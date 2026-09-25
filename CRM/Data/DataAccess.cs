@@ -57,6 +57,10 @@ namespace CRM.Data
                                     .Select(c => NormalizeColumnName(c.ColumnName))
                                     .ToList();
 
+                                viewModel.SourceColumnNames = dataTable.Columns.Cast<DataColumn>()
+                                    .Select(c => c.ColumnName)
+                                    .ToList();
+
                                 viewModel.ColumnTypes = dataTable.Columns.Cast<DataColumn>()
                                     .Select(c => c.DataType.FullName ?? "System.String")
                                     .ToList();
@@ -82,6 +86,7 @@ namespace CRM.Data
             {
                 viewModel.ErrorMessage = ex.Message;
                 viewModel.ColumnNames = new List<string>();
+                viewModel.SourceColumnNames = new List<string>();
                 viewModel.ColumnTypes = new List<string>();
                 viewModel.Rows = new List<Dictionary<string, object?>>();
                 viewModel.TotalRecords = 0;
@@ -155,14 +160,6 @@ namespace CRM.Data
             await cmd.ExecuteNonQueryAsync();
         }
 
-        private static readonly (string FieldName, string[] ColumnNames)[] FilterFieldDefinitions =
-        {
-            ("Date", new[] { "Date", "FilterDate", "Filter_Date", "DateFilter", "Date_Filter" }),
-            ("Client Name", new[] { "Client Name", "ClientName", "Client_Name", "FilterClientName", "Filter_ClientName", "ClientNameFilter", "Client_Name_Filter" }),
-            ("Category", new[] { "Category", "CategoryFilter", "Category_Filter", "FilterCategory", "Filter_Category" }),
-            ("Status", new[] { "Status", "StatusFilter", "Status_Filter", "FilterStatus", "Filter_Status" })
-        };
-
         public async Task<List<ReportMenuItem>> GetWebTblMasterAsync()
         {
             var menuItems = new List<ReportMenuItem>();
@@ -183,7 +180,7 @@ namespace CRM.Data
                     {
                         Tbl_View_Name = ReadStringValue(reader, "Tbl_View_Name", "TblViewName"),
                         Report_Name = ReadStringValue(reader, "Report_Name", "ReportName"),
-                        Report_Type = ReadStringValue(reader, "Report_Type", "ReportType", "Type", "Menu_Head", "MenuHead"),
+                        Report_Type = ReadStringValue(reader, "Menu_Head", "MenuHead", "Report_Type", "ReportType", "Type"),
                         FilterFields = ReadFilterFields(reader)
                     });
                 }
@@ -199,19 +196,8 @@ namespace CRM.Data
         private static List<ReportFilterField> ReadFilterFields(SqlDataReader reader)
         {
             var filterFields = new List<ReportFilterField>();
-
-            foreach (var definition in FilterFieldDefinitions)
-            {
-                AddFilterField(reader, definition.FieldName, definition.ColumnNames, filterFields);
-            }
-
             AddPositionalFilterFields(reader, filterFields);
-
-            if (filterFields.Count == 0 && TryReadValue(reader, new[] { "FilterFields", "Filter_Field", "Filters" }, out var combinedValue))
-            {
-                AddFilterValue(filterFields, combinedValue, string.Empty);
-            }
-
+            ApplyVisibility(reader, filterFields);
             return filterFields;
         }
 
@@ -236,32 +222,22 @@ namespace CRM.Data
             }
         }
 
-        private static void AddFilterField(SqlDataReader reader, string defaultFieldName, IEnumerable<string> columnNames, List<ReportFilterField> filterFields)
+        private static void ApplyVisibility(SqlDataReader reader, List<ReportFilterField> filterFields)
         {
-            var visibilityColumnNames = new[]
+            foreach (var filterField in filterFields)
             {
-                defaultFieldName + "Visible",
-                defaultFieldName + "_Visible",
-                "Visible" + defaultFieldName,
-                "Is" + defaultFieldName + "Visible"
-            };
-            var hasVisibility = TryReadValue(reader, visibilityColumnNames, out var visibilityValue);
+                var visibilityColumnNames = new[]
+                {
+                    filterField.FieldName + "Visible",
+                    filterField.FieldName + "_Visible",
+                    "Visible" + filterField.FieldName,
+                    "Is" + filterField.FieldName + "Visible"
+                };
 
-            if (hasVisibility && !ParseBooleanValue(visibilityValue, true))
-            {
-                AddFilterField(filterFields, defaultFieldName, false);
-                return;
-            }
-
-            if (TryReadValue(reader, columnNames, out var value) && value != null && value != DBNull.Value)
-            {
-                AddFilterValue(filterFields, value, defaultFieldName);
-                return;
-            }
-
-            if (hasVisibility)
-            {
-                AddFilterField(filterFields, defaultFieldName, ParseBooleanValue(visibilityValue, true));
+                if (TryReadValue(reader, visibilityColumnNames, out var visibilityValue) && !ParseBooleanValue(visibilityValue, true))
+                {
+                    filterField.Visible = false;
+                }
             }
         }
 

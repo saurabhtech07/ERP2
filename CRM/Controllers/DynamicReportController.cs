@@ -58,6 +58,7 @@ namespace CRM.Controllers
                     reportName = reportName,
                     reportType = menuItem?.Report_Type ?? string.Empty,
                     columns = data.ColumnNames,
+                    sourceColumns = data.SourceColumnNames,
                     columnTypes = data.ColumnTypes,
                     rows = data.Rows,
                     filterFields = filterFields

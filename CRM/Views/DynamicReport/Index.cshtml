@@ -23,21 +23,52 @@
             min-height: 38px;
         }
 
-        #dynamicGrid .gridjs-wrapper {
-            box-shadow: none;
-            border-radius: 0.6rem;
-            border: 1px solid #e9ecef;
+        #dynamicGrid {
             max-height: calc(100vh - 265px);
             min-height: 470px;
-            overflow-y: auto;
-            overflow-x: auto;
+            overflow: auto !important;
+            border: 1px solid #e9ecef;
+            border-radius: 0.6rem;
+            background: #ffffff;
+            scrollbar-gutter: stable;
         }
 
-        #dynamicGrid .gridjs-thead,
+        #dynamicGrid .gridjs-wrapper {
+            max-height: none !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        #dynamicGrid .gridjs-container,
+        #dynamicGrid .gridjs-content {
+            display: block !important;
+            width: 100% !important;
+            overflow: visible !important;
+        }
+
+        #dynamicGrid .gridjs-table,
+        #dynamicGrid .gridjs-table table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate !important;
+            border-spacing: 0;
+        }
+
+        #dynamicGrid .gridjs-thead {
+            display: table-header-group;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #1e3a5f;
+        }
+
         #dynamicGrid .gridjs-thead th {
             position: sticky !important;
             top: 0;
-            z-index: 3;
+            z-index: 11;
         }
 
         #dynamicGrid .gridjs-thead th {
@@ -561,6 +592,7 @@
             let grid = null;
             let initialTable = '@Html.Raw(ViewBag.SelectedTable ?? "")';
             let allColumns = [];
+            let sourceColumns = [];
             let allRows = [];
             let allColumnTypes = [];
             let filterDefinitions = [];
@@ -727,10 +759,16 @@
                         document.getElementById('loading').style.display = 'none';
                         if (data.success) {
                             allColumns = data.columns || [];
+                            sourceColumns = Array.isArray(data.sourceColumns) && data.sourceColumns.length === allColumns.length
+                                ? data.sourceColumns
+                                : allColumns.slice();
                             allRows = data.rows || [];
                             allColumnTypes = data.columnTypes || [];
                             filterDefinitions = Array.isArray(data.filterFields) ? data.filterFields : [];
-                            exportCols = allColumns.map(function (c) { return { key: c, label: c.charAt(0).toUpperCase() + c.slice(1) }; });
+                            exportCols = allColumns.map(function (c, index) {
+                                var label = String(sourceColumns[index] || c);
+                                return { key: c, label: label };
+                            });
                             var nameEl = document.getElementById('reportName');
                             if (nameEl && data.reportName) {
                                 nameEl.textContent = data.reportName;
@@ -763,15 +801,17 @@ function renderGrid(columns, rows) {
                 var kw = document.getElementById('reportSearch').value.trim();
                 var limit = parseInt(document.getElementById('page-size').value, 10) || 10;
 
-                var gridColumns = columns.map(c => ({
-                    name: c.charAt(0).toUpperCase() + c.slice(1),
-                    id: c
-                }));
+                var gridColumns = columns.map(function (c, index) {
+                    return {
+                        name: String(sourceColumns[index] || c),
+                        id: c
+                    };
+                });
 
                 var gridData = rows.map(row => {
                     let obj = {};
                     columns.forEach(col => {
-                        obj[col] = row[col] !== null ? row[col] : '';
+                        obj[col] = row[col] === null || row[col] === undefined ? '' : row[col];
                     });
                     return obj;
                 });
@@ -1044,10 +1084,12 @@ function renderGrid(columns, rows) {
                     cardEl.querySelector('.avatar-title').className = 'avatar-title rounded-xl icon-44 bg-solid-' + color;
                     cardEl.querySelector('.avatar-title i').className = c.icon + ' text-white';
                     cardEl.querySelector('.stat-label').textContent = c.label;
-                    cardEl.querySelector('.stat-label').title = 'Column: ' + c.col + ' | Calculation: ' + c.calc;
+                    var cardTitle = 'Column: ' + c.col + ' | Calculation: ' + c.calc;
+                    cardEl.title = cardTitle;
+                    cardEl.querySelector('.stat-label').title = '';
                     var valueEl = cardEl.querySelector('.stat-value');
                     valueEl.textContent = nfmt(c.value);
-                    valueEl.title = 'Column: ' + c.col + ' | Calculation: ' + c.calc;
+                    valueEl.title = '';
                     cardEl.querySelector('.chart-mini').innerHTML = chartSvg(color);
                 }
             }
@@ -1057,13 +1099,6 @@ function renderGrid(columns, rows) {
                 if (!v || v === '') return null;
                 var d = new Date(v);
                 return isNaN(d.getTime()) ? null : d;
-            }
-
-            function normalizeFieldName(name) {
-                return String(name == null ? '' : name)
-                    .trim()
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]/g, '');
             }
 
             function getFilterFieldName(item) {
@@ -1081,26 +1116,17 @@ function renderGrid(columns, rows) {
                 return item.visible !== false;
             }
 
-            var filterFieldAliases = {
-                date: ['date', 'docdate', 'edate', 'createdate', 'modifydate'],
-                clientname: ['clientname', 'client'],
-                category: ['category', 'category1', 'cat1'],
-                status: ['status']
-            };
-
             function getColumnEntries(name) {
                 var out = [];
                 if (!allColumns || !allColumns.length) return out;
-                var requested = normalizeFieldName(name);
+                var requested = String(name == null ? '' : name).trim().toLowerCase();
                 if (!requested) return out;
-                var aliases = filterFieldAliases[requested] || [requested];
-                aliases.forEach(function (alias) {
-                    allColumns.forEach(function (column) {
-                        if (normalizeFieldName(column) === alias && out.indexOf(column) < 0) {
-                            out.push(column);
-                        }
-                    });
-                });
+                for (var i = 0; i < allColumns.length; i++) {
+                    var source = String(sourceColumns[i] == null ? allColumns[i] : sourceColumns[i]).trim().toLowerCase();
+                    if (source === requested && out.indexOf(allColumns[i]) < 0) {
+                        out.push(allColumns[i]);
+                    }
+                }
                 return out;
             }
 
@@ -1130,11 +1156,9 @@ function renderGrid(columns, rows) {
                 for (var i = 0; i < filterDefinitions.length; i++) {
                     if (!isFilterFieldVisible(filterDefinitions[i])) continue;
                     var field = getFilterFieldName(filterDefinitions[i]);
-                    var fieldKey = normalizeFieldName(field);
                     var found = getColumnEntries(field);
                     for (var j = 0; j < found.length; j++) {
-                        var columnKey = normalizeFieldName(found[j]);
-                        if (fieldKey === 'date' || columnKey === 'date' || columnKey.indexOf('date') >= 0 || isDateColumn(found[j])) {
+                        if (String(field).trim().toLowerCase() === 'date' || isDateColumn(found[j])) {
                             return found[j];
                         }
                     }
@@ -1167,7 +1191,7 @@ function renderGrid(columns, rows) {
                     var found = getColumnEntries(field);
                     if (!found.length) continue;
                     var col = found[0];
-                    var columnKey = normalizeFieldName(col);
+                    var columnKey = String(col).trim().toLowerCase();
                     if (usedCols[columnKey] || col === dateCol || isDateColumn(col)) continue;
                     out.push({ col: col, label: field || col, options: buildFilterOptions(col) });
                     usedCols[columnKey] = 1;

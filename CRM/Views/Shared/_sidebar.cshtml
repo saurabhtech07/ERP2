@@ -1,8 +1,16 @@
+@using System
+@using System.Linq
 @using CRM.Data
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     var dataAccess = new DataAccess(Configuration.GetConnectionString("DefaultConnection")!);
     var dynamicReportsList = await dataAccess.GetWebTblMasterAsync();
+    var masterDynamicReports = dynamicReportsList
+        .Where(x => string.Equals(x.Report_Type?.Trim(), "MASTER_DYNAMIC", StringComparison.OrdinalIgnoreCase))
+        .ToList();
+    var reportDynamicReports = dynamicReportsList
+        .Where(x => string.Equals(x.Report_Type?.Trim(), "REPORT_DYNAMIC", StringComparison.OrdinalIgnoreCase))
+        .ToList();
 }
 <!-- ========== App Menu ========== -->
 <div class="app-menu navbar-menu">
@@ -54,20 +62,22 @@
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarMaster">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item"><a href="@Url.Action("Index", "ItemMaster")" class="nav-link" data-key="t-item-master">Item Master</a></li>
-                            <li class="nav-item"><a href="@Url.Action("Index", "ClientMaster")" class="nav-link" data-key="t-client-master">Client Master</a></li>
-                            <li class="nav-item"><a href="@Url.Action("Index", "SupplierMaster")" class="nav-link" data-key="t-supplier-master">Supplier Master</a></li>
-                            <li class="nav-item"><a href="@Url.Action("Index", "GstMaster")" class="nav-link" data-key="t-gst-master">GST Master</a></li>
+                            @foreach (var master in masterDynamicReports)
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Index", "DynamicReport", new { tableName = master.Tbl_View_Name })" class="nav-link">@master.Report_Name</a>
+                                </li>
+                            }
                         </ul>
                     </div>
                 </li>
                 <li class="nav-item">
                     <a href="#sidebarReports" data-bs-toggle="collapse" class="nav-link menu-link" role="button" aria-expanded="false" aria-controls="sidebarReports">
-                        <i class="ri-bar-chart-2-line"></i> <span data-key="t-reports">Dynamic Reports</span>
+                        <i class="ri-bar-chart-2-line"></i> <span data-key="t-reports">Reports</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarReports">
                         <ul class="nav nav-sm flex-column">
-                            @foreach(var report in dynamicReportsList)
+                            @foreach (var report in reportDynamicReports)
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("Index", "DynamicReport", new { tableName = report.Tbl_View_Name })" class="nav-link">@report.Report_Name</a>

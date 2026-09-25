@@ -1,0 +1,7 @@
+:root{--primary-blue:#2563eb;--primary-dark-blue:#1d4ed8;--accent-cyan:#38bdf8;--accent-purple:#8b5cf6;--accent-emerald:#10b981;--accent-orange:#ff6b00;--text-dark:#0f172a;--text-muted:#64748b}
+html, body { background-color: #ffffff !important; }
+
+#navbar-nav li:has(.nav-link span[data-key="t-dashboards"]){display:none !important}
+.customizer-setting,.customizer-setting *{display:none !important}
+#theme-settings-offcanvas{display:none !important}
+/*# sourceMappingURL=custom.min.css.map */

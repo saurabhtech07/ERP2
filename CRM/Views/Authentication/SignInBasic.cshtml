@@ -1,0 +1,284 @@
+@model CRM.Models.LoginViewModel
+
+@{
+    ViewBag.Title = "Sign In - BestIT Enterprise ERP";
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Sign In | BestIT - Enterprise ERP Platform</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico">
+
+    <!-- Bootstrap & Theme CSS -->
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/app.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/css/custom.css?v=@DateTime.Now.Ticks" rel="stylesheet" type="text/css" />
+
+    <!-- Google Fonts: Plus Jakarta Sans for Ultra Modern SaaS Look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="auth-unified-layout">
+
+        <!-- Unified Canvas Background Elements (Spans 100vw x 100vh) -->
+        <div class="unified-mesh-bg"></div>
+        <div class="unified-aurora-glow glow-top-left"></div>
+        <div class="unified-aurora-glow glow-center"></div>
+        <div class="unified-aurora-glow glow-bottom-right"></div>
+        <div class="unified-grid-overlay"></div>
+
+        <!-- Continuous Fluid Organic Wave Canvas Across Whole Page -->
+        <div class="unified-wave-canvas">
+            <!-- Wave Layer 1 -->
+            <svg class="unified-wave wave-bottom-1" viewBox="0 0 1440 380" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="uniWaveGrad1" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4" />
+                        <stop offset="35%" stop-color="#60a5fa" stop-opacity="0.25" />
+                        <stop offset="70%" stop-color="#818cf8" stop-opacity="0.15" />
+                        <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.05" />
+                    </linearGradient>
+                </defs>
+                <path d="M0,180 C280,290 520,110 820,230 C1120,350 1280,160 1440,210 L1440,380 L0,380 Z" fill="url(#uniWaveGrad1)" />
+            </svg>
+
+            <!-- Wave Layer 2 -->
+            <svg class="unified-wave wave-bottom-2" viewBox="0 0 1440 380" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="uniWaveGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1" stop-opacity="0.32" />
+                        <stop offset="50%" stop-color="#4f46e5" stop-opacity="0.2" />
+                        <stop offset="100%" stop-color="#2563eb" stop-opacity="0.06" />
+                    </linearGradient>
+                </defs>
+                <path d="M0,260 C240,140 480,280 840,160 C1140,60 1320,220 1440,150 L1440,380 L0,380 Z" fill="url(#uniWaveGrad2)" />
+            </svg>
+
+            <!-- Wave Layer 3 -->
+            <svg class="unified-wave wave-bottom-3" viewBox="0 0 1440 260" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="uniWaveGrad3" x1="0%" y1="50%" x2="100%" y2="50%">
+                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.28" />
+                        <stop offset="55%" stop-color="#3b82f6" stop-opacity="0.15" />
+                        <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.04" />
+                    </linearGradient>
+                </defs>
+                <path d="M0,110 Q380,230 760,120 T1440,170 L1440,260 L0,260 Z" fill="url(#uniWaveGrad3)" />
+            </svg>
+        </div>
+
+        <!-- Main Content Area: Left Showcase + Right Login Card on ONE Single Canvas -->
+        <div class="container-fluid h-100 position-relative z-2">
+            <div class="row h-100 align-items-center g-4 px-3 px-xl-5">
+                
+                <!-- ==================== LEFT BRANDING & 3D CRM HERO ==================== -->
+                <div class="col-lg-7 col-xl-7 d-flex flex-column justify-content-between h-100 py-3 ps-xl-4">
+                    
+                    <!-- Top Header: BestIT Logo + BestIT™ + Enterprise CRM Badge -->
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="brand-logo-container">
+                                <img src="~/assets/images/bestit-logo.png" alt="BestIT Logo" class="brand-logo-img" />
+                            </div>
+                            <span class="fs-20 fw-bold text-white tracking-wide">BestIT<span class="brand-tm">™</span></span>
+                        </div>
+
+                        <div class="pill-badge-verified">
+                            <span class="live-pulse-dot"></span>
+                            <span>Enterprise ERP</span>
+                        </div>
+                    </div>
+
+                    <!-- Middle Showcase: Bright Focused Tagline + 3D Hero Graphic -->
+                    <div class="auth-left-showcase-container my-auto">
+                        <div class="auth-hero-tagline-wrap text-center">
+                            <h2 class="auth-hero-tagline">
+                                Streamline business operations, manage resources, and drive productivity 
+                                <span class="hero-tagline-highlight">— all in one place.</span>
+                            </h2>
+                        </div>
+
+                        <div class="auth-hero-showcase text-center">
+                            <div class="hero-aura-pedestal"></div>
+                            <img src="~/assets/images/crm-hero.png?v=@DateTime.Now.Ticks" alt="BestIT ERP Platform" class="auth-hero-showcase-img" />
+                        </div>
+                    </div>
+
+                    <!-- Bottom Glass Security Badge -->
+                    <div>
+                        <div class="glass-security-box">
+                            <div class="shield-icon-badge">
+                                <i class="ri-shield-check-line"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-white fs-13 lh-1">Secure • Reliable • Scalable</div>
+                                <div class="text-white-75 fs-11 mt-1">Enterprise-Ready ERP Platform</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ==================== RIGHT FLOATING LOGIN CARD ==================== -->
+                <div class="col-lg-5 col-xl-5 d-flex justify-content-center align-items-center h-100 py-3 pe-xl-4">
+                    
+                    <div class="auth-login-card position-relative">
+                        
+                        <!-- Card Header -->
+                        <div class="text-center mb-3">
+                            <div class="d-inline-flex align-items-center justify-content-center mb-2">
+                                <img src="~/assets/images/bestit-logo.png" alt="BestIT Logo" class="card-top-logo" />
+                            </div>
+                            
+                            <div class="auth-brand-badge mb-1">
+                                <span>ERP Portal Sign In</span>
+                            </div>
+                            
+                            <h3 class="auth-card-title mb-1">Welcome Back! 👋</h3>
+                            <p class="auth-card-subtitle mb-0">Enter your credentials to access your ERP workspace.</p>
+                        </div>
+
+                        <!-- Error Alert -->
+                        @if (ViewBag.Error != null)
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show fs-12 py-2 px-3 mb-3 fw-medium" role="alert">
+                                <i class="ri-error-warning-line me-1 align-middle fs-14"></i> @ViewBag.Error
+                                <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+
+                        <!-- Login Form -->
+                        <form asp-controller="Authentication" asp-action="SignInBasic" method="post" class="auth-form-body">
+                            @Html.AntiForgeryToken()
+<input type="hidden" asp-for="ReturnUrl" />
+
+                            <!-- Username Field -->
+                            <div class="mb-3">
+                                <label class="form-label auth-label mb-1" for="username">Username / Email</label>
+                                <div class="custom-input-box">
+                                    <i class="ri-user-3-fill input-icon-start"></i>
+                                    <input type="text" class="form-control auth-input-control" id="username" name="username" placeholder="Enter your username" required autocomplete="username" />
+                                </div>
+                            </div>
+
+                            <!-- Password Field -->
+ <!-- Password Field -->
+<div class="mb-3">
+    <label class="form-label auth-label mb-1" for="password-input">Password <span class="text-white-50 fs-11 fw-normal">(Optional)</span></label>
+    <div class="custom-input-box">
+        <i class="ri-lock-2-fill input-icon-start"></i>
+        <input type="password" class="form-control auth-input-control" id="password-input" name="password" placeholder="Enter password (optional)" autocomplete="current-password" />
+
+        <button type="button" class="password-eye-btn" id="password-addon" aria-label="Toggle password visibility">
+            <i class="ri-eye-off-line" id="password-icon"></i>
+        </button>
+    </div>
+</div>
+                            <!-- Options (Remember Me & Bright Orange Forgot Password) -->
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="form-check d-flex align-items-center">
+                                    <input class="form-check-input auth-checkbox" type="checkbox" id="auth-remember-check" asp-for="RememberMe" />
+                                    <label class="form-check-label auth-remember-label" for="auth-remember-check">Remember me</label>
+                                </div>
+                                <a href="@Url.Action("PasswordResetBasic", "Authentication")" class="auth-forgot-link">Forgot password?</a>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-signin-custom w-100 d-flex align-items-center justify-content-center gap-2">
+                                    <span>Sign In</span>
+                                    <i class="ri-arrow-right-line fs-17 btn-arrow-icon"></i>
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- SSO Divider -->
+                        <div class="sso-divider-text">
+                            <span>or continue with</span>
+                        </div>
+
+                        <!-- Google & Microsoft SSO Buttons -->
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button type="button" class="btn btn-sso-custom w-100" onclick="openGoogleAccountChooser()" title="Sign in with Google">
+                                    <svg width="18" height="18" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.27 21.39 7.34 24 12 24z"/>
+                                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.97 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
+                                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.27 2.61 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                                    </svg>
+                                    <span>Google</span>
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-sso-custom w-100" onclick="openMicrosoftAccountChooser()" title="Sign in with Microsoft">
+                                    <svg width="18" height="18" viewBox="0 0 24 24">
+                                        <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
+                                        <rect x="13" y="1" width="10" height="10" fill="#7FBA00"/>
+                                        <rect x="1" y="13" width="10" height="10" fill="#00A4EF"/>
+                                        <rect x="13" y="13" width="10" height="10" fill="#FFB900"/>
+                                    </svg>
+                                    <span>Microsoft</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle Password Visibility
+        document.getElementById('password-addon').addEventListener('click', function () {
+            var passwordInput = document.getElementById('password-input');
+            var passwordIcon = document.getElementById('password-icon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.classList.remove('ri-eye-off-line');
+                passwordIcon.classList.add('ri-eye-line');
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.classList.remove('ri-eye-line');
+                passwordIcon.classList.add('ri-eye-off-line');
+            }
+        });
+
+        // Google Account Chooser Popup
+        function openGoogleAccountChooser() {
+            var width = 500;
+            var height = 620;
+            var left = (window.screen.width / 2) - (width / 2);
+            var top = (window.screen.height / 2) - (height / 2);
+            var url = "https://accounts.google.com/AccountChooser?service=lso&flowName=GlifWebSignIn";
+            window.open(url, "GoogleSignIn", "width=" + width + ",height=" + height + ",top=" + top + ",left=" + left + ",status=no,toolbar=no,menubar=no,location=no,resizable=yes");
+        }
+
+        // Microsoft Account Chooser Popup
+        function openMicrosoftAccountChooser() {
+            var width = 500;
+            var height = 620;
+            var left = (window.screen.width / 2) - (width / 2);
+            var top = (window.screen.height / 2) - (height / 2);
+            var url = "https://login.live.com/login.srf";
+            window.open(url, "MicrosoftSignIn", "width=" + width + ",height=" + height + ",top=" + top + ",left=" + left + ",status=no,toolbar=no,menubar=no,location=no,resizable=yes");
+        }
+    </script>
+</body>
+</html>
+

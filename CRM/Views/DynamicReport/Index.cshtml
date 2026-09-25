@@ -1,0 +1,907 @@
+﻿@model IEnumerable<CRM.Models.ReportMenuItem>
+@{
+    ViewData["Title"] = ViewBag.ReportName;
+}
+
+@section styles {
+<link href="~/assets/libs/gridjs/theme/mermaid.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/css/item-master.css" rel="stylesheet" type="text/css" />
+    <style>
+        .fs-label-sm {
+            display: block;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.45px;
+            color: #64748b;
+            margin-bottom: 0.35rem;
+        }
+.filter-panel input[type="date"],
+        .filter-panel .form-select {
+            min-height: 38px;
+        }
+
+        #dynamicGrid .gridjs-wrapper {
+            box-shadow: none;
+            border-radius: 0.6rem;
+            border: 1px solid #e9ecef;
+            max-height: calc(100vh - 265px);
+            min-height: 470px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        #dynamicGrid .gridjs-thead,
+        #dynamicGrid .gridjs-thead th {
+            position: sticky !important;
+            top: 0;
+            z-index: 3;
+        }
+
+        #dynamicGrid .gridjs-thead th {
+            background-color: #1e3a5f !important;
+            color: #fff !important;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 11px 12px;
+            border: none !important;
+            white-space: nowrap;
+            overflow: visible;
+        }
+
+        #dynamicGrid .gridjs-thead th .gridjs-th-content {
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+        #dynamicGrid .gridjs-thead th:hover {
+            background-color: #274b76 !important;
+        }
+
+        #dynamicGrid .gridjs-table {
+            margin: 0;
+        }
+
+        #dynamicGrid .gridjs-table tbody td {
+            vertical-align: middle;
+            padding: 10px 12px;
+        }
+
+        #dynamicGrid .gridjs-table tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        #dynamicGrid .gridjs-table tbody tr:hover td {
+            background-color: #eef4fb;
+        }
+
+        #dynamicGrid .gridjs-pagination {
+            justify-content: flex-end;
+            padding-top: 0.75rem;
+        }
+
+        #dynamicGrid button.gridjs-pages button {
+            border-radius: 0.375rem;
+            margin: 0 0.125rem;
+        }
+
+        #dynamicGrid .gridjs-footer {
+            background: var(--vz-card-bg);
+        }
+
+        #dynamicGrid .gridjs-th-sort:hover,
+        #dynamicGrid .gridjs-th-sort:focus {
+            background: none;
+        }
+    </style>
+}
+
+<!-- Dynamic summary cards (auto-detected per report) -->
+<div class="row g-3 mb-3" id="drcCards">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100 stat-orange">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="avatar-title rounded-xl icon-44 bg-solid-orange">
+                        <i class="ri-tools-line text-white"></i>
+                    </span>
+                    <div>
+                        <h4 class="fw-bold mb-1 stat-label" id="drc1lbl" title="Loading">Loading&hellip;</h4>
+                        <div class="stat-value" id="drc1val">&mdash;</div>
+                    </div>
+                </div>
+                <div class="chart-mini"><div id="drc1chart"></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100 stat-blue">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="avatar-title rounded-xl icon-44 bg-solid-blue">
+                        <i class="ri-tools-line text-white"></i>
+                    </span>
+                    <div>
+                        <h4 class="fw-bold mb-1 stat-label" id="drc2lbl" title="Loading">Loading&hellip;</h4>
+                        <div class="stat-value" id="drc2val">&mdash;</div>
+                    </div>
+                </div>
+                <div class="chart-mini"><div id="drc2chart"></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100 stat-grey">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="avatar-title rounded-xl icon-44 bg-solid-grey">
+                        <i class="ri-tools-line text-white"></i>
+                    </span>
+                    <div>
+                        <h4 class="fw-bold mb-1 stat-label" id="drc3lbl" title="Loading">Loading&hellip;</h4>
+                        <div class="stat-value" id="drc3val">&mdash;</div>
+                    </div>
+                </div>
+                <div class="chart-mini"><div id="drc3chart"></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100 stat-green">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="avatar-title rounded-xl icon-44 bg-solid-green">
+                        <i class="ri-tools-line text-white"></i>
+                    </span>
+                    <div>
+                        <h4 class="fw-bold mb-1 stat-label" id="drc4lbl" title="Loading">Loading&hellip;</h4>
+                        <div class="stat-value" id="drc4val">&mdash;</div>
+                    </div>
+                </div>
+                <div class="chart-mini"><div id="drc4chart"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card filter-panel">
+            <div class="card-body">
+                <label class="form-label fs-label"><i class="ri-filter-3-line me-1"></i>Filters</label>
+                <div class="row g-2 align-items-end">
+                    <div class="col-6 col-lg-2" id="drcFromWrap" style="display:none;">
+                        <label class="form-label fs-label-sm">From Date</label>
+                        <input type="date" class="form-control" id="drcFromDate">
+                    </div>
+                    <div class="col-6 col-lg-2" id="drcToWrap" style="display:none;">
+                        <label class="form-label fs-label-sm">To Date</label>
+                        <input type="date" class="form-control" id="drcToDate">
+                    </div>
+<div class="col-12" id="drcFilterMounts" style="display:none;">
+                        <div class="row g-2" id="drcFilterRow"></div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 align-items-center mt-2 pt-2 border-top">
+                    <div class="position-relative flex-grow-1" style="min-width:220px">
+                        <input type="text" id="reportSearch" class="form-control ps-5" placeholder="Search in report...">
+                        <i class="ri-search-line position-absolute top-50 translate-middle-y ms-3 search-icon"></i>
+                    </div>
+                    <button type="button" class="btn btn-light btn-action" id="btn-clear">
+                        <i class="ri-refresh-line me-1"></i>Clear
+                    </button>
+                    <button type="button" class="btn btn-action btn-excel" id="btn-excel">
+                        <i class="ri-file-excel-line me-1"></i>Excel
+                    </button>
+                    <button type="button" class="btn btn-action btn-csv" id="btn-csv">
+                        <i class="ri-file-list-line me-1"></i>CSV
+                    </button>
+                    <button type="button" class="btn btn-action btn-print" id="btn-print">
+                        <i class="ri-printer-line me-1"></i>Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row table-section" id="reportTableSection">
+    <div class="col-xl-12">
+        <div class="card table-panel">
+            <div class="card-header align-items-center d-flex py-2">
+                <h4 class="card-title mb-0 flex-grow-1 fs-15"><span id="reportName">@ViewBag.ReportName</span> <span class="fs-13 text-muted fw-normal" id="record-count"></span></h4>
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted fs-12 fw-medium">Rows / page</small>
+                    <select id="drcPageSize" class="form-select form-select-sm">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="loading" class="text-center py-5" style="display: none;">
+                    <i class="ri-loader-4-line ri-spin fs-2 text-primary"></i>
+                    <p class="text-muted mb-0 mt-2 fs-14">Loading data...</p>
+                </div>
+                <div id="dynamicGrid"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script src="~/assets/libs/gridjs/dist/gridjs.production.min.js"></script>
+    <script src="~/assets/libs/toastify-js/src/toastify.js"></script>
+    <script src="~/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let grid = null;
+            let initialTable = '@Html.Raw(ViewBag.SelectedTable ?? "")';
+            let allColumns = [];
+            let allRows = [];
+            let dateCol = null;
+            let filterCols = [];
+            let choicesInstances = {};
+            let currentRows = [];
+            let exportCols = [];
+
+            if (initialTable) {
+                loadReportData(initialTable);
+            } else {
+                document.getElementById('dynamicGrid').innerHTML = '<div class="alert alert-info">Please select a report from the sidebar.</div>';
+            }
+
+            // Search logic
+            document.getElementById('reportSearch').addEventListener('input', function (e) {
+                if (grid) {
+                    grid.updateConfig({
+                        search: {
+                            keyword: e.target.value
+                        }
+                    }).forceRender();
+                }
+            });
+
+// Date / dropdown filter events
+            document.getElementById('drcFromDate').addEventListener('change', applyFilters);
+            document.getElementById('drcToDate').addEventListener('change', applyFilters);
+
+            // Clear button
+            document.getElementById('btn-clear').addEventListener('click', function () {
+                document.getElementById('reportSearch').value = '';
+                document.getElementById('drcFromDate').value = '';
+                document.getElementById('drcToDate').value = '';
+                filterCols.forEach(function (f) {
+                    var ch = choicesInstances[f.col];
+                    if (ch) { try { ch.setChoiceByValue('__ALL__'); } catch (e) { } }
+                });
+                applyFilters();
+            });
+
+// Export buttons (ItemMaster-style)
+            function getReportTitle() {
+                var el = document.getElementById('reportName');
+                return el ? el.textContent.trim() : 'Report';
+            }
+
+            function escHtml(s) {
+                return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function csvVal(v) {
+                var s = String(v == null ? '' : v);
+                if (/^\d{4}-\d{2}-\d{2}T/.test(s) || /^\d{4}-\d{2}-\d{2} /.test(s)) s = s.slice(0, 10);
+                return '"' + s.replace(/"/g, '""') + '"';
+            }
+
+            function download(filename, content, type) {
+                var blob = new Blob([content], { type: type + ';charset=utf-8;' });
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            }
+
+            function getExportRows() {
+                var rows = (currentRows && currentRows.length) ? currentRows.slice() : allRows.slice();
+                var kw = document.getElementById('reportSearch').value.trim().toLowerCase();
+                if (!kw) return rows;
+                return rows.filter(function (r) {
+                    for (var i = 0; i < exportCols.length; i++) {
+                        var v = r[exportCols[i].key];
+                        if (String(v == null ? '' : v).toLowerCase().indexOf(kw) >= 0) return true;
+                    }
+                    return false;
+                });
+            }
+
+            function exportCsv() {
+                var rows = getExportRows();
+                var header = ['Sr.No'].concat(exportCols.map(function (c) { return c.label; })).join(',');
+                var lines = rows.map(function (r, i) {
+                    return (i + 1) + ',' + exportCols.map(function (c) { return csvVal(r[c.key]); }).join(',');
+                });
+                download(getReportTitle().replace(/[^\w-]+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.csv', '\uFEFF' + header + '\n' + lines.join('\n'), 'text/csv');
+            }
+
+            function exportExcel() {
+                var rows = getExportRows();
+                var head = ['Sr.No'].concat(exportCols.map(function (c) { return escHtml(c.label); })).map(function (h) { return '<th>' + h + '</th>'; }).join('');
+                var body = rows.map(function (r, i) {
+                    var cells = exportCols.map(function (c) { return '<td>' + escHtml(r[c.key]) + '</td>'; });
+                    return '<tr><td>' + (i + 1) + '</td>' + cells.join('') + '</tr>';
+                }).join('');
+                download(getReportTitle().replace(/[^\w-]+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.xls', '\uFEFF' + '<table border="1"><tr>' + head + '</tr>' + body + '</table>', 'application/vnd.ms-excel');
+            }
+
+            function printTable() {
+                var rows = getExportRows();
+                var w = window.open('', '_blank');
+                if (!w) {
+                    Toastify({ text: 'Popup blocked. Allow popups to print.', duration: 3000, close: true, gravity: "top", position: "right", backgroundColor: "#f06548" }).showToast();
+                    return;
+                }
+                var head = ['Sr.No'].concat(exportCols.map(function (c) { return escHtml(c.label); })).map(function (h) { return '<th>' + h + '</th>'; }).join('');
+                var body = rows.map(function (r, i) {
+                    var cells = exportCols.map(function (c) {
+                        var v = r[c.key];
+                        if (/^\d{4}-\d{2}-\d{2}T/.test(String(v == null ? '' : v)) || /^\d{4}-\d{2}-\d{2} /.test(String(v == null ? '' : v))) v = String(v).slice(0, 10);
+                        return '<td>' + escHtml(v) + '</td>';
+                    });
+                    return '<tr><td>' + (i + 1) + '</td>' + cells.join('') + '</tr>';
+                }).join('');
+                w.document.write('<!DOCTYPE html><html><head><title>' + escHtml(getReportTitle()) + '</title>');
+                w.document.write('<style>body{font-family:Arial,sans-serif;padding:20px}h2{margin-bottom:10px}' +
+                    'table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ddd;padding:5px 8px;text-align:left}' +
+                    'th{background:#1e3a5f;color:#fff}</style></head><body>');
+                w.document.write('<h2>' + escHtml(getReportTitle()) + ' Report</h2>');
+                w.document.write('<p>' + rows.length + ' of ' + allRows.length + ' records</p>');
+                w.document.write('<table border="1"><tr>' + head + '</tr>' + body + '</table>');
+                w.document.write('</body></html>');
+                w.document.close();
+                w.focus();
+                w.print();
+            }
+
+            document.getElementById('btn-excel').addEventListener('click', exportExcel);
+            document.getElementById('btn-csv').addEventListener('click', exportCsv);
+            document.getElementById('btn-print').addEventListener('click', printTable);
+
+            // Rows per page
+            document.getElementById('drcPageSize').addEventListener('change', function () {
+                if (!grid) return;
+                grid.updateConfig({
+                    pagination: {
+                        enabled: true,
+                        limit: parseInt(this.value, 10) || 10
+                    }
+                });
+                grid.forceRender();
+                this.blur();
+            });
+
+            // Record count
+            function updateRecordCount(rows) {
+                var el = document.getElementById('record-count');
+                if (!el) return;
+                el.textContent = (rows ? rows.length : allRows.length) + ' of ' + allRows.length + ' records';
+            }
+
+            function loadReportData(tableName) {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('dynamicGrid').innerHTML = '';
+
+                fetch(`/DynamicReport/GetReportData?tableName=${encodeURIComponent(tableName)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('loading').style.display = 'none';
+if (data.success) {
+                            allColumns = data.columns || [];
+                            allRows = data.rows || [];
+                            exportCols = allColumns.map(function (c) { return { key: c, label: c.charAt(0).toUpperCase() + c.slice(1) }; });
+                            var nameEl = document.getElementById('reportName');
+                            if (nameEl && data.reportName) {
+                                nameEl.textContent = data.reportName;
+                                if (document.title) document.title = data.reportName;
+                            }
+                            initFilters();
+                            renderCards(allColumns, allRows);
+                            renderGrid(allColumns, allRows);
+                            updateRecordCount(allRows);
+                        } else {
+                            Toastify({ text: data.message || "Failed to load report.", duration: 3000, close: true, gravity: "top", position: "right", backgroundColor: "#f06548" }).showToast();
+                            document.getElementById('dynamicGrid').innerHTML = '<div class="alert alert-danger">Failed to load data.</div>';
+                        }
+                    })
+                    .catch(err => {
+                        document.getElementById('loading').style.display = 'none';
+                        Toastify({ text: "Error connecting to server.", duration: 3000, close: true, gravity: "top", position: "right", backgroundColor: "#f06548" }).showToast();
+                    });
+            }
+
+            function renderGrid(columns, rows) {
+                var gridWrapper = document.getElementById('dynamicGrid');
+                gridWrapper.innerHTML = ''; 
+
+                if (!columns || columns.length === 0) {
+                    gridWrapper.innerHTML = '<p class="text-muted">No data found.</p>';
+                    return;
+                }
+
+                var gridColumns = columns.map(c => ({
+                    name: c.charAt(0).toUpperCase() + c.slice(1),
+                    id: c
+                }));
+
+                var gridData = rows.map(row => {
+                    let obj = {};
+                    columns.forEach(col => {
+                        obj[col] = row[col] !== null ? row[col] : '';
+                    });
+                    return obj;
+                });
+
+                grid = new gridjs.Grid({
+                    columns: gridColumns,
+                    data: gridData,
+                    pagination: {
+                        limit: 10
+                    },
+                    sort: true,
+                    search: true, // GridJS internal search used programmatically
+                    className: {
+                        table: 'table table-hover table-striped align-middle mb-0'
+                    }
+                }).render(gridWrapper);
+
+                // Hide the default GridJS search box since we have our custom one
+                setTimeout(() => {
+                    var gridJsSearch = gridWrapper.querySelector('.gridjs-search');
+                    if (gridJsSearch) {
+                        gridJsSearch.style.display = 'none';
+                    }
+                }, 100);
+            }
+
+            // ============ Dynamic Summary Cards ============
+            function nfmt(n) {
+                return new Intl.NumberFormat('en-IN').format(Math.round(n * 100) / 100);
+            }
+
+            function isBlankCol(col, rows) {
+                for (var i = 0; i < rows.length; i++) {
+                    var v = rows[i][col];
+                    if (v !== null && v !== undefined && String(v).trim() !== '' && String(v).trim() !== '-') return false;
+                }
+                return true;
+            }
+
+            function findCol(columns, pat, rows) {
+                for (var i = 0; i < columns.length; i++) {
+                    if (pat.test(columns[i]) && !isBlankCol(columns[i], rows)) return columns[i];
+                }
+                return null;
+            }
+
+            function distinctCount(col, rows) {
+                var s = new Set();
+                for (var i = 0; i < rows.length; i++) {
+                    var v = rows[i][col];
+                    if (v !== null && v !== undefined && String(v).trim() !== '') s.add(String(v).trim());
+                }
+                return s.size;
+            }
+
+            function nonEmptyCount(col, rows) {
+                var c = 0;
+                for (var i = 0; i < rows.length; i++) {
+                    var v = rows[i][col];
+                    if (v !== null && v !== undefined && String(v).trim() !== '') c++;
+                }
+                return c;
+            }
+
+            function sumNumeric(col, rows) {
+                var t = 0;
+                for (var i = 0; i < rows.length; i++) {
+                    var v = rows[i][col];
+                    if (v === null || v === undefined) continue;
+                    var n = parseFloat(String(v).replace(/[^\d.\-]/g, ''));
+                    if (isFinite(n)) t += n;
+                }
+                return t;
+            }
+
+            function isNumericCol(col, rows) {
+                for (var i = 0; i < rows.length; i++) {
+                    var v = rows[i][col];
+                    if (v === null || v === undefined || String(v).trim() === '') continue;
+                    return isFinite(parseFloat(String(v).replace(/[^\d.\-]/g, '')));
+                }
+                return false;
+            }
+
+            function activeCount(col, rows) {
+                var c = 0;
+                for (var i = 0; i < rows.length; i++) {
+                    var v = rows[i][col];
+                    if (v === null || v === undefined) continue;
+                    if (/active/i.test(String(v))) c++;
+                }
+                return c;
+            }
+
+            function isIgnoredFallback(col) {
+                var c = String(col).trim();
+                if (/^(id|name|client|clientname|remarks?|remark|unit|username|colno|itemid|row ?no|log ?id|user ?id|hsn ?code|status)$/i.test(c)) return true;
+                if (/^add\d?$|^city$|^pin$|address/.test(c)) return true;
+                if (/date$|date_|time/.test(c)) return true;
+                if (/^(cat\d*|category\d*|size|size ?name|size ?head|color|box ?no|fabricator|salesman)$/i.test(c)) return true;
+                return false;
+            }
+
+            function findFallbackCol(columns, rows, used) {
+                // Pass 1: meaningful, non-blank, unused
+                for (var i = 0; i < columns.length; i++) {
+                    var c = columns[i];
+                    if (used.indexOf(c) >= 0) continue;
+                    if (isBlankCol(c, rows)) continue;
+                    if (isIgnoredFallback(c)) continue;
+                    return c;
+                }
+                // Pass 2: any non-blank unused
+                for (var j = 0; j < columns.length; j++) {
+                    var c2 = columns[j];
+                    if (used.indexOf(c2) >= 0) continue;
+                    if (isBlankCol(c2, rows)) continue;
+                    return c2;
+                }
+                // Pass 3: first non-blank
+                for (var k = 0; k < columns.length; k++) {
+                    if (!isBlankCol(columns[k], rows)) return columns[k];
+                }
+                return null;
+            }
+
+            function pickQty(columns, rows, used) {
+                var pat = /(qty|quantity|fg_qty|rm_qty|jobqty|cutqty|issueqty|balqty|balissue|sizeqty|invqty|soqty|pendqty|r_qty|i_qty|grossqty)/i;
+                var best = null;
+                var any = null;
+                for (var i = 0; i < columns.length; i++) {
+                    if (!pat.test(columns[i])) continue;
+                    if (isBlankCol(columns[i], rows)) continue;
+                    if (any === null) any = columns[i];
+                    if (used.indexOf(columns[i]) < 0) { best = columns[i]; break; }
+                }
+                return best || any;
+            }
+
+            function pickAmount(columns, rows, used) {
+                var strong = /(amount|grossamt|totalamt)/i;
+                var broad = /(^amt$|amt|cost|price|^mrp$|^wsp$|balance|rate)/i;
+                var any = null;
+                for (var i = 0; i < columns.length; i++) {
+                    if (!broad.test(columns[i]) && !strong.test(columns[i])) continue;
+                    if (isBlankCol(columns[i], rows)) continue;
+                    if (any === null) any = columns[i];
+                    if (strong.test(columns[i]) && used.indexOf(columns[i]) < 0) return columns[i];
+                }
+                for (var j = 0; j < columns.length; j++) {
+                    if (!broad.test(columns[j])) continue;
+                    if (isBlankCol(columns[j], rows)) continue;
+                    if (used.indexOf(columns[j]) < 0) return columns[j];
+                }
+                return any;
+            }
+
+            function resolveCard1(columns, rows, used) {
+                var col = findCol(columns, /(^\s*order ?no\s*$|orderno)/i, rows);
+                if (col) return { label: 'Total Orders', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'total', icon: 'ri-file-list-3-line', num: false };
+                col = findCol(columns, /(^\s*doc ?no\s*$|^docno$|^doc_no$)/i, rows);
+                if (col) return { label: 'Total Documents', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'total', icon: 'ri-file-list-3-line', num: false };
+                col = findFallbackCol(columns, rows, used);
+                if (!col) return { label: 'Total Records', value: rows.length, col: 'â€”', calc: 'ROW COUNT', tone: 'total', icon: 'ri-file-list-3-line', num: false };
+                var calc = isNumericCol(col, rows) ? 'RECORD COUNT' : 'DISTINCT COUNT';
+                var val = isNumericCol(col, rows) ? nonEmptyCount(col, rows) : distinctCount(col, rows);
+                return { label: 'Total Records', value: val, col: col, calc: calc, tone: 'total', icon: 'ri-file-list-3-line', num: false };
+            }
+
+            function resolveCard2(columns, rows, used) {
+                var col = findCol(columns, /(^\s*job ?card ?no\s*$|^jobcardno$|^job_card_no$)/i, rows);
+                if (col) return { label: 'Total Job Cards', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'job', icon: 'ri-tools-line', num: false };
+                col = findCol(columns, /(^\s*barcode\s*$)/i, rows);
+                if (col) return { label: 'Total Barcodes', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'job', icon: 'ri-barcode-line', num: false };
+                col = pickQty(columns, rows, []);
+                if (col) return { label: 'Total Quantity', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'qty', icon: 'ri-stack-line', num: true };
+                col = findFallbackCol(columns, rows, used);
+                if (!col) return { label: 'Total Records', value: rows.length, col: 'â€”', calc: 'ROW COUNT', tone: 'job', icon: 'ri-tools-line', num: false };
+                var calc = isNumericCol(col, rows) ? 'RECORD COUNT' : 'DISTINCT COUNT';
+                var val = isNumericCol(col, rows) ? nonEmptyCount(col, rows) : distinctCount(col, rows);
+                return { label: 'Total Records', value: val, col: col, calc: calc, tone: 'job', icon: 'ri-tools-line', num: false };
+            }
+
+            function resolveCard3(columns, rows, used) {
+                var col = findCol(columns, /(^\s*status\s*$|^status|^close ?yn$)/i, rows);
+                if (col) {
+                    var act = activeCount(col, rows);
+                    if (act > 0) return { label: 'Active', value: act, col: col, calc: 'ACTIVE COUNT', tone: 'active', icon: 'ri-checkbox-circle-line', num: false };
+                    return { label: 'Status', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'active', icon: 'ri-checkbox-circle-line', num: false };
+                }
+                col = pickAmount(columns, rows, []);
+                if (col) return { label: 'Total Amount', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'total', icon: 'ri-money-dollar-circle-line', num: true };
+                col = pickQty(columns, rows, used);
+                if (col) return { label: 'Total Quantity', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'qty', icon: 'ri-stack-line', num: true };
+                col = findFallbackCol(columns, rows, used);
+                if (!col) return { label: 'Total Records', value: rows.length, col: 'â€”', calc: 'ROW COUNT', tone: 'active', icon: 'ri-checkbox-circle-line', num: false };
+                var calc = isNumericCol(col, rows) ? 'RECORD COUNT' : 'DISTINCT COUNT';
+                var val = isNumericCol(col, rows) ? nonEmptyCount(col, rows) : distinctCount(col, rows);
+                return { label: 'Total Records', value: val, col: col, calc: calc, tone: 'active', icon: 'ri-checkbox-circle-line', num: false };
+            }
+
+            function resolveCard4(columns, rows, used) {
+                var col = findCol(columns, /(gst ?amount|gst ?amt|cgst ?amt|sgst ?amt|igst ?amt|^cgst$|^sgst$|^igst$)/i, rows);
+                if (col) return { label: 'Total GST', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'gst', icon: 'ri-percent-line', num: true };
+                col = findCol(columns, /(^\s*gstin\s*$|^\s*gst ?no\s*$|gst ?no$|^gst$)/i, rows);
+                if (col) return { label: 'GST Register', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'gst', icon: 'ri-percent-line', num: false };
+                col = findCol(columns, /(gst ?per|igst1?_per|gst_per)|(^((cgst|sgst|igst)?(per|percent))$)/i, rows);
+                if (col) return { label: 'GST Rates', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'gst', icon: 'ri-percent-line', num: false };
+                col = pickQty(columns, rows, used);
+                if (col) return { label: 'Total Quantity', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'qty', icon: 'ri-stack-line', num: true };
+                col = pickAmount(columns, rows, used);
+                if (col) return { label: 'Total Amount', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'total', icon: 'ri-money-dollar-circle-line', num: true };
+                col = findFallbackCol(columns, rows, used);
+                if (!col) return { label: 'Total Records', value: rows.length, col: 'â€”', calc: 'ROW COUNT', tone: 'gst', icon: 'ri-percent-line', num: false };
+                var calc = isNumericCol(col, rows) ? 'RECORD COUNT' : 'DISTINCT COUNT';
+                var val = isNumericCol(col, rows) ? nonEmptyCount(col, rows) : distinctCount(col, rows);
+                return { label: 'Total Records', value: val, col: col, calc: calc, tone: 'gst', icon: 'ri-percent-line', num: false };
+            }
+
+            function chartSvg(color) {
+                if (color === 'blue') {
+                    return '<svg viewBox="0 0 24 24" fill="none"><rect x="0" y="12" width="4" height="12" rx="1.5" fill="#3b82f6" opacity="0.35"/><rect x="6" y="6" width="4" height="18" rx="1.5" fill="#3b82f6" opacity="0.65"/><rect x="12" y="2" width="4" height="22" rx="1.5" fill="#3b82f6"/><rect x="18" y="9" width="4" height="15" rx="1.5" fill="#3b82f6" opacity="0.5"/></svg>';
+                }
+                if (color === 'grey') {
+                    return '<svg viewBox="0 0 18 24" fill="none"><rect x="0" y="10" width="4" height="14" rx="1.5" fill="#6b7280" opacity="0.4"/><rect x="6" y="2" width="4" height="22" rx="1.5" fill="#6b7280"/><rect x="12" y="7" width="4" height="17" rx="1.5" fill="#6b7280" opacity="0.7"/></svg>';
+                }
+                if (color === 'green') {
+                    return '<svg viewBox="0 0 24 24" fill="none"><rect x="0" y="13" width="4" height="11" rx="1.5" fill="#10b981" opacity="0.4"/><rect x="6" y="5" width="4" height="19" rx="1.5" fill="#10b981" opacity="0.7"/><rect x="12" y="9" width="4" height="15" rx="1.5" fill="#10b981"/><circle cx="20" cy="4" r="2.5" fill="#10b981"/><rect x="18" y="11" width="4" height="13" rx="1.5" fill="#10b981" opacity="0.55"/></svg>';
+                }
+                return '<svg viewBox="0 0 18 24" fill="none"><rect x="0" y="14" width="4" height="10" rx="1.5" fill="#ff8c00" opacity="0.35"/><rect x="6" y="4" width="4" height="20" rx="1.5" fill="#ff8c00"/><rect x="12" y="8" width="4" height="16" rx="1.5" fill="#ff8c00" opacity="0.65"/></svg>';
+            }
+
+            function renderCards(columns, rows) {
+                if (!columns || columns.length === 0) return;
+                var used = [];
+                var cards = [resolveCard1(columns, rows, used), resolveCard2(columns, rows, used), resolveCard3(columns, rows, used), resolveCard4(columns, rows, used)];
+                var colorMap = { total: 'orange', job: 'blue', qty: 'blue', active: 'green', gst: 'orange' };
+
+                for (var i = 0; i < cards.length; i++) {
+                    var c = cards[i];
+                    var n = i + 1;
+                    var color = colorMap[c.tone] || 'orange';
+                    var cardEl = document.getElementById('drcCards').querySelectorAll('.stat-card')[i];
+                    if (!cardEl) continue;
+                    cardEl.className = 'card stat-card h-100 stat-' + color;
+                    cardEl.querySelector('.avatar-title').className = 'avatar-title rounded-xl icon-44 bg-solid-' + color;
+                    cardEl.querySelector('.avatar-title i').className = c.icon + ' text-white';
+                    cardEl.querySelector('.stat-label').textContent = c.label;
+                    cardEl.querySelector('.stat-label').title = 'Column: ' + c.col + ' | Calculation: ' + c.calc;
+                    var valueEl = cardEl.querySelector('.stat-value');
+                    valueEl.textContent = nfmt(c.value);
+                    valueEl.title = 'Column: ' + c.col + ' | Calculation: ' + c.calc;
+                    cardEl.querySelector('.chart-mini').innerHTML = chartSvg(color);
+                }
+            }
+
+            // ============ Dynamic Filters ============
+            function parseDate(v) {
+                if (!v || v === '') return null;
+                var d = new Date(v);
+                return isNaN(d.getTime()) ? null : d;
+            }
+
+            function getColumnEntries(name) {
+                var out = [];
+                if (!allColumns || !allColumns.length) return out;
+                var lower = name.toLowerCase();
+                allColumns.forEach(function (c) {
+                    if (c.toLowerCase() === lower) out.push(c);
+                });
+                allColumns.forEach(function (c) {
+                    if (c.toLowerCase() !== lower && c.toLowerCase().indexOf(lower) >= 0) out.push(c);
+                });
+                return out;
+            }
+
+            function isDateColCandidate(col) {
+                var vals = 0, parseable = 0;
+                for (var i = 0; i < allRows.length; i++) {
+                    var v = allRows[i][col];
+                    if (v === null || v === undefined) continue;
+                    vals++;
+                    if (parseDate(v)) parseable++;
+                }
+                return vals > 0 && (parseable / vals) >= 0.6;
+            }
+
+            function detectDateCol() {
+                var prio = ['docdate', 'edate', 'createdate', 'create_date', 'modifieddate', 'modifydate', 'date'];
+                for (var i = 0; i < prio.length; i++) {
+                    var found = getColumnEntries(prio[i]);
+                    for (var j = 0; j < found.length; j++) {
+                        if (!isBlankCol(found[j], allRows) && isDateColCandidate(found[j])) return found[j];
+                    }
+                }
+                if (allColumns) {
+                    for (var k = 0; k < allColumns.length; k++) {
+                        var c = allColumns[k].toLowerCase();
+                        if (c.indexOf('date') >= 0 && !isBlankCol(allColumns[k], allRows) && isDateColCandidate(allColumns[k])) return allColumns[k];
+                    }
+                }
+                return null;
+            }
+
+            function buildFilterOptions(col) {
+                var seen = {};
+                var vals = [];
+                for (var i = 0; i < allRows.length; i++) {
+                    var v = allRows[i][col];
+                    if (v === null || v === undefined) continue;
+                    var s = String(v).trim();
+                    if (!s || seen[s]) continue;
+                    seen[s] = 1;
+                    vals.push(s);
+                }
+                vals.sort(function (a, b) { return a.localeCompare(b); });
+                return vals;
+            }
+
+function detectFilterCols() {
+                var out = [];
+                if (!allColumns || !allColumns.length) return out;
+                var prio = ['status', 'category1', 'cat1', 'category2', 'cat2', 'category3', 'client', 'clientname', 'fabricator', 'salesman', 'unit', 'type', 'color'];
+                var usedCols = {};
+                if (dateCol) usedCols[dateCol.toLowerCase()] = 1;
+                for (var i = 0; i < prio.length && out.length < 4; i++) {
+                    var found = getColumnEntries(prio[i]);
+                    for (var j = 0; j < found.length; j++) {
+                        var col = found[j];
+                        if (usedCols[col.toLowerCase()]) continue;
+                        if (isBlankCol(col, allRows)) continue;
+                        var opts = buildFilterOptions(col);
+                        if (opts.length < 2 || opts.length > 300) continue;
+                        out.push({ col: col, options: opts });
+                        usedCols[col.toLowerCase()] = 1;
+                    }
+                }
+                return out;
+            }
+
+            function humanLabel(col) {
+                var s = col.split(/[^A-Za-z0-9]+/).join(' ');
+                return s.charAt(0).toUpperCase() + s.slice(1);
+            }
+
+            function initFilters() {
+                dateCol = detectDateCol();
+                var fromWrap = document.getElementById('drcFromWrap');
+                var toWrap = document.getElementById('drcToWrap');
+                if (dateCol) {
+                    fromWrap.style.display = '';
+                    toWrap.style.display = '';
+                    document.getElementById('drcFromDate').value = '';
+                    document.getElementById('drcToDate').value = '';
+                } else {
+                    fromWrap.style.display = 'none';
+                    toWrap.style.display = 'none';
+                }
+
+                filterCols = [];
+                choicesInstances = {};
+                var mounts = document.getElementById('drcFilterMounts');
+                var row = document.getElementById('drcFilterRow');
+                row.innerHTML = '';
+                if (allColumns && allColumns.length) {
+                    var cols = detectFilterCols();
+                    cols.forEach(function (res) {
+                        var div = document.createElement('div');
+                        div.className = 'col-6 col-lg-3';
+                        var lbl = document.createElement('label');
+                        lbl.className = 'form-label fs-label-sm';
+                        lbl.textContent = humanLabel(res.col);
+                        var sel = document.createElement('select');
+                        sel.className = 'form-select drc-filter-select';
+                        sel.dataset.col = res.col;
+                        var allOpt = document.createElement('option');
+                        allOpt.value = '__ALL__';
+                        allOpt.textContent = 'All ' + humanLabel(res.col);
+                        sel.appendChild(allOpt);
+                        res.options.forEach(function (o) {
+                            var opt = document.createElement('option');
+                            opt.value = o;
+                            opt.textContent = o;
+                            sel.appendChild(opt);
+                        });
+                        sel.selectedIndex = 0;
+                        div.appendChild(lbl);
+                        div.appendChild(sel);
+                        row.appendChild(div);
+                        filterCols.push({ col: res.col, select: sel });
+                        sel.addEventListener('change', applyFilters);
+                        try {
+                            choicesInstances[res.col] = new Choices(sel, {
+                                searchEnabled: true,
+                                searchFloor: 1,
+                                shouldSort: false,
+                                position: 'bottom',
+                                itemSelectText: '',
+                                placeholder: false
+                            });
+                        } catch (e) { }
+                    });
+                    mounts.style.display = filterCols.length ? '' : 'none';
+                } else {
+                    mounts.style.display = 'none';
+                }
+            }
+
+            function applyFilters() {
+                if (!allColumns.length || !allRows.length) return;
+                var rows = allRows.slice();
+
+                var fromVal = document.getElementById('drcFromDate').value;
+                var toVal = document.getElementById('drcToDate').value;
+                var from = fromVal ? parseDate(fromVal + 'T00:00:00') : null;
+                var to = toVal ? parseDate(toVal + 'T23:59:59.999') : null;
+
+                if ((from || to) && dateCol) {
+                    rows = rows.filter(function (r) {
+                        var d = parseDate(r[dateCol]);
+                        if (!d) return false;
+                        if (from && d < from) return false;
+                        if (to && d > to) return false;
+                        return true;
+                    });
+}
+
+// dropdown filters (multi)
+                filterCols.forEach(function (f) {
+                    var fv;
+                    var ch = choicesInstances[f.col];
+                    if (ch && typeof ch.getValue === 'function') {
+                        var got = ch.getValue(true);
+                        fv = Array.isArray(got) ? (got.length ? String(got[0]) : '') : String(got || '');
+                    } else {
+                        fv = f.select.value;
+                    }
+                    if (!fv || fv === '__ALL__') return;
+                    rows = rows.filter(function (r) {
+                        var v = r[f.col];
+                        return String(v === null || v === undefined ? '' : v).trim() === fv;
+                    });
+                });
+
+currentRows = rows;
+                renderCards(allColumns, rows);
+                renderGrid(allColumns, rows);
+                updateRecordCount(rows);
+
+                var kw = document.getElementById('reportSearch').value;
+                if (kw) {
+                    grid.updateConfig({ search: { keyword: kw } }).forceRender();
+                }
+            }
+        });
+    </script>
+}
+

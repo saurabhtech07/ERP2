@@ -1,0 +1,554 @@
+/* ==========================================================================
+   BESTIT ENTERPRISE CRM - UNIFIED CONTINUOUS CANVAS ARCHITECTURE
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary-blue: #2563eb;
+    --primary-dark-blue: #1d4ed8;
+    --accent-cyan: #38bdf8;
+    --accent-purple: #8b5cf6;
+    --accent-emerald: #10b981;
+    --accent-orange: #ff6b00;
+    --text-dark: #0f172a;
+    --text-muted: #64748b;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+    background-color: #f3f6f9 !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ====================================================
+   1. UNIFIED SINGLE FULL-VIEWPORT CANVAS
+   ==================================================== */
+.auth-unified-layout {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    width: 100vw !important;
+    position: relative;
+    background: #060810;
+    overflow: hidden !important;
+    display: flex;
+    align-items: center;
+}
+
+/* Continuous Rich Cosmic Mesh (Spans whole screen) */
+.unified-mesh-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: 
+        radial-gradient(circle at 18% 25%, #311b92 0%, #1e1b4b 30%, transparent 65%),
+        radial-gradient(circle at 82% 75%, #1e3a8a 0%, #0f172a 35%, transparent 68%),
+        radial-gradient(circle at 50% 50%, #172554 0%, #090b14 60%, transparent 85%),
+        linear-gradient(135deg, #050711 0%, #0a0e24 25%, #10163a 50%, #151d4b 75%, #1b2661 100%);
+}
+
+/* Ambient Glowing Aurora Orbs across the canvas */
+.unified-aurora-glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(55px);
+    z-index: 0;
+}
+
+.glow-top-left {
+    top: -120px;
+    left: -100px;
+    width: 550px;
+    height: 550px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(99, 102, 241, 0.16) 45%, transparent 70%);
+}
+
+.glow-center {
+    top: 45%;
+    left: 48%;
+    width: 600px;
+    height: 600px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.26) 0%, rgba(56, 189, 248, 0.12) 45%, transparent 70%);
+}
+
+.glow-bottom-right {
+    bottom: -100px;
+    right: -80px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(147, 51, 234, 0.15) 45%, transparent 70%);
+}
+
+/* Continuous Subtle Tech Grid Overlay */
+.unified-grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
+    background-size: 26px 26px;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse at 50% 50%, black 50%, transparent 90%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 50%, transparent 90%);
+}
+
+/* Continuous Flowing Organic SVG Waves */
+.unified-wave-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.unified-wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+}
+
+.wave-bottom-1 { height: 46%; z-index: 1; opacity: 0.85; }
+.wave-bottom-2 { height: 52%; z-index: 2; opacity: 0.8; }
+.wave-bottom-3 { height: 32%; z-index: 3; opacity: 0.9; }
+
+/* ====================================================
+   2. LEFT SIDE SHOWCASE (BRAND, TAGLINE, 3D HERO)
+   ==================================================== */
+.brand-logo-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    border-radius: 10px;
+}
+
+.brand-logo-img {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+
+.brand-tm {
+    font-size: 11px;
+    vertical-align: top;
+    color: #93c5fd;
+    margin-left: 2px;
+}
+
+/* Enterprise CRM Status Pill */
+.pill-badge-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    letter-spacing: 0.3px;
+}
+
+.live-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #10b981;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: livePulse 2s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes livePulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Focused Tagline */
+.auth-left-showcase-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px 0;
+}
+
+.auth-hero-tagline-wrap {
+    max-width: 620px;
+    margin: 0 auto 12px auto;
+    padding: 0 10px;
+}
+
+.auth-hero-tagline {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.38;
+    letter-spacing: -0.2px;
+    color: #ffffff !important;
+    text-shadow: 
+        0 0 20px rgba(255, 255, 255, 0.45),
+        0 2px 8px rgba(0, 0, 0, 0.9),
+        0 8px 24px rgba(0, 0, 0, 0.7);
+    margin-bottom: 0;
+}
+
+.hero-tagline-highlight {
+    display: inline;
+    color: #38bdf8 !important;
+    -webkit-text-fill-color: #38bdf8 !important;
+    font-weight: 800;
+    text-shadow: 
+        0 0 18px rgba(56, 189, 248, 0.85),
+        0 2px 8px rgba(0, 0, 0, 0.95);
+}
+
+/* 3D CRM/ERP Hero Showcase Image */
+.auth-hero-showcase {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.hero-aura-pedestal {
+    position: absolute;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.45) 0%, rgba(56, 189, 248, 0.22) 45%, transparent 70%);
+    pointer-events: none;
+    filter: blur(45px);
+    z-index: 0;
+}
+
+.auth-hero-showcase-img {
+    position: relative;
+    z-index: 2;
+    max-height: 390px;
+    width: 100%;
+    max-width: 620px;
+    object-fit: contain;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    filter: drop-shadow(0 25px 45px rgba(0, 0, 0, 0.65));
+    animation: smoothHeroFloat 4.8s ease-in-out infinite alternate;
+}
+
+@keyframes smoothHeroFloat {
+    0% { transform: translateY(0px) scale(1); }
+    100% { transform: translateY(-8px) scale(1.02); }
+}
+
+/* Bottom Glass Security Box */
+.glass-security-box {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    width: auto;
+    max-width: fit-content;
+    white-space: nowrap;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.shield-icon-badge {
+    font-size: 20px;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+}
+
+.text-white-75 {
+    color: rgba(255, 255, 255, 0.82) !important;
+}
+
+/* ====================================================
+   3. RIGHT SIDE FLOATING LUXURY LOGIN CARD
+   ==================================================== */
+.auth-login-card {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 30px 75px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    width: 100%;
+    max-width: 415px;
+    padding: 28px 32px 22px 32px;
+    z-index: 5;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-top-logo {
+    height: 46px;
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.25s ease;
+}
+
+.card-top-logo:hover {
+    transform: scale(1.04);
+}
+
+.auth-brand-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    color: #1d4ed8;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    background: rgba(37, 99, 235, 0.08);
+    padding: 3px 12px;
+    border-radius: 50px;
+}
+
+.auth-card-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #000000 !important;
+    letter-spacing: -0.4px;
+}
+
+.auth-card-subtitle {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #475569 !important;
+    line-height: 1.45;
+}
+
+/* ====================================================
+   4. FORM CONTROLS & BUTTONS
+   ==================================================== */
+.auth-label {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    letter-spacing: 0.1px;
+}
+
+.custom-input-box {
+    position: relative;
+}
+
+.custom-input-box .input-icon-start {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #2563eb !important;
+    font-size: 18px;
+    z-index: 3;
+    transition: all 0.2s ease;
+}
+
+.custom-input-box .form-control,
+.custom-input-box .auth-input-control {
+    padding-left: 44px;
+    padding-right: 42px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1.8px solid #cbd5e1 !important;
+    font-size: 14px !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+    background-color: #ffffff;
+    transition: all 0.22s ease;
+}
+
+.custom-input-box .form-control:focus,
+.custom-input-box .auth-input-control:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.16) !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.custom-input-box .auth-input-control::placeholder {
+    color: #94a3b8 !important;
+    font-weight: 400 !important;
+    font-size: 13.5px !important;
+}
+
+.custom-input-box .password-eye-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #2563eb !important;
+    cursor: pointer;
+    font-size: 18px;
+    z-index: 3;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.custom-input-box .password-eye-btn:hover {
+    color: #1d4ed8 !important;
+}
+
+/* Custom Checkbox */
+.auth-checkbox {
+    border: 1.8px solid #2563eb !important;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.auth-checkbox:checked {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+.auth-remember-label {
+    font-size: 13px !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+    margin-left: 6px;
+}
+
+/* Bright High-Contrast Orange Forgot Link */
+.auth-forgot-link {
+    font-size: 13px !important;
+    color: #ff6b00 !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    letter-spacing: 0.1px;
+}
+
+.auth-forgot-link:hover {
+    color: #d95800 !important;
+    text-decoration: underline !important;
+}
+
+/* Primary CTA Button */
+.btn-signin-custom {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%) !important;
+    border: none !important;
+    height: 45px !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 14.5px !important;
+    box-shadow: 0 8px 22px -3px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    transition: all 0.25s ease !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-signin-custom:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+    transform: translateY(-1.5px);
+    box-shadow: 0 12px 28px -3px rgba(37, 99, 235, 0.58) !important;
+    color: #ffffff !important;
+}
+
+.btn-signin-custom:active {
+    transform: translateY(0);
+}
+
+.btn-arrow-icon {
+    transition: transform 0.2s ease;
+}
+
+.btn-signin-custom:hover .btn-arrow-icon {
+    transform: translateX(4px);
+}
+
+/* SSO Social Buttons */
+.btn-sso-custom {
+    height: 40px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.22s ease;
+}
+
+.btn-sso-custom:hover {
+    background: #f8fafc !important;
+    border-color: #2563eb !important;
+    color: #2563eb !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.sso-divider-text {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 14px 0;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    font-size: 12px;
+}
+
+.sso-divider-text::before, .sso-divider-text::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1.5px solid #e2e8f0;
+}
+
+.sso-divider-text span {
+    padding: 0 10px;
+}
+
+/* ====================================================
+   5. RESPONSIVE DESIGN (TABLETS & MOBILE)
+   ==================================================== */
+@media (max-width: 991.98px) {
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+    }
+    .auth-unified-layout {
+        height: auto !important;
+        min-height: 100vh !important;
+        overflow: auto !important;
+        padding: 30px 10px;
+    }
+    .auth-hero-showcase-img {
+        max-height: 260px;
+    }
+}

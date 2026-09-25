@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Item Master";
+    var columnsJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ColumnNames ?? new List<string>());
+    var itemsJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ItemsData ?? new List<object>());
+    var errorJson = System.Text.Json.JsonSerializer.Serialize((string)(ViewBag.ErrorMessage ?? ""));
+}
+
+@section styles {
+    <link href="~/assets/libs/gridjs/theme/mermaid.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" type="text/css" />
+    <link href="~/css/item-master.css" rel="stylesheet" type="text/css" />
+}
+
+<div class="row mb-3">
+    <partial name="Partials/_StatCards" />
+</div>
+
+<div class="row">
+    <partial name="Partials/_FilterPanel" />
+</div>
+
+<div class="row table-section">
+    <partial name="Partials/_TablePanel" />
+</div>
+
+<partial name="Partials/_ItemModal" />
+<partial name="Partials/_ViewModal" />
+
+@section scripts {
+    <script src="~/assets/libs/gridjs/dist/gridjs.production.min.js"></script>
+    <script src="~/assets/libs/apexcharts/apexcharts.min.js"></script>
+    <script src="~/assets/libs/toastify-js/src/toastify.js"></script>
+    <script>
+        window.__ITEM_COLUMNS__ = @Html.Raw(columnsJson);
+        window.__ITEM_DATA__ = @Html.Raw(itemsJson);
+        window.__ITEM_ERROR__ = @Html.Raw(errorJson);
+    </script>
+    <script src="~/js/item-master.js?v=@DateTime.UtcNow.Ticks"></script>
+}

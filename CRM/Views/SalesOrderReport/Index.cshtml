@@ -1,0 +1,1130 @@
+@model CRM.Models.MasterDataPageResult
+@{
+    ViewBag.Title = "Sales Order Report";
+    ViewBag.pagetitle = "Reports";
+    ViewBag.ptitle = "Sales Order Report";
+}
+
+@section styles {
+    <link rel="stylesheet" href="~/assets/css/client-master.css?v=8" />
+}
+
+<div class="alert alert-danger alert-dismissible fade show d-none" role="alert" id="gridErrorAlert">
+    <i class="ri-error-warning-line me-2 align-middle fs-16"></i>
+    <strong>Database Notice:</strong> <span id="gridErrorMsg"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<!-- Summary stat cards -->
+<div class="row g-3 mb-3">
+    <div class="col-6 col-xl-3">
+        <div class="cm-stat-card">
+            <div class="cm-stat-icon cm-stat-total"><i class="ri-shopping-cart-2-line"></i></div>
+            <div class="cm-stat-body">
+                <span class="cm-stat-label">Total Orders</span>
+                <h4 class="cm-stat-value"><span id="statTotalOrders">0</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="cm-stat-card">
+            <div class="cm-stat-icon cm-stat-active"><i class="ri-time-line"></i></div>
+            <div class="cm-stat-body">
+                <span class="cm-stat-label">Open Orders</span>
+                <h4 class="cm-stat-value"><span id="statOpenOrders">0</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="cm-stat-card">
+            <div class="cm-stat-icon cm-stat-inactive"><i class="ri-box-3-line"></i></div>
+            <div class="cm-stat-body">
+                <span class="cm-stat-label">Pending Qty</span>
+                <h4 class="cm-stat-value"><span id="statPendingQty">0</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="cm-stat-card">
+            <div class="cm-stat-icon cm-stat-gst"><i class="ri-file-invoice-line"></i></div>
+            <div class="cm-stat-body">
+                <span class="cm-stat-label">Invoiced Qty</span>
+                <h4 class="cm-stat-value"><span id="statInvoicedQty">0</span></h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="cm-filter-bar" id="salesFilterBar">
+    <div class="cm-filter-top">
+        <div class="cm-filter-head">
+            <div class="cm-filter-chip"><i class="ri-filter-3-line"></i></div>
+            <div class="cm-filter-heading">
+                <span class="cm-filter-title">Filters</span>
+                <span class="cm-filter-sub">Narrow down orders by date, client &amp; salesman</span>
+            </div>
+        </div>
+        <div class="cm-filter-actions">
+            <button type="button" class="cm-filter-btn cm-filter-reset" onclick="resetFilters()"><i class="ri-refresh-line"></i> Reset</button>
+            <button type="button" class="cm-filter-btn cm-filter-apply" onclick="applyFilters()"><i class="ri-check-line"></i> Apply</button>
+        </div>
+    </div>
+
+    <div class="cm-range-row">
+        <span class="cm-range-label"><i class="ri-time-line"></i> Quick</span>
+        <div class="cm-range-presets" id="cmRangePresets">
+            <button type="button" class="cm-range-preset" data-range="today" onclick="setDateRange('today')">Today</button>
+            <button type="button" class="cm-range-preset" data-range="last7" onclick="setDateRange('last7')">Last 7 Days</button>
+            <button type="button" class="cm-range-preset" data-range="month" onclick="setDateRange('month')">This Month</button>
+            <button type="button" class="cm-range-preset" data-range="lastmonth" onclick="setDateRange('lastmonth')">Last Month</button>
+            <button type="button" class="cm-range-preset" data-range="year" onclick="setDateRange('year')">This Year</button>
+            <button type="button" class="cm-range-preset" data-range="all" onclick="setDateRange('all')">All</button>
+        </div>
+    </div>
+
+    <div class="cm-filter-row">
+        <div class="cm-filter-group cm-filter-date-group">
+            <div class="cm-filter-field cm-filter-date">
+                <label class="cm-filter-label" for="filterFromDate">From Date</label>
+                <div class="cm-input-wrap">
+                    <i class="ri-calendar-line cm-input-ico"></i>
+                    <input type="date" id="filterFromDate" class="cm-filter-input cm-input-padded">
+                </div>
+            </div>
+            <span class="cm-range-sep"><i class="ri-arrow-right-line"></i></span>
+            <div class="cm-filter-field cm-filter-date">
+                <label class="cm-filter-label" for="filterToDate">To Date</label>
+                <div class="cm-input-wrap">
+                    <i class="ri-calendar-line cm-input-ico"></i>
+                    <input type="date" id="filterToDate" class="cm-filter-input cm-input-padded">
+                </div>
+            </div>
+            <div class="cm-filter-error d-none" id="filterDateError"><i class="ri-error-warning-line"></i> From date must be before To date</div>
+        </div>
+
+        <div class="cm-filter-field cm-filter-field-wide">
+            <label class="cm-filter-label" for="clientComboInput">Client</label>
+            <div class="cm-combo" id="clientCombo">
+                <div class="cm-input-wrap">
+                    <i class="ri-user-3-line cm-input-ico"></i>
+                    <input type="text" id="clientComboInput" class="cm-combo-input cm-input-padded" placeholder="All Clients" autocomplete="off">
+                    <button type="button" class="cm-combo-clear" title="Clear"><i class="ri-close-line"></i></button>
+                    <i class="ri-arrow-down-s-line cm-select-caret"></i>
+                </div>
+                <ul class="cm-combo-list" id="clientComboList"></ul>
+            </div>
+        </div>
+
+        <div class="cm-filter-field cm-filter-field-wide">
+            <label class="cm-filter-label" for="salesmanComboInput">Salesman</label>
+            <div class="cm-combo" id="salesmanCombo">
+                <div class="cm-input-wrap">
+                    <i class="ri-user-star-line cm-input-ico"></i>
+                    <input type="text" id="salesmanComboInput" class="cm-combo-input cm-input-padded" placeholder="All Salesmen" autocomplete="off">
+                    <button type="button" class="cm-combo-clear" title="Clear"><i class="ri-close-line"></i></button>
+                    <i class="ri-arrow-down-s-line cm-select-caret"></i>
+                </div>
+                <ul class="cm-combo-list" id="salesmanComboList"></ul>
+            </div>
+        </div>
+
+        <div class="cm-filter-field cm-filter-status">
+            <label class="cm-filter-label" for="filterStatus">Status</label>
+            <div class="cm-input-wrap">
+                <i class="ri-list-check-3 cm-input-ico"></i>
+                <select id="filterStatus" class="cm-filter-select cm-input-padded">
+                    <option value="all">All</option>
+                    <option value="open">Open</option>
+                    <option value="closed">Closed</option>
+                </select>
+                <i class="ri-arrow-down-s-line cm-select-caret"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card cm-card">
+
+            <div class="card-body">
+
+                <!-- Toolbar -->
+                <div class="cm-toolbar">
+                    <div class="cm-pg-control">
+                        <span class="cm-pg-label">Show</span>
+                        <div class="cm-select-wrap">
+                            <select id="pageSizeSelect" class="cm-size-select">
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <i class="ri-arrow-down-s-line cm-select-caret"></i>
+                        </div>
+                        <span class="cm-pg-label">entries</span>
+                    </div>
+
+                    <div class="cm-export">
+                        <button type="button" class="cm-export-btn cm-export-excel" onclick="exportToExcel()" title="Download as Excel (.xls)">
+                            <span class="cm-export-ico"><i class="ri-file-excel-2-line"></i></span> Excel
+                        </button>
+                        <button type="button" class="cm-export-btn cm-export-csv" onclick="exportToCSV()" title="Download as CSV">
+                            <span class="cm-export-ico"><i class="ri-file-text-line"></i></span> CSV
+                        </button>
+                        <button type="button" class="cm-export-btn cm-export-print" onclick="printTable()" title="Print records">
+                            <span class="cm-export-ico"><i class="ri-printer-line"></i></span> Print
+                        </button>
+                    </div>
+
+                    <div class="cm-search-wrap" id="cmSearchWrap">
+                        <div class="cm-search-chip"><i class="ri-search-line cm-search-icon"></i></div>
+                        <input type="text" id="searchInput" class="cm-search-input" placeholder="Search records..." autocomplete="off">
+                        <span class="cm-search-count" id="searchCount"></span>
+                        <button type="button" class="cm-search-clear" id="searchClearBtn" onclick="clearSearch()" title="Clear search (Esc)">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="cm-scroll-wrapper" id="cmScrollWrapper">
+                    <div class="cm-loader-overlay" id="gridLoader">
+                        <div class="cm-loader">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <span>Loading data...</span>
+                        </div>
+                    </div>
+                    <table class="cm-table table table-hover align-middle mb-0" id="gridTable">
+                        <thead id="gridTableHead">
+                        </thead>
+                        <tbody id="gridBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-3 pt-2 border-top">
+                    <div class="cm-footer-info">
+                        Showing <span class="fw-semibold" id="showingStart">0</span>
+                        to <span class="fw-semibold" id="showingEnd">0</span>
+                        of <span class="fw-semibold" id="totalEntries">0</span> entries
+                    </div>
+                    <ul class="pagination pagination-separated pagination-sm cm-pagination mb-0" id="paginationContainer"></ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View details modal -->
+<div class="modal fade" id="cmViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header cm-view-modal-header">
+                <div>
+                    <h5 class="modal-title" id="cmViewTitle">Record Details</h5>
+                    <small class="cm-view-subtitle" id="cmViewSubtitle"></small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="cm-view-grid" id="cmViewBody"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    const API_URL = '@Url.Action("GetData", "SalesOrderReport")';
+    const FILTER_OPTIONS_URL = '@Url.Action("GetFilterOptions", "SalesOrderReport")';
+    const MODULE_TITLE = 'Sales Order Report';
+
+    let columns = [];
+    let currentRows = [];
+    let currentPage = 1;
+    let pageSize = 10;
+    let currentQuery = '';
+    let sortColumn = '';
+    let sortDir = 'asc';
+    let searchTimer = null;
+
+    let filters = { fromDate: '', toDate: '', client: '', salesman: '', salesStatus: 'all' };
+    let clientOptions = [];
+    let salesmanOptions = [];
+    let statusOptions = [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        bindEvents();
+        setUpCombos();
+        loadPage();
+        window.addEventListener('resize', adjustScrollWrapper);
+    });
+
+    function setUpCombos() {
+        setUpCombo('clientCombo', 'clientComboInput', 'clientComboList', clientOptions, 'client', 'All Clients');
+        setUpCombo('salesmanCombo', 'salesmanComboInput', 'salesmanComboList', salesmanOptions, 'salesman', 'All Salesmen');
+        loadFilterOptions();
+
+        document.getElementById('filterFromDate').addEventListener('change', validateDateRange);
+        document.getElementById('filterToDate').addEventListener('change', validateDateRange);
+        document.getElementById('filterStatus').addEventListener('change', function () {
+            filters.salesStatus = this.value;
+            loadFilterOptions();
+        });
+    }
+
+    function loadFilterOptions() {
+        const params = new URLSearchParams();
+        if (filters.client) params.set('client', filters.client);
+        if (filters.salesman) params.set('salesman', filters.salesman);
+        if (filters.salesStatus && filters.salesStatus !== 'all') params.set('status', filters.salesStatus);
+        return fetch(FILTER_OPTIONS_URL + '?' + params.toString()).then(function (res) {
+            return res.json();
+        }).then(function (json) {
+            clientOptions = json.clients || [];
+            salesmanOptions = json.salesmen || [];
+            statusOptions = json.statuses || [];
+            return reconcileOptions();
+        }).then(function (again) {
+            if (again) return loadFilterOptions();
+        }).catch(function () {
+        });
+    }
+
+    function reconcileOptions() {
+        let again = false;
+
+        if (filters.client && clientOptions.indexOf(filters.client) === -1) {
+            filters.client = '';
+            again = true;
+        }
+        if (filters.salesman && salesmanOptions.indexOf(filters.salesman) === -1) {
+            filters.salesman = '';
+            again = true;
+        }
+        const availStatuses = statusOptions.map(function (s) { return s.toLowerCase(); });
+        if (filters.salesStatus !== 'all' && availStatuses.indexOf(filters.salesStatus) === -1) {
+            filters.salesStatus = 'all';
+            again = true;
+        }
+
+        refreshComboInput('client');
+        refreshComboInput('salesman');
+        refreshComboList('clientComboList', clientOptions, filters.client, 'All Clients');
+        refreshComboList('salesmanComboList', salesmanOptions, filters.salesman, 'All Salesmen');
+        refreshStatusSelect();
+        return again;
+    }
+
+    function refreshComboInput(key) {
+        const input = document.getElementById(key + 'ComboInput');
+        if (!input) return;
+        input.value = filters[key] || '';
+        const wrap = document.getElementById(key + 'Combo');
+        if (wrap) wrap.classList.toggle('has-value', !!filters[key]);
+    }
+
+    function refreshStatusSelect() {
+        const sel = document.getElementById('filterStatus');
+        if (!sel) return;
+        sel.innerHTML = '';
+
+        const option = document.createElement('option');
+        option.value = 'all';
+        option.textContent = 'All';
+        sel.appendChild(option);
+
+        statusOptions.forEach(function (s) {
+            const o = document.createElement('option');
+            o.value = s.toLowerCase();
+            o.textContent = s;
+            sel.appendChild(o);
+        });
+
+        const available = statusOptions.map(function (s) { return s.toLowerCase(); });
+        if (available.indexOf(filters.salesStatus) === -1) filters.salesStatus = 'all';
+        sel.value = filters.salesStatus;
+    }
+
+    function setUpCombo(wrapId, inputId, listId, optsRef, filterKey, allLabel) {
+        (function () {
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            const wrap = document.getElementById(wrapId);
+            const clearBtn = wrap.querySelector('.cm-combo-clear');
+
+            function currentOptions() {
+                return filterKey === 'client' ? clientOptions : salesmanOptions;
+            }
+
+            function updateHasValue() {
+                wrap.classList.toggle('has-value', (input.value || '').trim().length > 0);
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    setComboValue(filterKey, '');
+                    input.focus();
+                    updateHasValue();
+                });
+            }
+
+            input.addEventListener('click', function () {
+                refreshComboList(listId, currentOptions(), filters[filterKey], allLabel);
+                list.classList.add('open');
+            });
+            input.addEventListener('input', function () {
+                refreshComboList(listId, currentOptions(), filters[filterKey], allLabel);
+                list.classList.add('open');
+                updateHasValue();
+            });
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    list.classList.remove('open');
+                    input.value = filters[filterKey] || '';
+                    input.blur();
+                    updateHasValue();
+                } else if (e.key === 'Enter') {
+                    const li = list.querySelector('li:not(.cm-combo-selected)');
+                    if (li && li.hasAttribute('data-value')) {
+                        setComboValue(filterKey, li.getAttribute('data-value'), input, allLabel);
+                    } else if (filters[filterKey]) {
+                        list.classList.remove('open');
+                    }
+                    e.preventDefault();
+                }
+            });
+            input.addEventListener('blur', function () {
+                if (list.classList.contains('open')) return;
+                input.value = filters[filterKey] || '';
+                updateHasValue();
+            });
+            document.addEventListener('click', function (e) {
+                if (!wrap.contains(e.target)) list.classList.remove('open');
+            });
+
+            input.value = filters[filterKey] || '';
+            updateHasValue();
+        })();
+    }
+
+    function refreshComboList(listId, options, current, allLabel) {
+        const list = document.getElementById(listId);
+        const input = list.parentElement.querySelector('.cm-combo-input');
+        const q = input.value.trim().toLowerCase();
+        list.innerHTML = '';
+
+        addComboItem(list, allLabel, '', current === '', function () {
+            setComboValueFromLi('', input);
+            list.classList.remove('open');
+        });
+
+        options.forEach(function (v) {
+            if (q && v.toLowerCase().indexOf(q) === -1) return;
+            addComboItem(list, v, v, current && v.toLowerCase() === current.toLowerCase(), function () {
+                setComboValueFromLi(v, input);
+                list.classList.remove('open');
+            });
+        });
+    }
+
+    function addComboItem(list, label, value, selected, onClick) {
+        const li = document.createElement('li');
+        li.textContent = label;
+        li.setAttribute('data-value', value);
+        li.classList.toggle('cm-combo-selected', selected);
+        li.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+        });
+        li.addEventListener('click', onClick);
+        list.appendChild(li);
+    }
+
+    function setComboValueFromLi(value, input) {
+        const wrap = input.closest('.cm-combo');
+        const key = wrap && wrap.id.indexOf('client') === 0 ? 'client' : 'salesman';
+        setComboValue(key, value);
+    }
+
+    function setComboValue(key, value) {
+        filters[key] = value;
+        setComboValueInner(key, value);
+        loadFilterOptions();
+    }
+
+    function setComboValueInner(key, value) {
+        filters[key] = value;
+        document.getElementById(key + 'ComboInput').value = value;
+        const wrap = document.getElementById(key + 'Combo');
+        if (wrap) wrap.classList.toggle('has-value', !!value);
+        const openListId = key + 'ComboList';
+        const openList = document.getElementById(openListId);
+        const label = key === 'client' ? 'All Clients' : 'All Salesmen';
+        refreshComboList(openListId, key === 'client' ? clientOptions : salesmanOptions, value, label);
+        openList.classList.remove('open');
+    }
+
+    function applyFilters() {
+        syncComboFromInput('client');
+        syncComboFromInput('salesman');
+        const fromDate = document.getElementById('filterFromDate').value;
+        const toDate = document.getElementById('filterToDate').value;
+        if (fromDate && toDate && fromDate > toDate) {
+            showDateError();
+            return;
+        }
+        hideDateError();
+        filters.fromDate = fromDate;
+        filters.toDate = toDate;
+        filters.salesStatus = document.getElementById('filterStatus').value;
+        currentPage = 1;
+        loadPage();
+    }
+
+    function showDateError() {
+        document.getElementById('filterDateError').classList.remove('d-none');
+    }
+
+    function hideDateError() {
+        document.getElementById('filterDateError').classList.add('d-none');
+    }
+
+    function validateDateRange() {
+        const fromDate = document.getElementById('filterFromDate').value;
+        const toDate = document.getElementById('filterToDate').value;
+        document.querySelectorAll('#cmRangePresets .cm-range-preset').forEach(function (btn) {
+            btn.classList.remove('cm-range-preset-active');
+        });
+        if (fromDate && toDate && fromDate > toDate) {
+            showDateError();
+        } else {
+            hideDateError();
+        }
+    }
+
+    function formatDate(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+    }
+
+    function setDateRange(range) {
+        const fromEl = document.getElementById('filterFromDate');
+        const toEl = document.getElementById('filterToDate');
+        const today = new Date();
+        let from = new Date(today);
+        let to = new Date(today);
+
+        if (range === 'today') {
+            from.setDate(today.getDate());
+            to.setDate(today.getDate());
+        } else if (range === 'last7') {
+            from.setDate(today.getDate() - 6);
+        } else if (range === 'month') {
+            from.setDate(1);
+        } else if (range === 'lastmonth') {
+            from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            to = new Date(today.getFullYear(), today.getMonth(), 0);
+        } else if (range === 'year') {
+            from = new Date(today.getFullYear(), 0, 1);
+            to = new Date(today.getFullYear(), 11, 31);
+        } else { // 'all'
+            fromEl.value = '';
+            toEl.value = '';
+        }
+
+        if (range !== 'all') {
+            fromEl.value = formatDate(from);
+            toEl.value = formatDate(to);
+        }
+
+        document.querySelectorAll('#cmRangePresets .cm-range-preset').forEach(function (btn) {
+            btn.classList.toggle('cm-range-preset-active', btn.getAttribute('data-range') === range);
+        });
+
+        applyFilters();
+    }
+
+    function syncComboFromInput(key) {
+        const v = document.getElementById(key + 'ComboInput').value.trim();
+        const options = key === 'client' ? clientOptions : salesmanOptions;
+        if (!v) {
+            filters[key] = '';
+        } else {
+            const exact = options.find(function (o) { return o.toLowerCase() === v.toLowerCase(); });
+            filters[key] = exact ? exact : filters[key];
+        }
+    }
+
+    function resetFilters() {
+        filters = { fromDate: '', toDate: '', client: '', salesman: '', salesStatus: 'all' };
+        document.getElementById('filterFromDate').value = '';
+        document.getElementById('filterToDate').value = '';
+        document.getElementById('clientComboInput').value = '';
+        document.getElementById('salesmanComboInput').value = '';
+        document.getElementById('clientCombo').classList.remove('has-value');
+        document.getElementById('salesmanCombo').classList.remove('has-value');
+        document.getElementById('clientComboList').classList.remove('open');
+        document.getElementById('salesmanComboList').classList.remove('open');
+        document.querySelectorAll('#cmRangePresets .cm-range-preset').forEach(function (btn) {
+            btn.classList.remove('cm-range-preset-active');
+        });
+        hideDateError();
+        refreshStatusSelect();
+        loadFilterOptions();
+        currentPage = 1;
+        loadPage();
+    }
+
+    function bindEvents() {
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const q = this.value.trim();
+            this.classList.toggle('has-text', q.length > 0);
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                currentQuery = q;
+                currentPage = 1;
+                loadPage(false);
+            }, 300);
+        });
+
+        document.getElementById('pageSizeSelect').addEventListener('change', function () {
+            pageSize = parseInt(this.value, 10);
+            currentPage = 1;
+            loadPage();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            const si = document.getElementById('searchInput');
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey && document.activeElement &&
+                !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                si.focus();
+            } else if (e.key === 'Escape' && document.activeElement === si) {
+                clearSearch();
+                si.blur();
+            }
+        });
+    }
+
+    function clearSearch() {
+        const input = document.getElementById('searchInput');
+        input.value = '';
+        input.classList.remove('has-text');
+        currentQuery = '';
+        currentPage = 1;
+        loadPage(false);
+        input.focus();
+    }
+
+    function buildParams(allRows) {
+        const params = new URLSearchParams();
+        params.set('page', allRows ? 1 : currentPage);
+        params.set('pageSize', allRows ? 0 : pageSize);
+        params.set('search', currentQuery);
+        params.set('sortColumn', sortColumn);
+        params.set('sortDir', sortDir);
+        if (filters.fromDate) params.set('fromDate', filters.fromDate);
+        if (filters.toDate) params.set('toDate', filters.toDate);
+        if (filters.client) params.set('client', filters.client);
+        if (filters.salesman) params.set('salesman', filters.salesman);
+        if (filters.salesStatus && filters.salesStatus !== 'all') params.set('salesStatus', filters.salesStatus);
+        return params.toString();
+    }
+
+    function fetchGrid(allRows) {
+        return fetch(API_URL + '?' + buildParams(allRows)).then(function (res) {
+            return res.json();
+        });
+    }
+
+    function loadPage(showLoader, animateStats) {
+        if (showLoader === undefined) showLoader = true;
+        if (animateStats === undefined) animateStats = true;
+        if (showLoader) setLoading(true);
+        fetchGrid(false).then(function (json) {
+            if (showLoader) setLoading(false);
+            if (json && json.errorMessage) {
+                showError(json.errorMessage);
+                return;
+            }
+            hideError();
+            if (json.columnNames) {
+                columns = json.columnNames;
+                renderHeader();
+            }
+            currentRows = json.rows || [];
+            renderBody(currentRows);
+            if (animateStats) renderStats(json);
+            renderPagination(json.total, json.totalPages);
+            updateSearchCount(json.total);
+            updateInfo(json.total);
+            if (currentQuery) highlightMatches();
+            adjustScrollWrapper();
+        }).catch(function (err) {
+            setLoading(false);
+            showError(err.message || 'Request failed');
+        });
+    }
+
+    let loadStartedAt = 0;
+
+    function setLoading(show) {
+        const loader = document.getElementById('gridLoader');
+        if (!loader) return;
+        if (show) {
+            loadStartedAt = performance.now();
+            loader.classList.remove('d-none');
+        } else {
+            const elapsed = performance.now() - loadStartedAt;
+            const delay = Math.max(0, 400 - elapsed);
+            setTimeout(function () {
+                loader.classList.add('d-none');
+            }, delay);
+        }
+    }
+
+    function showError(msg) {
+        document.getElementById('gridErrorMsg').textContent = msg;
+        document.getElementById('gridErrorAlert').classList.remove('d-none');
+    }
+
+    function hideError() {
+        document.getElementById('gridErrorAlert').classList.add('d-none');
+    }
+
+    function renderHeader() {
+        const head = document.getElementById('gridTableHead');
+        const tr = document.createElement('tr');
+        tr.id = 'gridHeaderRow';
+        columns.forEach(function (col, i) {
+            const th = document.createElement('th');
+            th.scope = 'col';
+            th.setAttribute('onclick', 'sortTable(' + i + ')');
+            th.setAttribute('data-col-index', i);
+            th.setAttribute('title', 'Sort by ' + col);
+            th.innerHTML = escapeHtml(col) + ' <span class="cm-sort-icon"><i class="ri-arrow-up-down-line"></i></span>';
+            tr.appendChild(th);
+        });
+        const thActions = document.createElement('th');
+        thActions.scope = 'col';
+        thActions.className = 'text-center';
+        thActions.textContent = 'Actions';
+        tr.appendChild(thActions);
+        head.innerHTML = '';
+        head.appendChild(tr);
+    }
+
+    function renderBody(rows) {
+        const tbody = document.getElementById('gridBody');
+        tbody.innerHTML = '';
+
+        if (!rows || rows.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="' + (columns.length || 1) + 1 + '" class="text-center py-5 text-muted">' +
+                '<i class="ri-inbox-line fs-36 d-block mb-2 text-muted"></i>' +
+                '<span class="fs-14">No matching records found.</span></td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        rows.forEach(function (data) {
+            const tr = document.createElement('tr');
+            columns.forEach(function (col) {
+                const td = document.createElement('td');
+                td.innerHTML = formatCellHtml(data, col);
+                tr.appendChild(td);
+            });
+            const tdActions = document.createElement('td');
+            tdActions.className = 'cm-actions-td';
+            tdActions.innerHTML =
+                '<button type="button" class="cm-action-btn cm-view-btn" onclick="viewRow(' + rows.indexOf(data) + ')" title="View details"><i class="ri-eye-line"></i></button>' +
+                '<button type="button" class="cm-action-btn cm-edit-btn" onclick="editRow(' + rows.indexOf(data) + ')" title="Edit"><i class="ri-pencil-line"></i></button>' +
+                '<button type="button" class="cm-action-btn cm-delete-btn" onclick="deleteRow(' + rows.indexOf(data) + ')" title="Delete"><i class="ri-delete-bin-line"></i></button>';
+            tr.appendChild(tdActions);
+            tbody.appendChild(tr);
+        });
+    }
+
+    function cellValue(data, col) {
+        const v = data[col];
+        return v === undefined || v === null ? '' : String(v).trim();
+    }
+
+    function formatCellHtml(data, col) {
+        const val = cellValue(data, col);
+        const colLower = col.toLowerCase();
+        const valLower = val.toLowerCase();
+
+        const isStatus = /status|active|isactive/.test(colLower);
+        const isPriority = /priority/.test(colLower);
+
+        if (isStatus) {
+            if (valLower === '1' || valLower === 'true' || valLower.indexOf('active') >= 0) {
+                return '<span class="cm-badge badge bg-success-subtle text-success">' + (valLower === '1' || valLower === 'true' ? 'Active' : escapeHtml(val)) + '</span>';
+            }
+            if (valLower === '0' || valLower === 'false' || valLower.indexOf('inactive') >= 0) {
+                return '<span class="cm-badge badge bg-danger-subtle text-danger">' + (valLower === '0' || valLower === 'false' ? 'Inactive' : escapeHtml(val)) + '</span>';
+            }
+            if (valLower.indexOf('pending') >= 0 || valLower.indexOf('process') >= 0) {
+                return '<span class="cm-badge badge bg-warning-subtle text-warning">' + escapeHtml(val) + '</span>';
+            }
+            return '<span class="cm-badge badge bg-secondary-subtle text-secondary">' + escapeHtml(val) + '</span>';
+        }
+        if (isPriority) {
+            if (valLower.indexOf('urgent') >= 0 || valLower.indexOf('critical') >= 0) {
+                return '<span class="cm-badge badge bg-danger-subtle text-danger">' + escapeHtml(val) + '</span>';
+            }
+            if (valLower.indexOf('high') >= 0) {
+                return '<span class="cm-badge badge bg-warning-subtle text-warning">' + escapeHtml(val) + '</span>';
+            }
+            return '<span class="cm-badge badge bg-info-subtle text-info">' + escapeHtml(val) + '</span>';
+        }
+        return '<span>' + (val === '' ? '—' : escapeHtml(val)) + '</span>';
+    }
+
+    function formatPlain(data, col) {
+        let v = cellValue(data, col);
+        const colLower = col.toLowerCase();
+        const vLower = v.toLowerCase();
+        if (/status|active|isactive/.test(colLower)) {
+            if (vLower === '1' || vLower === 'true' || vLower.indexOf('active') >= 0) return 'Active';
+            if (vLower === '0' || vLower === 'false' || vLower.indexOf('inactive') >= 0) return 'Inactive';
+        }
+        return v === '' ? '—' : v;
+    }
+
+    function highlightMatches() {
+        const q = currentQuery;
+        if (!q) return;
+        const tbody = document.getElementById('gridBody');
+        if (!tbody) return;
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach(function (row) {
+            const tds = Array.prototype.slice.call(row.children);
+            for (let i = 0; i < tds.length - 1; i++) {
+                const td = tds[i];
+                const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT);
+                const textNodes = [];
+                while (walker.nextNode()) textNodes.push(walker.currentNode);
+                for (const node of textNodes) {
+                    const txt = node.nodeValue;
+                    if (!txt) continue;
+                    const lower = txt.toLowerCase();
+                    if (lower.indexOf(q) === -1) continue;
+                    const frag = document.createDocumentFragment();
+                    let last = 0, idx;
+                    while ((idx = lower.indexOf(q, last)) !== -1) {
+                        if (idx > last) frag.appendChild(document.createTextNode(txt.slice(last, idx)));
+                        const mark = document.createElement('mark');
+                        mark.className = 'cm-match';
+                        mark.textContent = txt.substr(idx, q.length);
+                        frag.appendChild(mark);
+                        last = idx + q.length;
+                    }
+                    if (last < txt.length) frag.appendChild(document.createTextNode(txt.slice(last)));
+                    node.parentNode.replaceChild(frag, node);
+                }
+            }
+        });
+    }
+
+    function viewRow(idx) {
+        const data = currentRows[idx];
+        if (!data) return;
+        const first = columns.find(function (c) {
+            const v = data[c];
+            return v !== null && v !== undefined && String(v).trim() !== '';
+        });
+        const titleEl = document.getElementById('cmViewTitle');
+        const subtitleEl = document.getElementById('cmViewSubtitle');
+        const bodyEl = document.getElementById('cmViewBody');
+        if (titleEl) titleEl.textContent = first ? (first + ': ' + data[first]) : 'Record Details';
+        if (subtitleEl) subtitleEl.textContent = columns.length + ' fields · ' + getRowStatus(data);
+
+        bodyEl.innerHTML = columns.map(function (c) {
+            let val = cellValue(data, c);
+            if (!val || val.toLowerCase() === 'null') val = '';
+            let content = val === '' ? '—' : escapeHtml(val);
+            if (/status|active|isactive/.test(c)) {
+                const v = val.toLowerCase();
+                if (v === '1' || v === 'true' || v.indexOf('active') >= 0) {
+                    content = '<span class="cm-badge badge bg-success-subtle text-success" style="font-size:12px;">Active</span>';
+                } else if (v === '0' || v === 'false' || v.indexOf('inactive') >= 0) {
+                    content = '<span class="cm-badge badge bg-danger-subtle text-danger" style="font-size:12px;">Inactive</span>';
+                } else {
+                    content = '<span class="cm-badge badge bg-secondary-subtle text-secondary" style="font-size:12px;">' + (val === '' ? '—' : escapeHtml(val)) + '</span>';
+                }
+            }
+            return '<div class="cm-view-item"><span class="cm-view-label">' + escapeHtml(c) + '</span><span class="cm-view-value">' + content + '</span></div>';
+        }).join('');
+
+        const modalEl = document.getElementById('cmViewModal');
+        if (window.bootstrap && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        } else {
+            modalEl.style.display = 'block';
+            modalEl.classList.add('show');
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function getRowStatus(data) {
+        const idx = columns.findIndex(function (c) { return /status|active|isactive/.test(c); });
+        if (idx < 0) return '';
+        const v = cellValue(data, columns[idx]).toLowerCase();
+        if (v === '1' || v === 'true' || v.indexOf('active') >= 0) return 'Active';
+        if (v === '0' || v === 'false' || v.indexOf('inactive') >= 0) return 'Inactive';
+        return v ? v : '';
+    }
+
+    function editRow(idx) {
+    }
+
+    function deleteRow(idx) {
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (m) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+        });
+    }
+
+    function formatIn(value, fractionDigits) {
+        return Number(value || 0).toLocaleString('en-IN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: fractionDigits === undefined ? 0 : fractionDigits
+        });
+    }
+
+    function renderStats(json) {
+        countUp('statTotalOrders', json.totalOrders || 0, function (v) { return formatIn(v, 0); });
+        countUp('statOpenOrders', json.openOrders || 0, function (v) { return formatIn(v, 0); });
+        countUp('statPendingQty', json.pendingQty || 0, function (v) { return formatIn(v, 0); });
+        countUp('statInvoicedQty', json.invoicedQty || 0, function (v) { return formatIn(v, 0); });
+    }
+
+    function countUp(id, target, formatter) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        formatter = formatter || function (v) { return Math.round(v); };
+        const duration = 500;
+        const start = performance.now();
+        function step(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const current = target * (1 - Math.pow(1 - progress, 3));
+            el.textContent = formatter(current);
+            if (progress < 1) requestAnimationFrame(step);
+            else el.textContent = formatter(target);
+        }
+        requestAnimationFrame(step);
+    }
+
+    function updateInfo(total) {
+        const totalPages = pageSize > 0 ? Math.max(Math.ceil(total / pageSize), 1) : 1;
+        const startRow = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+        const endRow = Math.min(currentPage * pageSize, total);
+        document.getElementById('showingStart').innerText = total === 0 ? 0 : startRow;
+        document.getElementById('showingEnd').innerText = endRow;
+        document.getElementById('totalEntries').innerText = total;
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+            return true;
+        }
+        return false;
+    }
+
+    function renderPagination(total, totalPages) {
+        if (totalPages < 1) totalPages = 1;
+        const container = document.getElementById('paginationContainer');
+        container.innerHTML = '';
+
+        const prevLi = document.createElement('li');
+        prevLi.className = 'page-item ' + (currentPage === 1 ? 'disabled' : '');
+        prevLi.innerHTML = '<a class="page-link" href="javascript:void(0);" onclick="goToPage(' + (currentPage - 1) + ')"><i class="ri-arrow-left-s-line"></i></a>';
+        container.appendChild(prevLi);
+
+        for (let p = 1; p <= totalPages; p++) {
+            if (totalPages > 7 && (p < currentPage - 2 || p > currentPage + 2) && p !== 1 && p !== totalPages) {
+                if (p === currentPage - 3 || p === currentPage + 3) {
+                    const dotsLi = document.createElement('li');
+                    dotsLi.className = 'page-item disabled';
+                    dotsLi.innerHTML = '<a class="page-link" href="javascript:void(0);">…</a>';
+                    container.appendChild(dotsLi);
+                }
+                continue;
+            }
+            const li = document.createElement('li');
+            li.className = 'page-item ' + (p === currentPage ? 'active' : '');
+            li.innerHTML = '<a class="page-link" href="javascript:void(0);" onclick="goToPage(' + p + ')">' + p + '</a>';
+            container.appendChild(li);
+        }
+
+        const nextLi = document.createElement('li');
+        nextLi.className = 'page-item ' + (currentPage === totalPages || total === 0 ? 'disabled' : '');
+        nextLi.innerHTML = '<a class="page-link" href="javascript:void(0);" onclick="goToPage(' + (currentPage + 1) + ')"><i class="ri-arrow-right-s-line"></i></a>';
+        container.appendChild(nextLi);
+
+        adjustScrollWrapper();
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        loadPage();
+    }
+
+    function sortTable(colIndex) {
+        const col = columns[colIndex];
+        if (!col) return;
+        if (sortColumn === col) {
+            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = col;
+            sortDir = 'asc';
+        }
+        document.querySelectorAll('#gridHeaderRow th').forEach(function (th, idx) {
+            th.classList.remove('cm-sorted');
+            const icon = th.querySelector('.cm-sort-icon');
+            if (icon) icon.innerHTML = '<i class="ri-arrow-up-down-line"></i>';
+        });
+        const activeTh = document.querySelector('#gridHeaderRow th[data-col-index="' + colIndex + '"]');
+        if (activeTh) {
+            activeTh.classList.add('cm-sorted');
+            const icon = activeTh.querySelector('.cm-sort-icon');
+            if (icon) icon.innerHTML = sortDir === 'asc' ? '<i class="ri-arrow-up-line"></i>' : '<i class="ri-arrow-down-line"></i>';
+        }
+        currentPage = 1;
+        loadPage(false, false);
+    }
+
+    function updateSearchCount(total) {
+        const el = document.getElementById('searchCount');
+        const wrap = document.getElementById('cmSearchWrap');
+        if (!el) return;
+        if (!currentQuery) {
+            el.classList.remove('show', 'is-zero');
+            el.style.display = 'none';
+            if (wrap) wrap.classList.remove('cm-has-count');
+            return;
+        }
+        el.textContent = total;
+        el.classList.add('show');
+        el.classList.toggle('is-zero', total === 0);
+        el.style.display = 'inline-flex';
+        if (wrap) wrap.classList.add('cm-has-count');
+    }
+
+    function adjustScrollWrapper() {
+        const w = document.getElementById('cmScrollWrapper');
+        if (!w) return;
+        w.classList.toggle('cm-scroll-fit-y', w.scrollHeight <= w.clientHeight + 2);
+        w.classList.toggle('cm-scroll-fit-x', w.scrollWidth <= w.clientWidth + 2);
+    }
+
+    // ---------- Export / Print ----------
+    function getExportData(cb) {
+        fetchGrid(true).then(function (json) {
+            if (json && json.errorMessage) {
+                showError(json.errorMessage);
+                cb(null);
+                return;
+            }
+            cb(json);
+        }).catch(function (err) {
+            showError(err.message || 'Request failed');
+            cb(null);
+        });
+    }
+
+    function buildExcelTable(json) {
+        const cols = json.columnNames || [];
+        const thead = '<tr>' + cols.map(function (c) { return '<th>' + escapeHtml(c) + '</th>'; }).join('') + '</tr>';
+        const tbody = (json.rows || []).map(function (data) {
+            return '<tr>' + cols.map(function (c) { return '<td>' + escapeHtml(formatPlain(data, c)) + '</td>'; }).join('') + '</tr>';
+        }).join('');
+        return '<table>' + thead + '<tbody>' + tbody + '</tbody></table>';
+    }
+
+    function exportToCSV() {
+        getExportData(function (json) {
+            if (!json) return;
+            const rows = json.rows || [];
+            if (rows.length === 0) { alert('No records to export'); return; }
+            const cols = json.columnNames || [];
+            let csv = '\uFEFF' + cols.map(function (c) { return '"' + c + '"'; }).join(',') + '\n';
+            rows.forEach(function (data) {
+                csv += cols.map(function (c) {
+                    return '"' + String(formatPlain(data, c)).replace(/"/g, '""') + '"';
+                }).join(',') + '\n';
+            });
+            const link = document.createElement('a');
+            link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(csv));
+            link.setAttribute('download', MODULE_TITLE.replace(/\s+/g, '') + '_' + new Date().toISOString().slice(0, 10) + '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    function exportToExcel() {
+        getExportData(function (json) {
+            if (!json) return;
+            const rows = json.rows || [];
+            if (rows.length === 0) { alert('No records to export'); return; }
+            const html = '\uFEFF<html><head><meta charset="utf-8"/></head><body>' + buildExcelTable(json) + '</body></html>';
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = MODULE_TITLE.replace(/\s+/g, '') + '_' + new Date().toISOString().slice(0, 10) + '.xls';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    }
+
+    function printTable() {
+        getExportData(function (json) {
+            if (!json) return;
+            const rows = json.rows || [];
+            if (rows.length === 0) { alert('No records to export'); return; }
+            const win = window.open('', '', 'height=700,width=1100');
+
+            const q = currentQuery;
+            const infoParts = [];
+            if (filters.fromDate) infoParts.push('From: ' + filters.fromDate);
+            if (filters.toDate) infoParts.push('To: ' + filters.toDate);
+            if (filters.client) infoParts.push('Client: ' + filters.client);
+            if (filters.salesman) infoParts.push('Salesman: ' + filters.salesman);
+            if (filters.salesStatus && filters.salesStatus !== 'all') infoParts.push('Status: ' + filters.salesStatus);
+            if (q) infoParts.push('Search: "' + q + '"');
+            const info = infoParts.length ? ' · ' + infoParts.join(' · ') : '';
+
+            win.document.write('<html><head><title>' + MODULE_TITLE + ' - Print</title>');
+            win.document.write('<style>body{font-family:sans-serif;font-size:12px;}');
+            win.document.write('table{width:100%;border-collapse:collapse;}');
+            win.document.write('th,td{border:1px solid #ddd;padding:7px 12px;text-align:left;}');
+            win.document.write('th{background:#2563eb;color:#fff;font-weight:600;}');
+            win.document.write('tr:nth-child(even) td{background:#f8f9fa;}');
+            win.document.write('thead th:last-child, tbody td:last-child{display:none;}');
+            win.document.write('</style></head><body>');
+            win.document.write('<h2 style="color:#2563eb;margin-bottom:2px;">' + MODULE_TITLE + ' Records</h2>');
+            win.document.write('<div style="color:#64748b;font-size:11px;margin-bottom:14px;">' + rows.length + ' record(s)' + info + '</div>');
+            win.document.write(buildExcelTable(json));
+            win.document.write('</body></html>');
+            win.document.close();
+            win.focus();
+            win.print();
+            win.close();
+        });
+    }
+</script>
+}

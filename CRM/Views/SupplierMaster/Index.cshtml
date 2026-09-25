@@ -1,0 +1,1512 @@
+@{
+    ViewBag.Title = "Supplier Master";
+    ViewBag.pagetitle = "Master";
+    ViewBag.ptitle = "Supplier Master";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Professional ERP & Velzon-aligned styling */
+    .master-page-header {
+        margin-bottom: 1.25rem;
+    }
+    .master-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.01em;
+    }
+    .master-subtitle {
+        font-size: 0.85rem;
+        color: #1e293b;
+        font-weight: 500;
+    }
+
+    /* KPI Summary Cards */
+    .kpi-card {
+        border-radius: 10px;
+        border: 1px solid rgba(203, 213, 225, 0.9);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+        background: #ffffff;
+        transition: all 0.2s ease-in-out;
+    }
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px -2px rgba(50, 50, 93, 0.08), 0 3px 6px -3px rgba(0, 0, 0, 0.08);
+        border-color: #94a3b8;
+    }
+    .kpi-title {
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.6px;
+        color: #1e293b;
+        text-transform: uppercase;
+    }
+    .kpi-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: 2px;
+        margin-bottom: 0;
+        line-height: 1.2;
+    }
+    .kpi-icon-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        transition: transform 0.2s ease;
+    }
+    .kpi-card:hover .kpi-icon-box {
+        transform: scale(1.05);
+    }
+    
+    /* Compact Red Filter Panel */
+    .filter-card {
+        border-radius: 8px;
+        overflow: visible;
+        border: 1px solid #fee2e2;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        margin-bottom: 1rem;
+        background: #ffffff;
+        position: relative;
+        z-index: 20;
+    }
+    .filter-header {
+        background: #c0392b;
+        background: linear-gradient(90deg, #c0392b 0%, #b71c1c 100%);
+        color: #ffffff;
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        letter-spacing: 0.3px;
+        border-top-left-radius: 7px;
+        border-top-right-radius: 7px;
+    }
+    .filter-body {
+        background: #ffffff;
+        padding: 10px 16px;
+        border-bottom-left-radius: 7px;
+        border-bottom-right-radius: 7px;
+        overflow: visible;
+    }
+    .filter-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 4px;
+        text-transform: capitalize;
+    }
+    .filter-select {
+        height: 38px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1.5px solid #94a3b8;
+        border-radius: 6px;
+        color: #0f172a;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .filter-select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Custom Searchable Dropdown Styling */
+    .filter-dropdown-btn {
+        height: 38px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1.5px solid #94a3b8;
+        border-radius: 6px;
+        color: #0f172a;
+        background-color: #ffffff;
+        padding: 6px 12px;
+        text-align: left;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .filter-dropdown-btn i {
+        color: #0f172a !important;
+        font-weight: 700;
+    }
+    .filter-dropdown-btn::after {
+        display: none !important;
+    }
+    .filter-dropdown-btn:hover {
+        background-color: #ffffff;
+        border-color: #64748b;
+        color: #0f172a;
+    }
+    .filter-dropdown-btn:focus, .filter-dropdown-btn[aria-expanded="true"] {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        background-color: #ffffff;
+        color: #0f172a;
+    }
+    .filter-dropdown-menu {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        z-index: 1060;
+        min-width: 230px;
+        width: 100%;
+        margin-top: 4px !important;
+    }
+    .dropdown-items-list {
+        max-height: 180px;
+        overflow-y: auto;
+    }
+    .dropdown-items-list::-webkit-scrollbar {
+        width: 5px;
+    }
+    .dropdown-items-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    .dropdown-items-list .dropdown-item {
+        color: #0f172a;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 4px;
+        transition: background-color 0.12s ease;
+    }
+    .dropdown-items-list .dropdown-item:hover {
+        background-color: #f1f5f9;
+        color: #0f172a;
+    }
+    .dropdown-items-list .dropdown-item.active {
+        background-color: #0284c7;
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .filter-search-box {
+        position: relative;
+    }
+    .filter-search-box input {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #0f172a;
+        padding-left: 28px;
+        border: 1.5px solid #94a3b8;
+        border-radius: 6px;
+    }
+    .filter-search-box input::placeholder {
+        color: #64748b !important;
+        opacity: 1;
+    }
+    .filter-search-box i {
+        position: absolute;
+        top: 50%;
+        left: 9px;
+        transform: translateY(-50%);
+        color: #475569;
+        font-size: 0.95rem;
+    }
+
+    /* Reset button link in filter */
+    .filter-card a.text-secondary {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+    }
+    .filter-card a.text-secondary:hover {
+        color: #b71c1c !important;
+    }
+
+    /* Table Toolbar */
+    .table-toolbar {
+        background: #ffffff;
+        padding: 10px 16px;
+        border: 1px solid #cbd5e1;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .table-toolbar .text-muted {
+        color: #0f172a !important;
+        font-weight: 600 !important;
+    }
+    #tableSearchInput {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #0f172a;
+        border: 1.5px solid #94a3b8;
+    }
+    #tableSearchInput::placeholder {
+        color: #64748b !important;
+        opacity: 1;
+    }
+    #pageSizeSelect {
+        font-weight: 600;
+        color: #0f172a;
+        border: 1.5px solid #94a3b8;
+    }
+    .btn-export-excel {
+        background: #16a34a;
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.825rem;
+        padding: 6px 14px;
+        height: 36px;
+        border-radius: 6px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .btn-export-excel:hover {
+        background: #15803d;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+    .btn-export-csv {
+        background: #0284c7;
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.825rem;
+        padding: 6px 14px;
+        height: 36px;
+        border-radius: 6px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .btn-export-csv:hover {
+        background: #0369a1;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+    .btn-export-print {
+        background: #6366f1;
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.825rem;
+        padding: 6px 14px;
+        height: 36px;
+        border-radius: 6px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .btn-export-print:hover {
+        background: #4f46e5;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+    .btn-add-supplier {
+        background: #0284c7;
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.825rem;
+        padding: 6px 16px;
+        height: 36px;
+        border-radius: 6px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .btn-add-supplier:hover {
+        background: #0369a1;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    /* Data Table Card */
+    .master-table-card {
+        border: 1px solid #cbd5e1;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        background: #ffffff;
+        overflow: hidden;
+    }
+    .master-table thead th {
+        background: #1e3a5f !important;
+        color: #ffffff !important;
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 11px 12px;
+        border: none !important;
+        white-space: nowrap !important;
+        user-select: none;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+    .master-table thead th:hover {
+        background: #274b76 !important;
+    }
+    .master-table thead th.no-sort {
+        cursor: default;
+    }
+    .master-table tbody td {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #0f172a;
+        vertical-align: middle;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .master-table tbody tr {
+        transition: background 0.12s ease;
+    }
+    .master-table tbody tr:hover td {
+        background: #f1f5f9;
+    }
+    
+    /* Action Buttons in Table */
+    .btn-table-edit {
+        background: #f59e0b;
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 4px;
+        border: none;
+        transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .btn-table-edit:hover {
+        background: #d97706;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+    .btn-table-delete {
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 4px;
+        border: none;
+        transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .btn-table-delete:hover {
+        background: #dc2626;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+    
+    /* Badges */
+    .badge-status-active {
+        background: #dcfce7;
+        color: #15803d;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #86efac;
+    }
+    .badge-status-missing {
+        background: #fee2e2;
+        color: #b91c1c;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #fca5a5;
+    }
+    .badge-role {
+        background: #e2e8f0;
+        color: #0f172a;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #cbd5e1;
+    }
+    .badge-timestamp {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        color: #0f172a;
+        font-weight: 600;
+        font-size: 0.78rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        white-space: nowrap !important;
+        display: inline-block;
+    }
+
+    /* Pagination Styling */
+    #paginationInfo {
+        color: #0f172a !important;
+        font-weight: 600 !important;
+    }
+    .pagination .page-link {
+        color: #0f172a;
+        font-weight: 600;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #0284c7;
+        border-color: #0284c7;
+        color: #ffffff;
+    }
+
+    /* Print Specific Styling */
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+        #printArea, #printArea * {
+            visibility: visible;
+        }
+        #printArea {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+
+<!-- Alert Container -->
+<div id="alertContainer" class="no-print"></div>
+
+<!-- Page Top Title (Clean Header) -->
+<div class="master-page-header d-flex align-items-center justify-content-between no-print">
+    <div>
+        <h4 class="master-title mb-0">Supplier Master</h4>
+        <span class="master-subtitle">Manage and track supplier directory & tax compliance</span>
+    </div>
+</div>
+
+<!-- 1. Top Compact KPI Summary Cards (Dynamic & Column-Aware) -->
+<div class="row g-3 mb-3 no-print">
+    <!-- Card 1: Total Suppliers -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="kpi-title">TOTAL SUPPLIERS</div>
+                    <div class="kpi-value" id="kpiTotal">0</div>
+                </div>
+                <div class="kpi-icon-box bg-primary-subtle text-primary" title="Total Registered Suppliers">
+                    <i class="ri-truck-line"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: GST Registered -->
+    <div class="col-xl-3 col-sm-6" id="kpiGstRegCard">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="kpi-title">GST REGISTERED</div>
+                    <div class="kpi-value" id="kpiGstRegistered">0</div>
+                </div>
+                <div class="kpi-icon-box bg-success-subtle text-success" title="GST Compliant & Verified Suppliers">
+                    <i class="ri-verified-badge-line"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: GST Missing -->
+    <div class="col-xl-3 col-sm-6" id="kpiGstMissCard">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="kpi-title">GST MISSING</div>
+                    <div class="kpi-value" id="kpiGstMissing">0</div>
+                </div>
+                <div class="kpi-icon-box bg-danger-subtle text-danger" title="Suppliers with Missing GST">
+                    <i class="ri-alert-line"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: Supplier Cities / Locations -->
+    <div class="col-xl-3 col-sm-6" id="kpiCitiesCard">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="kpi-title" id="kpiCitiesTitle">SUPPLIER CITIES</div>
+                    <div class="kpi-value" id="kpiCities">0</div>
+                </div>
+                <div class="kpi-icon-box bg-info-subtle text-info" title="Geographical City Coverage">
+                    <i class="ri-map-pin-range-line"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Red / Crimson Filter Panel -->
+<div class="filter-card no-print">
+    <div class="filter-header">
+        <i class="ri-filter-3-line me-2"></i> Filter
+    </div>
+    <div class="filter-body">
+        <!-- Filter Inputs Grid: Supplier Name, City / Region, and GST Status -->
+        <div class="row g-2 align-items-end">
+            <!-- Supplier Name Searchable Dropdown -->
+            <div class="col-auto" id="filterNameContainer" style="width: 240px;">
+                <label class="filter-label">Supplier Name</label>
+                <div class="dropdown position-relative" id="nameDropdownWrapper">
+                    <button type="button" class="btn filter-dropdown-btn dropdown-toggle" id="nameDropdownBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        <span class="text-truncate" id="selectedNameText">All Suppliers</span>
+                        <i class="ri-arrow-down-s-line fs-14 text-muted ms-1"></i>
+                    </button>
+                    <div class="dropdown-menu p-2 filter-dropdown-menu shadow" aria-labelledby="nameDropdownBtn" style="min-width: 240px;">
+                        <div class="filter-search-box mb-2">
+                            <i class="ri-search-line"></i>
+                            <input type="text" class="form-control form-control-sm" id="nameSearchInput" placeholder="Search supplier name..." onkeyup="filterNameDropdownList(this.value)" autocomplete="off">
+                        </div>
+                        <div class="dropdown-items-list" id="nameOptionsList">
+                            <a href="javascript:void(0);" class="dropdown-item active" data-val="" onclick="selectNameFilter('', 'All Suppliers')">All Suppliers</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- City / Region Searchable Dropdown -->
+            <div class="col-auto" id="filterCityContainer" style="width: 210px;">
+                <label class="filter-label">City / Region</label>
+                <div class="dropdown position-relative" id="cityDropdownWrapper">
+                    <button type="button" class="btn filter-dropdown-btn dropdown-toggle" id="cityDropdownBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        <span class="text-truncate" id="selectedCityText">All Cities</span>
+                        <i class="ri-arrow-down-s-line fs-14 text-muted ms-1"></i>
+                    </button>
+                    <div class="dropdown-menu p-2 filter-dropdown-menu shadow" aria-labelledby="cityDropdownBtn" style="min-width: 210px;">
+                        <div class="filter-search-box mb-2">
+                            <i class="ri-search-line"></i>
+                            <input type="text" class="form-control form-control-sm" id="citySearchInput" placeholder="Search city..." onkeyup="filterCityDropdownList(this.value)" autocomplete="off">
+                        </div>
+                        <div class="dropdown-items-list" id="cityOptionsList">
+                            <a href="javascript:void(0);" class="dropdown-item active" data-val="" onclick="selectCityFilter('', 'All Cities')">All Cities</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GST Status Searchable Dropdown -->
+            <div class="col-auto" id="filterGstContainer" style="width: 210px;">
+                <label class="filter-label">GST Status</label>
+                <div class="dropdown position-relative" id="gstDropdownWrapper">
+                    <button type="button" class="btn filter-dropdown-btn dropdown-toggle" id="gstDropdownBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        <span class="text-truncate" id="selectedGstText">All</span>
+                        <i class="ri-arrow-down-s-line fs-14 text-muted ms-1"></i>
+                    </button>
+                    <div class="dropdown-menu p-2 filter-dropdown-menu shadow" aria-labelledby="gstDropdownBtn" style="min-width: 210px;">
+                        <div class="filter-search-box mb-2">
+                            <i class="ri-search-line"></i>
+                            <input type="text" class="form-control form-control-sm" id="gstSearchInput" placeholder="Search GST status..." onkeyup="filterGstDropdownList(this.value)" autocomplete="off">
+                        </div>
+                        <div class="dropdown-items-list" id="gstOptionsList">
+                            <a href="javascript:void(0);" class="dropdown-item active" data-val="" onclick="selectGstFilter('', 'All')">All</a>
+                            <a href="javascript:void(0);" class="dropdown-item" data-val="REGISTERED" onclick="selectGstFilter('REGISTERED', 'GST Registered')">GST Registered</a>
+                            <a href="javascript:void(0);" class="dropdown-item" data-val="MISSING" onclick="selectGstFilter('MISSING', 'GST Missing')">GST Missing</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reset Button -->
+            <div class="col-auto d-flex align-items-end pb-1 ps-2" style="height: 60px;">
+                <a href="javascript:void(0);" class="text-secondary fs-13 d-flex align-items-center text-decoration-none fw-medium" onclick="resetFilters()" title="Reset Filters">
+                    <i class="ri-refresh-line me-1"></i> Reset
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Table Toolbar & Actions -->
+<div class="table-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2 no-print">
+    <!-- Left: Records per page & Export Buttons -->
+    <div class="d-flex align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center me-2">
+            <select class="form-select form-select-sm" id="pageSizeSelect" style="width: 75px; height: 36px;" onchange="changePageSize(this.value)">
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="-1">All</option>
+            </select>
+            <span class="fs-13 text-muted ms-2">records per page</span>
+        </div>
+
+        <button type="button" class="btn-export-excel" onclick="exportFilteredExcel()" title="Export Filtered Data to Excel">
+            <i class="ri-file-excel-2-line me-1"></i> Excel
+        </button>
+        <button type="button" class="btn-export-csv" onclick="exportFilteredCSV()" title="Export Filtered Data to CSV">
+            <i class="ri-file-text-line me-1"></i> CSV
+        </button>
+        <button type="button" class="btn-export-print" onclick="printFilteredTable()" title="Print Filtered Data / Save as PDF">
+            <i class="ri-printer-line me-1"></i> Print
+        </button>
+    </div>
+
+    <!-- Right: Search & Add Supplier -->
+    <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center">
+            <span class="fs-13 text-muted me-2">Search:</span>
+            <input type="text" id="tableSearchInput" class="form-control form-control-sm" placeholder="Search..." style="width: 200px; height: 36px;" onkeyup="handleSearch(this.value)" />
+        </div>
+        <button type="button" class="btn-add-supplier" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+            <i class="ri-add-line me-1"></i> Add Supplier
+        </button>
+    </div>
+</div>
+
+<!-- 4. Main Data Table Container -->
+<div class="master-table-card" id="printArea">
+    <!-- Loading Spinner -->
+    <div id="tableLoadingSpinner" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="fs-14 text-muted mt-2">Loading supplier data...</div>
+    </div>
+
+    <!-- Responsive Table -->
+    <div class="table-responsive" id="tableWrapper" style="display: none;">
+        <table class="table master-table align-middle mb-0" id="mainSupplierTable">
+            <thead id="dynamicTableHead">
+                <!-- Headers dynamically rendered with sort arrows -->
+            </thead>
+            <tbody id="dynamicTableBody">
+                <!-- Rows dynamically rendered -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Table Footer / Pagination -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between p-3 border-top no-print" id="paginationWrapper" style="display: none;">
+        <div class="text-muted fs-13" id="paginationInfo">
+            Showing 0 to 0 of 0 records
+        </div>
+        <div class="mt-2 mt-sm-0">
+            <ul class="pagination pagination-sm mb-0" id="paginationControls">
+                <!-- Pagination buttons injected by JS -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 5. View Supplier Details Modal -->
+<div class="modal fade" id="viewSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white p-3">
+                <h5 class="modal-title text-white"><i class="ri-information-line me-1"></i> Supplier Information</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0" id="viewModalContent">
+                <!-- Injected dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 6. Add / Edit Supplier Modal -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light p-3">
+                <h5 class="modal-title" id="modalFormTitle"><i class="ri-user-add-line me-1 text-primary"></i> Add Supplier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="supplierForm">
+                    <div class="row g-3" id="dynamicFormInputs">
+                        <!-- Dynamic Input Fields based on Columns -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSupplierRecord()"><i class="ri-save-line me-1"></i> Save Record</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 7. Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content text-center p-3">
+            <div class="text-danger fs-1 mb-2">
+                <i class="ri-error-warning-line"></i>
+            </div>
+            <h5 class="fs-16 mb-1">Confirm Delete</h5>
+            <p class="text-muted fs-13 mb-3">Are you sure you want to delete this supplier record? This action cannot be undone.</p>
+            <div class="d-flex justify-content-center gap-2">
+                <button type="button" class="btn btn-sm btn-light px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-danger px-3" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    // State Management Variables
+    let rawColumns = [];
+    let rawData = [];
+    let filteredData = [];
+    let selectedNameVal = '';
+    let selectedCityVal = '';
+    let selectedGstVal = '';
+    
+    // Pagination & Sort State
+    let currentPage = 1;
+    let pageSize = 10;
+    let sortColumn = '';
+    let sortDirection = 'asc'; // 'asc' or 'desc'
+
+    // On DOM Load
+    document.addEventListener('DOMContentLoaded', function () {
+        // Auto-focus search inputs when searchable dropdown opens
+        document.getElementById('nameDropdownWrapper')?.addEventListener('shown.bs.dropdown', function () {
+            let input = document.getElementById('nameSearchInput');
+            if (input) input.focus();
+        });
+        document.getElementById('cityDropdownWrapper')?.addEventListener('shown.bs.dropdown', function () {
+            let input = document.getElementById('citySearchInput');
+            if (input) input.focus();
+        });
+        document.getElementById('gstDropdownWrapper')?.addEventListener('shown.bs.dropdown', function () {
+            let input = document.getElementById('gstSearchInput');
+            if (input) input.focus();
+        });
+
+        loadSupplierData();
+    });
+
+    // 1. Main AJAX Fetch Function
+    function loadSupplierData() {
+        showSpinner(true);
+
+        fetch('/SupplierMaster/GetSupplierData')
+            .then(res => res.json())
+            .then(res => {
+                showSpinner(false);
+                if (res.success) {
+                    rawColumns = res.columns || [];
+                    rawData = res.data || [];
+                    
+                    // Normalize records to include Created On and Entry Time if not present
+                    rawData = rawData.map(item => {
+                        return {
+                            ...item,
+                            _createdOn: item.CreatedOn || item.CREATED_ON || item.ModifyDate || item.MODIFYDATE || item.CreatedDate || '-',
+                            _entryTime: item.EntryTime || item.ENTRY_TIME || (item.ModifyDate ? formatTime(item.ModifyDate) : '-')
+                        };
+                    });
+
+                    // Populate Dropdown Filters
+                    populateNameFilter(rawData);
+                    populateCityFilter(rawData);
+
+                    // Initially filteredData is full dataset
+                    filteredData = [...rawData];
+
+                    // Render Table Headers
+                    buildDynamicHeaders(rawColumns);
+
+                    // Build Add Modal Inputs
+                    buildDynamicFormInputs(rawColumns);
+
+                    // Update UI & Table
+                    updateUIAndTable();
+                } else {
+                    displayAlert('danger', res.message || 'Failed to fetch supplier data.');
+                }
+            })
+            .catch(err => {
+                showSpinner(false);
+                displayAlert('danger', 'Server Connection Error: ' + err.message);
+            });
+    }
+
+    // Helper for time and date formatting (24-hour format, NO AM/PM)
+    function formatTime(dateStr) {
+        if (!dateStr || dateStr === '-') return '-';
+        let str = String(dateStr).trim();
+        try {
+            let d = new Date(dateStr);
+            if (!isNaN(d.getTime())) {
+                let hours = String(d.getHours()).padStart(2, '0');
+                let minutes = String(d.getMinutes()).padStart(2, '0');
+                let seconds = String(d.getSeconds()).padStart(2, '0');
+                return `${hours}:${minutes}:${seconds}`;
+            }
+        } catch(e) {}
+        return str.replace(/\s+(AM|PM)/i, '');
+    }
+
+    function formatDateTime(val) {
+        if (!val || val === '-') return '-';
+        let str = String(val).trim();
+        try {
+            let d = new Date(val);
+            if (!isNaN(d.getTime())) {
+                let year = d.getFullYear();
+                let month = String(d.getMonth() + 1).padStart(2, '0');
+                let day = String(d.getDate()).padStart(2, '0');
+                let hours = String(d.getHours()).padStart(2, '0');
+                let minutes = String(d.getMinutes()).padStart(2, '0');
+                let seconds = String(d.getSeconds()).padStart(2, '0');
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            }
+        } catch(e) {}
+        return str.replace(/\.[0-9]+$/, '').replace(/\s+(AM|PM)/i, '');
+    }
+
+    // 2. Build Dynamic Table Headers with Sorting
+    function buildDynamicHeaders(columns) {
+        const thead = document.getElementById('dynamicTableHead');
+        let html = '<tr>';
+
+        // Custom display headers
+        columns.forEach(col => {
+            let label = getFriendlyColumnName(col);
+            let sortArrow = (sortColumn === col) ? (sortDirection === 'asc' ? '↑' : '↓') : '↑↓';
+            html += `<th scope="col" onclick="sortTable('${col}')">${label} <span class="text-white-50 ms-1 fs-11">${sortArrow}</span></th>`;
+        });
+
+        // Mandatory Created On & Entry Time headers
+        let createdSort = (sortColumn === '_createdOn') ? (sortDirection === 'asc' ? '↑' : '↓') : '↑↓';
+        let entrySort = (sortColumn === '_entryTime') ? (sortDirection === 'asc' ? '↑' : '↓') : '↑↓';
+        html += `<th scope="col" onclick="sortTable('_createdOn')">CREATED ON <span class="text-white-50 ms-1 fs-11">${createdSort}</span></th>`;
+        html += `<th scope="col" onclick="sortTable('_entryTime')">ENTRY TIME <span class="text-white-50 ms-1 fs-11">${entrySort}</span></th>`;
+
+        // Mandatory Edit & Delete Action headers
+        html += `<th scope="col" class="text-center no-sort" style="width: 70px;">EDIT</th>`;
+        html += `<th scope="col" class="text-center no-sort" style="width: 70px;">DELETE</th>`;
+        html += '</tr>';
+
+        thead.innerHTML = html;
+    }
+
+    function getFriendlyColumnName(col) {
+        // Return exact uppercase column name as returned by SQL Server / SSMS
+        return col.toUpperCase();
+    }
+
+    // 3. Render Table Rows for Current Page
+    function renderTableRows() {
+        const tbody = document.getElementById('dynamicTableBody');
+        
+        if (!filteredData || filteredData.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="${rawColumns.length + 4}" class="text-center py-5">
+                        <div class="text-muted">
+                            <i class="ri-search-eye-line fs-1 d-block mb-2 text-warning"></i>
+                            <h6 class="fw-semibold">No suppliers found for the selected filters.</h6>
+                            <p class="fs-12 mb-0">Try changing your search keyword or clearing the filters.</p>
+                        </div>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        // Calculate Pagination Slice
+        let startIdx = 0;
+        let endIdx = filteredData.length;
+        if (pageSize > 0) {
+            startIdx = (currentPage - 1) * pageSize;
+            endIdx = Math.min(startIdx + pageSize, filteredData.length);
+        }
+        let pageRows = filteredData.slice(startIdx, endIdx);
+
+        let html = '';
+        pageRows.forEach((row, idx) => {
+            let actualIndex = startIdx + idx;
+            html += `<tr>`;
+
+            rawColumns.forEach(col => {
+                let val = row[col];
+                let lower = col.toLowerCase();
+
+                if (val === null || val === undefined || val === '') {
+                    html += `<td><span class="text-muted">-</span></td>`;
+                } else if (lower === 'gstno') {
+                    if (val && val.trim() !== '') {
+                        html += `<td><span class="badge-status-active">${val}</span></td>`;
+                    } else {
+                        html += `<td><span class="badge-status-missing">MISSING</span></td>`;
+                    }
+                } else if (lower === 'code') {
+                    html += `<td><span class="badge-role">${val}</span></td>`;
+                } else if (lower.includes('add')) {
+                    html += `<td><span class="d-inline-block text-truncate text-muted" style="max-width: 180px;" title="${val}">${val}</span></td>`;
+                } else if (lower === 'name') {
+                    html += `<td class="fw-medium text-dark">${val}</td>`;
+                } else if (lower.includes('date') || lower.includes('time') || lower.includes('modify') || lower.includes('created')) {
+                    html += `<td><span class="badge-timestamp">${formatDateTime(val)}</span></td>`;
+                } else {
+                    html += `<td>${val}</td>`;
+                }
+            });
+
+            // Created On & Entry Time
+            let createdOnVal = row._createdOn || '-';
+            let entryTimeVal = row._entryTime || '-';
+            html += `<td><span class="badge-timestamp">${formatDateTime(createdOnVal)}</span></td>`;
+            html += `<td><span class="badge-timestamp">${formatTime(entryTimeVal)}</span></td>`;
+
+            // Action: Edit button
+            html += `
+                <td class="text-center">
+                    <button type="button" class="btn-table-edit" onclick="openEditModal(${actualIndex})">Edit</button>
+                </td>`;
+
+            // Action: Delete button
+            html += `
+                <td class="text-center">
+                    <button type="button" class="btn-table-delete" onclick="openDeleteModal(${actualIndex})">Delete</button>
+                </td>`;
+
+            html += `</tr>`;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    // 4. Update Dynamic KPI Cards (Constant to Full Master Dataset)
+    function updateKPIs(data) {
+        let total = data.length;
+        document.getElementById('kpiTotal').innerText = total;
+
+        // Check GSTNO column
+        let hasGstCol = rawColumns.some(c => c.toLowerCase() === 'gstno');
+        let gstRegCard = document.getElementById('kpiGstRegCard');
+        let gstMissCard = document.getElementById('kpiGstMissCard');
+
+        if (hasGstCol) {
+            gstRegCard.style.display = 'block';
+            gstMissCard.style.display = 'block';
+
+            let registeredCount = data.filter(d => d.Gstno && d.Gstno.toString().trim() !== '').length;
+            let missingCount = total - registeredCount;
+
+            document.getElementById('kpiGstRegistered').innerText = registeredCount;
+            document.getElementById('kpiGstMissing').innerText = missingCount;
+        } else {
+            gstRegCard.style.display = 'none';
+            gstMissCard.style.display = 'none';
+        }
+
+        // Check CITY column
+        let hasCityCol = rawColumns.some(c => c.toLowerCase() === 'city');
+        let citiesCard = document.getElementById('kpiCitiesCard');
+
+        if (hasCityCol) {
+            citiesCard.style.display = 'block';
+            let distinctCities = new Set(data.map(d => (d.City || '').toString().trim()).filter(c => c !== ''));
+            document.getElementById('kpiCities').innerText = distinctCities.size;
+            document.getElementById('kpiCitiesTitle').innerText = 'SUPPLIER CITIES';
+        } else {
+            document.getElementById('kpiCitiesTitle').innerText = 'TOTAL FIELDS';
+            document.getElementById('kpiCities').innerText = rawColumns.length;
+        }
+    }
+
+    // 5. Searchable Dropdown Helpers & Population
+    function filterNameDropdownList(query) {
+        let q = (query || '').toLowerCase().trim();
+        let items = document.querySelectorAll('#nameOptionsList .dropdown-item');
+        items.forEach(item => {
+            let txt = item.innerText.toLowerCase();
+            if (txt.includes(q) || item.getAttribute('data-val') === '') {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function filterCityDropdownList(query) {
+        let q = (query || '').toLowerCase().trim();
+        let items = document.querySelectorAll('#cityOptionsList .dropdown-item');
+        items.forEach(item => {
+            let txt = item.innerText.toLowerCase();
+            if (txt.includes(q) || item.getAttribute('data-val') === '') {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function filterGstDropdownList(query) {
+        let q = (query || '').toLowerCase().trim();
+        let items = document.querySelectorAll('#gstOptionsList .dropdown-item');
+        items.forEach(item => {
+            let txt = item.innerText.toLowerCase();
+            if (txt.includes(q) || item.getAttribute('data-val') === '') {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function selectNameFilter(val, label) {
+        selectedNameVal = val;
+        document.getElementById('selectedNameText').innerText = label;
+        
+        // Update active class
+        document.querySelectorAll('#nameOptionsList .dropdown-item').forEach(el => {
+            if (el.getAttribute('data-val') === val) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+
+        // Close dropdown
+        let btn = document.getElementById('nameDropdownBtn');
+        let dropdown = bootstrap.Dropdown.getInstance(btn);
+        if (dropdown) dropdown.hide();
+
+        applyFilters();
+    }
+
+    function selectCityFilter(val, label) {
+        selectedCityVal = val;
+        document.getElementById('selectedCityText').innerText = label;
+        
+        // Update active class
+        document.querySelectorAll('#cityOptionsList .dropdown-item').forEach(el => {
+            if (el.getAttribute('data-val') === val) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+
+        // Close dropdown
+        let btn = document.getElementById('cityDropdownBtn');
+        let dropdown = bootstrap.Dropdown.getInstance(btn);
+        if (dropdown) dropdown.hide();
+
+        applyFilters();
+    }
+
+    function selectGstFilter(val, label) {
+        selectedGstVal = val;
+        document.getElementById('selectedGstText').innerText = label;
+
+        // Update active class
+        document.querySelectorAll('#gstOptionsList .dropdown-item').forEach(el => {
+            if (el.getAttribute('data-val') === val) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+
+        // Close dropdown
+        let btn = document.getElementById('gstDropdownBtn');
+        let dropdown = bootstrap.Dropdown.getInstance(btn);
+        if (dropdown) dropdown.hide();
+
+        applyFilters();
+    }
+
+    function populateNameFilter(data) {
+        let nameCol = rawColumns.find(c => c.toLowerCase() === 'name') || 'NAME';
+        let names = Array.from(new Set(data.map(d => (d[nameCol] || d.Name || d.NAME || '').toString().trim()).filter(n => n !== ''))).sort();
+        
+        let listHtml = `<a href="javascript:void(0);" class="dropdown-item ${selectedNameVal === '' ? 'active' : ''}" data-val="" onclick="selectNameFilter('', 'All Suppliers')">All Suppliers</a>`;
+        
+        names.forEach(n => {
+            let isActive = (selectedNameVal.toLowerCase() === n.toLowerCase()) ? 'active' : '';
+            let escaped = n.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            listHtml += `<a href="javascript:void(0);" class="dropdown-item ${isActive}" data-val="${n}" onclick="selectNameFilter('${escaped}', '${escaped}')">${n}</a>`;
+        });
+
+        document.getElementById('nameOptionsList').innerHTML = listHtml;
+    }
+
+    function populateCityFilter(data) {
+        let hasCityCol = rawColumns.some(c => c.toLowerCase() === 'city');
+
+        if (!hasCityCol) {
+            document.getElementById('filterCityContainer').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('filterCityContainer').style.display = 'block';
+        let cities = Array.from(new Set(data.map(d => (d.City || '').toString().trim()).filter(c => c !== ''))).sort();
+        
+        let listHtml = `<a href="javascript:void(0);" class="dropdown-item ${selectedCityVal === '' ? 'active' : ''}" data-val="" onclick="selectCityFilter('', 'All Cities')">All Cities</a>`;
+        
+        cities.forEach(c => {
+            let isActive = (selectedCityVal.toLowerCase() === c.toLowerCase()) ? 'active' : '';
+            let escaped = c.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            listHtml += `<a href="javascript:void(0);" class="dropdown-item ${isActive}" data-val="${c}" onclick="selectCityFilter('${escaped}', '${escaped}')">${c}</a>`;
+        });
+
+        document.getElementById('cityOptionsList').innerHTML = listHtml;
+    }
+
+    // 6. Filter Logic (Search + Name + City + GST Status)
+    function applyFilters() {
+        let searchKw = (document.getElementById('tableSearchInput').value || '').toLowerCase().trim();
+        let nameVal = (selectedNameVal || '').toLowerCase().trim();
+        let cityVal = (selectedCityVal || '').toLowerCase().trim();
+        let gstVal = selectedGstVal;
+
+        filteredData = rawData.filter(row => {
+            // 1. Search across all dynamic columns
+            let matchesSearch = true;
+            if (searchKw) {
+                matchesSearch = rawColumns.some(col => {
+                    let val = row[col];
+                    return val && val.toString().toLowerCase().includes(searchKw);
+                });
+            }
+
+            // 2. Name filter (Exact Match)
+            let matchesName = true;
+            if (nameVal) {
+                let nameCol = rawColumns.find(c => c.toLowerCase() === 'name') || 'NAME';
+                let rowName = (row[nameCol] || row.Name || row.NAME || '').toString().toLowerCase().trim();
+                matchesName = (rowName === nameVal);
+            }
+
+            // 3. City filter (Exact Match & Ignore Empty City on Specific Filter)
+            let matchesCity = true;
+            if (cityVal) {
+                let rowCity = (row.City || row.CITY || row.city || '').toString().toLowerCase().trim();
+                matchesCity = (rowCity === cityVal);
+            }
+
+            // 4. GST filter
+            let matchesGst = true;
+            let rowGst = (row.Gstno || row.GSTNO || row.gstno || '').toString().trim();
+            if (gstVal === 'REGISTERED') {
+                matchesGst = (rowGst !== '');
+            } else if (gstVal === 'MISSING') {
+                matchesGst = (rowGst === '');
+            }
+
+            return matchesSearch && matchesName && matchesCity && matchesGst;
+        });
+
+        // Reset to first page
+        currentPage = 1;
+
+        // Update UI
+        updateUIAndTable();
+    }
+
+    function handleSearch(val) {
+        applyFilters();
+    }
+
+    function resetFilters() {
+        document.getElementById('tableSearchInput').value = '';
+        
+        selectedNameVal = '';
+        document.getElementById('selectedNameText').innerText = 'All Suppliers';
+        let nameSearch = document.getElementById('nameSearchInput');
+        if (nameSearch) nameSearch.value = '';
+        filterNameDropdownList('');
+
+        selectedCityVal = '';
+        document.getElementById('selectedCityText').innerText = 'All Cities';
+        let citySearch = document.getElementById('citySearchInput');
+        if (citySearch) citySearch.value = '';
+        filterCityDropdownList('');
+
+        selectedGstVal = '';
+        document.getElementById('selectedGstText').innerText = 'All';
+        let gstSearch = document.getElementById('gstSearchInput');
+        if (gstSearch) gstSearch.value = '';
+        filterGstDropdownList('');
+
+        // Reset active classes
+        document.querySelectorAll('#nameOptionsList .dropdown-item').forEach(el => {
+            el.classList.toggle('active', el.getAttribute('data-val') === '');
+        });
+        document.querySelectorAll('#cityOptionsList .dropdown-item').forEach(el => {
+            el.classList.toggle('active', el.getAttribute('data-val') === '');
+        });
+        document.querySelectorAll('#gstOptionsList .dropdown-item').forEach(el => {
+            el.classList.toggle('active', el.getAttribute('data-val') === '');
+        });
+
+        // Restore full data
+        filteredData = [...rawData];
+        currentPage = 1;
+        updateUIAndTable();
+    }
+
+    // 7. Sorting Functionality
+    function sortTable(col) {
+        if (sortColumn === col) {
+            sortDirection = (sortDirection === 'asc') ? 'desc' : 'asc';
+        } else {
+            sortColumn = col;
+            sortDirection = 'asc';
+        }
+
+        filteredData.sort((a, b) => {
+            let valA = a[col] !== null && a[col] !== undefined ? a[col] : '';
+            let valB = b[col] !== null && b[col] !== undefined ? b[col] : '';
+
+            // 1. Numerical Comparison
+            let numA = parseFloat(valA);
+            let numB = parseFloat(valB);
+            if (!isNaN(numA) && !isNaN(numB) && valA.toString().trim() === numA.toString() && valB.toString().trim() === numB.toString()) {
+                return sortDirection === 'asc' ? numA - numB : numB - numA;
+            }
+
+            // 2. Trim whitespace and compare as string
+            let strA = valA.toString().trim();
+            let strB = valB.toString().trim();
+
+            // Push empty/blank values to bottom
+            if (strA === '' && strB !== '') return 1;
+            if (strA !== '' && strB === '') return -1;
+            if (strA === '' && strB === '') return 0;
+
+            let comp = strA.localeCompare(strB, undefined, { numeric: true, sensitivity: 'base' });
+            return sortDirection === 'asc' ? comp : -comp;
+        });
+
+        buildDynamicHeaders(rawColumns);
+        renderTableRows();
+    }
+
+    // 8. Pagination Functions
+    function changePageSize(size) {
+        pageSize = parseInt(size);
+        currentPage = 1;
+        updateUIAndTable();
+    }
+
+    function goToPage(page) {
+        let totalPages = pageSize > 0 ? Math.ceil(filteredData.length / pageSize) : 1;
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderTableRows();
+        buildPaginationControls();
+    }
+
+    function buildPaginationControls() {
+        const controls = document.getElementById('paginationControls');
+        const info = document.getElementById('paginationInfo');
+        let total = filteredData.length;
+
+        if (total === 0) {
+            info.innerText = 'Showing 0 to 0 of 0 records';
+            controls.innerHTML = '';
+            return;
+        }
+
+        let totalPages = pageSize > 0 ? Math.ceil(total / pageSize) : 1;
+        let start = pageSize > 0 ? ((currentPage - 1) * pageSize) + 1 : 1;
+        let end = pageSize > 0 ? Math.min(start + pageSize - 1, total) : total;
+        info.innerText = `Showing ${start} to ${end} of ${total} records`;
+
+        if (totalPages <= 1) {
+            controls.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="javascript:void(0);" onclick="goToPage(${currentPage - 1})">Previous</a></li>`;
+
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === 1 || p === totalPages || (p >= currentPage - 2 && p <= currentPage + 2)) {
+                html += `<li class="page-item ${p === currentPage ? 'active' : ''}"><a class="page-link" href="javascript:void(0);" onclick="goToPage(${p})">${p}</a></li>`;
+            } else if (p === currentPage - 3 || p === currentPage + 3) {
+                html += `<li class="page-item disabled"><a class="page-link" href="javascript:void(0);">...</a></li>`;
+            }
+        }
+
+        html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="javascript:void(0);" onclick="goToPage(${currentPage + 1})">Next</a></li>`;
+        controls.innerHTML = html;
+    }
+
+    // 9. Central UI Refresh Helper
+    function updateUIAndTable() {
+        // KPI Cards always show full master totals and do not change on filter
+        updateKPIs(rawData);
+        renderTableRows();
+        buildPaginationControls();
+    }
+
+    // 10. EXPORT: Filtered CSV Export (Only downloads currently filtered rows)
+    function exportFilteredCSV() {
+        if (!filteredData || filteredData.length === 0) {
+            displayAlert('warning', 'No filtered records to export.');
+            return;
+        }
+
+        let csvHeaders = rawColumns.map(c => getFriendlyColumnName(c));
+        csvHeaders.push('CREATED ON', 'ENTRY TIME');
+
+        let csvRows = [];
+        csvRows.push(csvHeaders.join(','));
+
+        filteredData.forEach(row => {
+            let rowVals = rawColumns.map(col => {
+                let v = (row[col] !== null && row[col] !== undefined) ? row[col].toString() : '';
+                return `"${v.replace(/"/g, '""')}"`;
+            });
+            rowVals.push(`"${(row._createdOn || '').replace(/"/g, '""')}"`);
+            rowVals.push(`"${(row._entryTime || '').replace(/"/g, '""')}"`);
+            csvRows.push(rowVals.join(','));
+        });
+
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csvRows.join('\n');
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Suppliers_Filtered_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // 11. EXPORT: Filtered Excel Export (HTML Table XML format readable in MS Excel)
+    function exportFilteredExcel() {
+        if (!filteredData || filteredData.length === 0) {
+            displayAlert('warning', 'No filtered records to export.');
+            return;
+        }
+
+        let tableHtml = '<table border="1"><thead><tr style="background:#f1f5f9; font-weight:bold;">';
+        rawColumns.forEach(col => {
+            tableHtml += `<th>${getFriendlyColumnName(col)}</th>`;
+        });
+        tableHtml += '<th>CREATED ON</th><th>ENTRY TIME</th></tr></thead><tbody>';
+
+        filteredData.forEach(row => {
+            tableHtml += '<tr>';
+            rawColumns.forEach(col => {
+                let v = (row[col] !== null && row[col] !== undefined) ? row[col] : '-';
+                tableHtml += `<td>${v}</td>`;
+            });
+            tableHtml += `<td>${row._createdOn || '-'}</td><td>${row._entryTime || '-'}</td></tr>`;
+        });
+        tableHtml += '</tbody></table>';
+
+        let blob = new Blob(['\uFEFF' + tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = `Suppliers_Filtered_${new Date().toISOString().slice(0,10)}.xls`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // 12. PRINT / PDF: Print Filtered Table
+    function printFilteredTable() {
+        if (!filteredData || filteredData.length === 0) {
+            displayAlert('warning', 'No filtered records to print.');
+            return;
+        }
+        window.print();
+    }
+
+    // 13. Dynamic Modal & Form Handlers
+    function buildDynamicFormInputs(columns, dataRow = null) {
+        const formContainer = document.getElementById('dynamicFormInputs');
+        let html = '';
+
+        columns.forEach(col => {
+            let lower = col.toLowerCase();
+            if (lower !== 'id') {
+                let val = dataRow ? (dataRow[col] || '') : '';
+                let label = getFriendlyColumnName(col);
+                html += `
+                    <div class="col-md-6">
+                        <label class="form-label fs-13 fw-medium text-capitalize">${label}</label>
+                        <input type="text" class="form-control form-control-sm" name="${col}" value="${val}" placeholder="Enter ${label}" />
+                    </div>`;
+            }
+        });
+
+        formContainer.innerHTML = html;
+    }
+
+    function openEditModal(index) {
+        let row = filteredData[index];
+        if (!row) return;
+
+        document.getElementById('modalFormTitle').innerHTML = '<i class="ri-pencil-line me-1 text-primary"></i> Edit Supplier';
+        buildDynamicFormInputs(rawColumns, row);
+        var modal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+        modal.show();
+    }
+
+    function openDeleteModal(index) {
+        let row = filteredData[index];
+        if (!row) return;
+
+        let deleteBtn = document.getElementById('confirmDeleteBtn');
+        deleteBtn.onclick = function () {
+            // Remove from client array for instant responsiveness
+            rawData = rawData.filter(r => r !== row);
+            filteredData = filteredData.filter(r => r !== row);
+            updateUIAndTable();
+
+            var modalEl = document.getElementById('deleteConfirmModal');
+            var modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+            displayAlert('success', 'Supplier record deleted successfully.');
+        };
+
+        var modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+        modal.show();
+    }
+
+    function saveSupplierRecord() {
+        var modalEl = document.getElementById('addSupplierModal');
+        var modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        displayAlert('success', 'Supplier saved successfully.');
+        // Refresh data from server
+        loadSupplierData();
+    }
+
+    // 14. UI Helpers (Spinner, Alerts)
+    function showSpinner(show) {
+        document.getElementById('tableLoadingSpinner').style.display = show ? 'block' : 'none';
+        document.getElementById('tableWrapper').style.display = show ? 'none' : 'block';
+        document.getElementById('paginationWrapper').style.display = show ? 'none' : 'flex';
+    }
+
+    function displayAlert(type, msg) {
+        let container = document.getElementById('alertContainer');
+        container.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+                <i class="ri-information-line me-2"></i> ${msg}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+    }
+</script>
+}

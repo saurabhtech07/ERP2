@@ -1,0 +1,121 @@
+<!-- Filters (Date + Item + Category + Size) -->
+<div class="cm-filter-bar" id="joFilterBar">
+    <div class="cm-filter-top">
+        <div class="cm-filter-head">
+            <div class="cm-filter-chip"><i class="ri-filter-3-line"></i></div>
+            <div class="cm-filter-heading">
+                <span class="cm-filter-title">Filters</span>
+                <span class="cm-filter-sub">Narrow down job cards by date, item, category &amp; size</span>
+            </div>
+        </div>
+        <div class="cm-filter-actions">
+            <button type="button" class="cm-filter-btn cm-filter-reset" onclick="resetFilters()"><i class="ri-refresh-line"></i> Reset</button>
+            <button type="button" class="cm-filter-btn cm-filter-apply" onclick="applyFilters()"><i class="ri-check-line"></i> Apply</button>
+        </div>
+    </div>
+
+    <div class="cm-range-row">
+        <span class="cm-range-label"><i class="ri-time-line"></i> Quick</span>
+        <div class="cm-range-presets" id="joRangePresets">
+            <button type="button" class="cm-range-preset" data-range="today" onclick="setDateRange('today')">Today</button>
+            <button type="button" class="cm-range-preset" data-range="last7" onclick="setDateRange('last7')">Last 7 Days</button>
+            <button type="button" class="cm-range-preset" data-range="month" onclick="setDateRange('month')">This Month</button>
+            <button type="button" class="cm-range-preset" data-range="lastmonth" onclick="setDateRange('lastmonth')">Last Month</button>
+            <button type="button" class="cm-range-preset" data-range="year" onclick="setDateRange('year')">This Year</button>
+            <button type="button" class="cm-range-preset" data-range="all" onclick="setDateRange('all')">All</button>
+        </div>
+    </div>
+
+    <div class="cm-filter-row">
+        <div class="cm-filter-group">
+            <div class="cm-filter-field cm-filter-date">
+                <label class="cm-filter-label" for="joFilterFromDate">From Date</label>
+                <div class="cm-input-wrap">
+                    <i class="ri-calendar-line cm-input-ico"></i>
+                    <input type="date" id="joFilterFromDate" class="cm-filter-input cm-input-padded">
+                </div>
+            </div>
+            <span class="cm-range-sep"><i class="ri-arrow-right-line"></i></span>
+            <div class="cm-filter-field cm-filter-date">
+                <label class="cm-filter-label" for="joFilterToDate">To Date</label>
+                <div class="cm-input-wrap">
+                    <i class="ri-calendar-line cm-input-ico"></i>
+                    <input type="date" id="joFilterToDate" class="cm-filter-input cm-input-padded">
+                </div>
+            </div>
+            <div class="cm-filter-error d-none" id="joFilterDateError"><i class="ri-error-warning-line"></i> From date must be before To date</div>
+        </div>
+
+        <div class="cm-filter-field cm-filter-field-wide">
+            <label class="cm-filter-label" for="joItemComboInput">Item</label>
+            <div class="cm-combo" id="joItemCombo">
+                <div class="cm-input-wrap">
+                    <i class="ri-box-3-line cm-input-ico"></i>
+                    <input type="text" id="joItemComboInput" class="cm-combo-input cm-input-padded" placeholder="All Items" autocomplete="off">
+                    <button type="button" class="cm-combo-clear" title="Clear"><i class="ri-close-line"></i></button>
+                    <i class="ri-arrow-down-s-line cm-select-caret"></i>
+                </div>
+                <ul class="cm-combo-list" id="joItemComboList"></ul>
+            </div>
+        </div>
+
+        <div class="cm-filter-field cm-filter-field-wide">
+            <label class="cm-filter-label" for="joCategoryComboInput">Category</label>
+            <div class="cm-combo" id="joCategoryCombo">
+                <div class="cm-input-wrap">
+                    <i class="ri-price-tag-3-line cm-input-ico"></i>
+                    <input type="text" id="joCategoryComboInput" class="cm-combo-input cm-input-padded" placeholder="All Categories" autocomplete="off">
+                    <button type="button" class="cm-combo-clear" title="Clear"><i class="ri-close-line"></i></button>
+                    <i class="ri-arrow-down-s-line cm-select-caret"></i>
+                </div>
+                <ul class="cm-combo-list" id="joCategoryComboList"></ul>
+            </div>
+        </div>
+
+        <div class="cm-filter-field cm-filter-field-wide">
+            <label class="cm-filter-label" for="joSizeComboInput">Size</label>
+            <div class="cm-combo" id="joSizeCombo">
+                <div class="cm-input-wrap">
+                    <i class="ri-ruler-2-line cm-input-ico"></i>
+                    <input type="text" id="joSizeComboInput" class="cm-combo-input cm-input-padded" placeholder="All Sizes" autocomplete="off">
+                    <button type="button" class="cm-combo-clear" title="Clear"><i class="ri-close-line"></i></button>
+                    <i class="ri-arrow-down-s-line cm-select-caret"></i>
+                </div>
+                <ul class="cm-combo-list" id="joSizeComboList"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Job Order filter bar — compact, matches Sales Order look */
+    #joFilterBar {
+        padding: 12px 14px 14px;
+        margin-bottom: 13px;
+    }
+    #joFilterBar .cm-filter-top {
+        margin-bottom: 7px;
+    }
+    #joFilterBar .cm-range-row {
+        margin: 0 0 10px;
+        padding-bottom: 9px;
+    }
+    #joFilterBar .cm-filter-row {
+        gap: 7px 12px;
+    }
+    #joFilterBar .cm-filter-field {
+        gap: 4px;
+    }
+    #joFilterBar .cm-filter-field.cm-filter-date,
+    #joFilterBar .cm-filter-field.cm-filter-field-wide {
+        width: 190px;
+    }
+    #joFilterBar .cm-filter-input,
+    #joFilterBar .cm-combo-input,
+    #joFilterBar .cm-filter-bar select.cm-filter-select {
+        height: 36px;
+    }
+    #joFilterBar .cm-range-sep {
+        height: 36px;
+    }
+</style>

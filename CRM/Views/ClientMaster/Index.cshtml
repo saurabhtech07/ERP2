@@ -1,0 +1,720 @@
+@model CRM.Models.MasterDataPageResult
+@{
+    ViewBag.Title = "Client Master";
+    ViewBag.pagetitle = "Reports";
+    ViewBag.ptitle = "Client Master";
+}
+
+@section styles {
+    <link rel="stylesheet" href="~/assets/css/client-master.css?v=6" />
+}
+
+<div class="alert alert-danger alert-dismissible fade show d-none" role="alert" id="gridErrorAlert">
+    <i class="ri-error-warning-line me-2 align-middle fs-16"></i>
+    <strong>Database Notice:</strong> <span id="gridErrorMsg"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<!-- Summary stat cards -->
+<div class="row g-3 mb-3">
+    <div class="col-6 col-xl-3">
+        <div class="cm-stat-card">
+            <div class="cm-stat-icon cm-stat-total"><i class="ri-database-2-line"></i></div>
+            <div class="cm-stat-body">
+                <span class="cm-stat-label">Total Records</span>
+                <h4 class="cm-stat-value"><span id="statTotal">0</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="cm-stat-card">
+            <div class="cm-stat-icon cm-stat-active"><i class="ri-user-smile-line"></i></div>
+            <div class="cm-stat-body">
+                <span class="cm-stat-label">Active Clients</span>
+                <h4 class="cm-stat-value"><span id="statActive">0</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="cm-stat-card">
+            <div class="cm-stat-icon cm-stat-inactive"><i class="ri-user-unfollow-line"></i></div>
+            <div class="cm-stat-body">
+                <span class="cm-stat-label">Inactive Clients</span>
+                <h4 class="cm-stat-value"><span id="statInactive">0</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="cm-stat-card">
+            <div class="cm-stat-icon cm-stat-gst"><i class="ri-briefcase-4-line"></i></div>
+            <div class="cm-stat-body">
+                <span class="cm-stat-label">GST Registered</span>
+                <h4 class="cm-stat-value"><span id="statGst">0</span></h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card cm-card">
+
+            <div class="card-body">
+
+                <!-- Toolbar -->
+                <div class="cm-toolbar">
+                    <div class="cm-pg-control">
+                        <span class="cm-pg-label">Show</span>
+                        <div class="cm-select-wrap">
+                            <select id="pageSizeSelect" class="cm-size-select">
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <i class="ri-arrow-down-s-line cm-select-caret"></i>
+                        </div>
+                        <span class="cm-pg-label">entries</span>
+                    </div>
+
+                    <div class="cm-export">
+                        <button type="button" class="cm-export-btn cm-export-excel" onclick="exportToExcel()" title="Download as Excel (.xls)">
+                            <span class="cm-export-ico"><i class="ri-file-excel-2-line"></i></span> Excel
+                        </button>
+                        <button type="button" class="cm-export-btn cm-export-csv" onclick="exportToCSV()" title="Download as CSV">
+                            <span class="cm-export-ico"><i class="ri-file-text-line"></i></span> CSV
+                        </button>
+                        <button type="button" class="cm-export-btn cm-export-print" onclick="printTable()" title="Print records">
+                            <span class="cm-export-ico"><i class="ri-printer-line"></i></span> Print
+                        </button>
+                    </div>
+
+                    <div class="cm-filters cm-filter-group">
+                        <div class="cm-filter-chip"><i class="ri-filter-3-line"></i></div>
+                        <div class="cm-select-wrap">
+                            <select id="statusFilter" class="cm-size-select cm-filter-select">
+                                <option value="all">Status: All</option>
+                                <option value="active">Status: Active</option>
+                                <option value="inactive">Status: Inactive</option>
+                            </select>
+                            <i class="ri-arrow-down-s-line cm-select-caret"></i>
+                        </div>
+                    </div>
+
+                    <div class="cm-search-wrap" id="cmSearchWrap">
+                        <div class="cm-search-chip"><i class="ri-search-line cm-search-icon"></i></div>
+                        <input type="text" id="searchInput" class="cm-search-input" placeholder="Search records..." autocomplete="off">
+                        <span class="cm-search-count" id="searchCount"></span>
+                        <button type="button" class="cm-search-clear" id="searchClearBtn" onclick="clearSearch()" title="Clear search (Esc)">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="cm-scroll-wrapper" id="cmScrollWrapper">
+                    <div class="cm-loader-overlay" id="gridLoader">
+                        <div class="cm-loader">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <span>Loading data...</span>
+                        </div>
+                    </div>
+                    <table class="cm-table table table-hover align-middle mb-0" id="gridTable">
+                        <thead id="gridTableHead">
+                        </thead>
+                        <tbody id="gridBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-3 pt-2 border-top">
+                    <div class="cm-footer-info">
+                        Showing <span class="fw-semibold" id="showingStart">0</span>
+                        to <span class="fw-semibold" id="showingEnd">0</span>
+                        of <span class="fw-semibold" id="totalEntries">0</span> entries
+                    </div>
+                    <ul class="pagination pagination-separated pagination-sm cm-pagination mb-0" id="paginationContainer"></ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View details modal -->
+<div class="modal fade" id="cmViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header cm-view-modal-header">
+                <div>
+                    <h5 class="modal-title" id="cmViewTitle">Record Details</h5>
+                    <small class="cm-view-subtitle" id="cmViewSubtitle"></small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="cm-view-grid" id="cmViewBody"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    const API_URL = '@Url.Action("GetData", "ClientMaster")';
+    const MODULE_TITLE = 'Client Master';
+
+    let columns = [];
+    let currentRows = [];
+    let currentPage = 1;
+    let pageSize = 10;
+    let currentQuery = '';
+    let statusFilter = 'all';
+    let sortColumn = '';
+    let sortDir = 'asc';
+    let searchTimer = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        bindEvents();
+        loadPage();
+        window.addEventListener('resize', adjustScrollWrapper);
+    });
+
+    function bindEvents() {
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const q = this.value.trim();
+            this.classList.toggle('has-text', q.length > 0);
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                currentQuery = q;
+                currentPage = 1;
+                loadPage(false);
+            }, 300);
+        });
+
+        document.getElementById('pageSizeSelect').addEventListener('change', function () {
+            pageSize = parseInt(this.value, 10);
+            currentPage = 1;
+            loadPage();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function () {
+            statusFilter = this.value;
+            currentPage = 1;
+            loadPage();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            const si = document.getElementById('searchInput');
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey && document.activeElement &&
+                !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                si.focus();
+            } else if (e.key === 'Escape' && document.activeElement === si) {
+                clearSearch();
+                si.blur();
+            }
+        });
+    }
+
+    function clearSearch() {
+        const input = document.getElementById('searchInput');
+        input.value = '';
+        input.classList.remove('has-text');
+        currentQuery = '';
+        currentPage = 1;
+        loadPage(false);
+        input.focus();
+    }
+
+    function buildParams(allRows) {
+        const params = new URLSearchParams();
+        params.set('page', allRows ? 1 : currentPage);
+        params.set('pageSize', allRows ? 0 : pageSize);
+        params.set('search', currentQuery);
+        params.set('sortColumn', sortColumn);
+        params.set('sortDir', sortDir);
+        params.set('statusFilter', statusFilter);
+        return params.toString();
+    }
+
+    function fetchGrid(allRows) {
+        return fetch(API_URL + '?' + buildParams(allRows)).then(function (res) {
+            return res.json();
+        });
+    }
+
+    function loadPage(showLoader, animateStats) {
+        if (showLoader === undefined) showLoader = true;
+        if (animateStats === undefined) animateStats = true;
+        if (showLoader) setLoading(true);
+        fetchGrid(false).then(function (json) {
+            if (showLoader) setLoading(false);
+            if (json && json.errorMessage) {
+                showError(json.errorMessage);
+                return;
+            }
+            hideError();
+            if (json.columnNames) {
+                columns = json.columnNames;
+                renderHeader();
+            }
+            currentRows = json.rows || [];
+            renderBody(currentRows);
+            if (animateStats) renderStats(json);
+            renderPagination(json.total, json.totalPages);
+            updateSearchCount(json.total);
+            updateInfo(json.total);
+            if (currentQuery) highlightMatches();
+            adjustScrollWrapper();
+        }).catch(function (err) {
+            setLoading(false);
+            showError(err.message || 'Request failed');
+        });
+    }
+
+    let loadStartedAt = 0;
+
+    function setLoading(show) {
+        const loader = document.getElementById('gridLoader');
+        if (!loader) return;
+        if (show) {
+            loadStartedAt = performance.now();
+            loader.classList.remove('d-none');
+        } else {
+            const elapsed = performance.now() - loadStartedAt;
+            const delay = Math.max(0, 400 - elapsed);
+            setTimeout(function () {
+                loader.classList.add('d-none');
+            }, delay);
+        }
+    }
+
+    function showError(msg) {
+        document.getElementById('gridErrorMsg').textContent = msg;
+        document.getElementById('gridErrorAlert').classList.remove('d-none');
+    }
+
+    function hideError() {
+        document.getElementById('gridErrorAlert').classList.add('d-none');
+    }
+
+    function renderHeader() {
+        const head = document.getElementById('gridTableHead');
+        const tr = document.createElement('tr');
+        tr.id = 'gridHeaderRow';
+        columns.forEach(function (col, i) {
+            const th = document.createElement('th');
+            th.scope = 'col';
+            th.setAttribute('onclick', 'sortTable(' + i + ')');
+            th.setAttribute('data-col-index', i);
+            th.setAttribute('title', 'Sort by ' + col);
+            th.innerHTML = escapeHtml(col) + ' <span class="cm-sort-icon"><i class="ri-arrow-up-down-line"></i></span>';
+            tr.appendChild(th);
+        });
+        const thActions = document.createElement('th');
+        thActions.scope = 'col';
+        thActions.className = 'text-center';
+        thActions.textContent = 'Actions';
+        tr.appendChild(thActions);
+        head.innerHTML = '';
+        head.appendChild(tr);
+    }
+
+    function renderBody(rows) {
+        const tbody = document.getElementById('gridBody');
+        tbody.innerHTML = '';
+
+        if (!rows || rows.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="' + (columns.length || 1) + 1 + '" class="text-center py-5 text-muted">' +
+                '<i class="ri-inbox-line fs-36 d-block mb-2 text-muted"></i>' +
+                '<span class="fs-14">No matching records found.</span></td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        rows.forEach(function (data) {
+            const tr = document.createElement('tr');
+            columns.forEach(function (col) {
+                const td = document.createElement('td');
+                td.innerHTML = formatCellHtml(data, col);
+                tr.appendChild(td);
+            });
+            const tdActions = document.createElement('td');
+            tdActions.className = 'cm-actions-td';
+            tdActions.innerHTML =
+                '<button type="button" class="cm-action-btn cm-view-btn" onclick="viewRow(' + rows.indexOf(data) + ')" title="View details"><i class="ri-eye-line"></i></button>' +
+                '<button type="button" class="cm-action-btn cm-edit-btn" onclick="editRow(' + rows.indexOf(data) + ')" title="Edit"><i class="ri-pencil-line"></i></button>' +
+                '<button type="button" class="cm-action-btn cm-delete-btn" onclick="deleteRow(' + rows.indexOf(data) + ')" title="Delete"><i class="ri-delete-bin-line"></i></button>';
+            tr.appendChild(tdActions);
+            tbody.appendChild(tr);
+        });
+    }
+
+    function cellValue(data, col) {
+        const v = data[col];
+        return v === undefined || v === null ? '' : String(v).trim();
+    }
+
+    function formatCellHtml(data, col) {
+        const val = cellValue(data, col);
+        const colLower = col.toLowerCase();
+        const valLower = val.toLowerCase();
+
+        const isStatus = /status|active|isactive/.test(colLower);
+        const isPriority = /priority/.test(colLower);
+
+        if (isStatus) {
+            if (valLower === '1' || valLower === 'true' || valLower.indexOf('active') >= 0) {
+                return '<span class="cm-badge badge bg-success-subtle text-success">' + (valLower === '1' || valLower === 'true' ? 'Active' : escapeHtml(val)) + '</span>';
+            }
+            if (valLower === '0' || valLower === 'false' || valLower.indexOf('inactive') >= 0) {
+                return '<span class="cm-badge badge bg-danger-subtle text-danger">' + (valLower === '0' || valLower === 'false' ? 'Inactive' : escapeHtml(val)) + '</span>';
+            }
+            if (valLower.indexOf('pending') >= 0 || valLower.indexOf('process') >= 0) {
+                return '<span class="cm-badge badge bg-warning-subtle text-warning">' + escapeHtml(val) + '</span>';
+            }
+            return '<span class="cm-badge badge bg-secondary-subtle text-secondary">' + escapeHtml(val) + '</span>';
+        }
+        if (isPriority) {
+            if (valLower.indexOf('urgent') >= 0 || valLower.indexOf('critical') >= 0) {
+                return '<span class="cm-badge badge bg-danger-subtle text-danger">' + escapeHtml(val) + '</span>';
+            }
+            if (valLower.indexOf('high') >= 0) {
+                return '<span class="cm-badge badge bg-warning-subtle text-warning">' + escapeHtml(val) + '</span>';
+            }
+            return '<span class="cm-badge badge bg-info-subtle text-info">' + escapeHtml(val) + '</span>';
+        }
+        return '<span>' + (val === '' ? '—' : escapeHtml(val)) + '</span>';
+    }
+
+    function formatPlain(data, col) {
+        let v = cellValue(data, col);
+        const colLower = col.toLowerCase();
+        const vLower = v.toLowerCase();
+        if (/status|active|isactive/.test(colLower)) {
+            if (vLower === '1' || vLower === 'true' || vLower.indexOf('active') >= 0) return 'Active';
+            if (vLower === '0' || vLower === 'false' || vLower.indexOf('inactive') >= 0) return 'Inactive';
+        }
+        return v === '' ? '—' : v;
+    }
+
+    function highlightMatches() {
+        const q = currentQuery;
+        if (!q) return;
+        const tbody = document.getElementById('gridBody');
+        if (!tbody) return;
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach(function (row) {
+            const tds = Array.prototype.slice.call(row.children);
+            for (let i = 0; i < tds.length - 1; i++) {
+                const td = tds[i];
+                const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT);
+                const textNodes = [];
+                while (walker.nextNode()) textNodes.push(walker.currentNode);
+                for (const node of textNodes) {
+                    const txt = node.nodeValue;
+                    if (!txt) continue;
+                    const lower = txt.toLowerCase();
+                    if (lower.indexOf(q) === -1) continue;
+                    const frag = document.createDocumentFragment();
+                    let last = 0, idx;
+                    while ((idx = lower.indexOf(q, last)) !== -1) {
+                        if (idx > last) frag.appendChild(document.createTextNode(txt.slice(last, idx)));
+                        const mark = document.createElement('mark');
+                        mark.className = 'cm-match';
+                        mark.textContent = txt.substr(idx, q.length);
+                        frag.appendChild(mark);
+                        last = idx + q.length;
+                    }
+                    if (last < txt.length) frag.appendChild(document.createTextNode(txt.slice(last)));
+                    node.parentNode.replaceChild(frag, node);
+                }
+            }
+        });
+    }
+
+    function viewRow(idx) {
+        const data = currentRows[idx];
+        if (!data) return;
+        const first = columns.find(function (c) {
+            const v = data[c];
+            return v !== null && v !== undefined && String(v).trim() !== '';
+        });
+        const titleEl = document.getElementById('cmViewTitle');
+        const subtitleEl = document.getElementById('cmViewSubtitle');
+        const bodyEl = document.getElementById('cmViewBody');
+        if (titleEl) titleEl.textContent = first ? (first + ': ' + data[first]) : 'Record Details';
+        if (subtitleEl) subtitleEl.textContent = columns.length + ' fields · ' + getRowStatus(data);
+
+        bodyEl.innerHTML = columns.map(function (c) {
+            let val = cellValue(data, c);
+            if (!val || val.toLowerCase() === 'null') val = '';
+            let content = val === '' ? '—' : escapeHtml(val);
+            if (/status|active|isactive/.test(c)) {
+                const v = val.toLowerCase();
+                if (v === '1' || v === 'true' || v.indexOf('active') >= 0) {
+                    content = '<span class="cm-badge badge bg-success-subtle text-success" style="font-size:12px;">Active</span>';
+                } else if (v === '0' || v === 'false' || v.indexOf('inactive') >= 0) {
+                    content = '<span class="cm-badge badge bg-danger-subtle text-danger" style="font-size:12px;">Inactive</span>';
+                } else {
+                    content = '<span class="cm-badge badge bg-secondary-subtle text-secondary" style="font-size:12px;">' + (val === '' ? '—' : escapeHtml(val)) + '</span>';
+                }
+            }
+            return '<div class="cm-view-item"><span class="cm-view-label">' + escapeHtml(c) + '</span><span class="cm-view-value">' + content + '</span></div>';
+        }).join('');
+
+        const modalEl = document.getElementById('cmViewModal');
+        if (window.bootstrap && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        } else {
+            modalEl.style.display = 'block';
+            modalEl.classList.add('show');
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function getRowStatus(data) {
+        const idx = columns.findIndex(function (c) { return /status|active|isactive/.test(c); });
+        if (idx < 0) return '';
+        const v = cellValue(data, columns[idx]).toLowerCase();
+        if (v === '1' || v === 'true' || v.indexOf('active') >= 0) return 'Active';
+        if (v === '0' || v === 'false' || v.indexOf('inactive') >= 0) return 'Inactive';
+        return v ? v : '';
+    }
+
+    function editRow(idx) {
+    }
+
+    function deleteRow(idx) {
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (m) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+        });
+    }
+
+    function renderStats(json) {
+        countUp('statTotal', json.total);
+        countUp('statActive', json.activeCount || 0);
+        countUp('statInactive', json.inactiveCount || 0);
+        countUp('statGst', json.gstCount || 0);
+    }
+
+    function countUp(id, target) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const duration = 500;
+        const start = performance.now();
+        function step(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            el.textContent = Math.round(target * (1 - Math.pow(1 - progress, 3)));
+            if (progress < 1) requestAnimationFrame(step);
+            else el.textContent = target;
+        }
+        requestAnimationFrame(step);
+    }
+
+    function updateInfo(total) {
+        const totalPages = pageSize > 0 ? Math.max(Math.ceil(total / pageSize), 1) : 1;
+        const startRow = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+        const endRow = Math.min(currentPage * pageSize, total);
+        document.getElementById('showingStart').innerText = total === 0 ? 0 : startRow;
+        document.getElementById('showingEnd').innerText = endRow;
+        document.getElementById('totalEntries').innerText = total;
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+            return true;
+        }
+        return false;
+    }
+
+    function renderPagination(total, totalPages) {
+        if (totalPages < 1) totalPages = 1;
+        const container = document.getElementById('paginationContainer');
+        container.innerHTML = '';
+
+        const prevLi = document.createElement('li');
+        prevLi.className = 'page-item ' + (currentPage === 1 ? 'disabled' : '');
+        prevLi.innerHTML = '<a class="page-link" href="javascript:void(0);" onclick="goToPage(' + (currentPage - 1) + ')"><i class="ri-arrow-left-s-line"></i></a>';
+        container.appendChild(prevLi);
+
+        for (let p = 1; p <= totalPages; p++) {
+            if (totalPages > 7 && (p < currentPage - 2 || p > currentPage + 2) && p !== 1 && p !== totalPages) {
+                if (p === currentPage - 3 || p === currentPage + 3) {
+                    const dotsLi = document.createElement('li');
+                    dotsLi.className = 'page-item disabled';
+                    dotsLi.innerHTML = '<a class="page-link" href="javascript:void(0);">…</a>';
+                    container.appendChild(dotsLi);
+                }
+                continue;
+            }
+            const li = document.createElement('li');
+            li.className = 'page-item ' + (p === currentPage ? 'active' : '');
+            li.innerHTML = '<a class="page-link" href="javascript:void(0);" onclick="goToPage(' + p + ')">' + p + '</a>';
+            container.appendChild(li);
+        }
+
+        const nextLi = document.createElement('li');
+        nextLi.className = 'page-item ' + (currentPage === totalPages || total === 0 ? 'disabled' : '');
+        nextLi.innerHTML = '<a class="page-link" href="javascript:void(0);" onclick="goToPage(' + (currentPage + 1) + ')"><i class="ri-arrow-right-s-line"></i></a>';
+        container.appendChild(nextLi);
+
+        adjustScrollWrapper();
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        loadPage();
+    }
+
+    function sortTable(colIndex) {
+        const col = columns[colIndex];
+        if (!col) return;
+        if (sortColumn === col) {
+            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = col;
+            sortDir = 'asc';
+        }
+        document.querySelectorAll('#gridHeaderRow th').forEach(function (th, idx) {
+            th.classList.remove('cm-sorted');
+            const icon = th.querySelector('.cm-sort-icon');
+            if (icon) icon.innerHTML = '<i class="ri-arrow-up-down-line"></i>';
+        });
+        const activeTh = document.querySelector('#gridHeaderRow th[data-col-index="' + colIndex + '"]');
+        if (activeTh) {
+            activeTh.classList.add('cm-sorted');
+            const icon = activeTh.querySelector('.cm-sort-icon');
+            if (icon) icon.innerHTML = sortDir === 'asc' ? '<i class="ri-arrow-up-line"></i>' : '<i class="ri-arrow-down-line"></i>';
+        }
+        currentPage = 1;
+        loadPage(false, false);
+    }
+
+    function updateSearchCount(total) {
+        const el = document.getElementById('searchCount');
+        const wrap = document.getElementById('cmSearchWrap');
+        if (!el) return;
+        if (!currentQuery) {
+            el.classList.remove('show', 'is-zero');
+            el.style.display = 'none';
+            if (wrap) wrap.classList.remove('cm-has-count');
+            return;
+        }
+        el.textContent = total;
+        el.classList.add('show');
+        el.classList.toggle('is-zero', total === 0);
+        el.style.display = 'inline-flex';
+        if (wrap) wrap.classList.add('cm-has-count');
+    }
+
+    function adjustScrollWrapper() {
+        const w = document.getElementById('cmScrollWrapper');
+        if (!w) return;
+        w.classList.toggle('cm-scroll-fit-y', w.scrollHeight <= w.clientHeight + 2);
+        w.classList.toggle('cm-scroll-fit-x', w.scrollWidth <= w.clientWidth + 2);
+    }
+
+    // ---------- Export / Print ----------
+    function getExportData(cb) {
+        fetchGrid(true).then(function (json) {
+            if (json && json.errorMessage) {
+                showError(json.errorMessage);
+                cb(null);
+                return;
+            }
+            cb(json);
+        }).catch(function (err) {
+            showError(err.message || 'Request failed');
+            cb(null);
+        });
+    }
+
+    function buildExcelTable(json) {
+        const cols = json.columnNames || [];
+        const thead = '<tr>' + cols.map(function (c) { return '<th>' + escapeHtml(c) + '</th>'; }).join('') + '</tr>';
+        const tbody = (json.rows || []).map(function (data) {
+            return '<tr>' + cols.map(function (c) { return '<td>' + escapeHtml(formatPlain(data, c)) + '</td>'; }).join('') + '</tr>';
+        }).join('');
+        return '<table>' + thead + '<tbody>' + tbody + '</tbody></table>';
+    }
+
+    function exportToCSV() {
+        getExportData(function (json) {
+            if (!json) return;
+            const rows = json.rows || [];
+            if (rows.length === 0) { alert('No records to export'); return; }
+            const cols = json.columnNames || [];
+            let csv = '\uFEFF' + cols.map(function (c) { return '"' + c + '"'; }).join(',') + '\n';
+            rows.forEach(function (data) {
+                csv += cols.map(function (c) {
+                    return '"' + String(formatPlain(data, c)).replace(/"/g, '""') + '"';
+                }).join(',') + '\n';
+            });
+            const link = document.createElement('a');
+            link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(csv));
+            link.setAttribute('download', MODULE_TITLE.replace(/\s+/g, '') + '_' + new Date().toISOString().slice(0, 10) + '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    function exportToExcel() {
+        getExportData(function (json) {
+            if (!json) return;
+            const rows = json.rows || [];
+            if (rows.length === 0) { alert('No records to export'); return; }
+            const html = '\uFEFF<html><head><meta charset="utf-8"/></head><body>' + buildExcelTable(json) + '</body></html>';
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = MODULE_TITLE.replace(/\s+/g, '') + '_' + new Date().toISOString().slice(0, 10) + '.xls';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    }
+
+    function printTable() {
+        getExportData(function (json) {
+            if (!json) return;
+            const rows = json.rows || [];
+            if (rows.length === 0) { alert('No records to export'); return; }
+            const win = window.open('', '', 'height=700,width=1100');
+
+            const q = currentQuery;
+            const st = statusFilter;
+            const infoParts = [];
+            if (q) infoParts.push('Search: "' + q + '"');
+            if (st === 'active') infoParts.push('Status: Active');
+            else if (st === 'inactive') infoParts.push('Status: Inactive');
+            const info = infoParts.length ? ' · ' + infoParts.join(' · ') : '';
+
+            win.document.write('<html><head><title>' + MODULE_TITLE + ' - Print</title>');
+            win.document.write('<style>body{font-family:sans-serif;font-size:12px;}');
+            win.document.write('table{width:100%;border-collapse:collapse;}');
+            win.document.write('th,td{border:1px solid #ddd;padding:7px 12px;text-align:left;}');
+            win.document.write('th{background:#2563eb;color:#fff;font-weight:600;}');
+            win.document.write('tr:nth-child(even) td{background:#f8f9fa;}');
+            win.document.write('thead th:last-child, tbody td:last-child{display:none;}');
+            win.document.write('</style></head><body>');
+            win.document.write('<h2 style="color:#2563eb;margin-bottom:2px;">' + MODULE_TITLE + ' Records</h2>');
+            win.document.write('<div style="color:#64748b;font-size:11px;margin-bottom:14px;">' + rows.length + ' record(s)' + info + '</div>');
+            win.document.write(buildExcelTable(json));
+            win.document.write('</body></html>');
+            win.document.close();
+            win.focus();
+            win.print();
+            win.close();
+        });
+    }
+</script>
+}

@@ -1,0 +1,39 @@
+<div class="col-xl-12">
+    <div class="card filter-panel">
+        <div class="card-body">
+            <label class="form-label fs-label"><i class="ri-filter-3-line me-1"></i>Filters</label>
+            <div class="row g-2 align-items-end">
+                <div class="col-12">
+                    <div id="auto-filters" class="d-flex flex-wrap gap-2 align-items-end"></div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 align-items-end mt-2 pt-2 border-top">
+                <div id="date-range-block" class="d-flex flex-wrap gap-2 align-items-end">
+                    <div class="date-filter-col">
+                        <label class="form-label mb-1" for="filter-from">From Date</label>
+                        <input type="date" id="filter-from" class="form-control form-control-sm date-input">
+                    </div>
+                    <div class="date-filter-col">
+                        <label class="form-label mb-1" for="filter-to">To Date</label>
+                        <input type="date" id="filter-to" class="form-control form-control-sm date-input">
+                    </div>
+                </div>
+                <div class="flex-grow-1 d-flex flex-wrap gap-2 align-items-center justify-content-end">
+                    <button type="button" class="btn btn-light btn-action" id="btn-clear">
+                        <i class="ri-refresh-line me-1"></i>Clear
+                    </button>
+                    <button type="button" class="btn btn-action btn-excel" id="btn-excel">
+                        <i class="ri-file-excel-line me-1"></i>Excel
+                    </button>
+                    <button type="button" class="btn btn-action btn-csv" id="btn-csv">
+                        <i class="ri-file-list-line me-1"></i>CSV
+                    </button>
+                    <button type="button" class="btn btn-action btn-print" id="btn-print">
+                        <i class="ri-printer-line me-1"></i>Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

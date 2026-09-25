@@ -1,0 +1,144 @@
+﻿
+<!doctype html>
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
+<head>
+    @Html.Partial("~/Views/Shared/_title_meta.cshtml")
+    @RenderSection("styles", required: false)
+    @Html.Partial("~/Views/Shared/_head_css.cshtml")
+</head>
+<body>
+    <!-- Page loading overlay -->
+    <div id="pageLoader">
+        <div class="page-loader-inner">
+            <div class="page-loader-spinner"></div>
+            <span class="page-loader-text">Loading...</span>
+        </div>
+    </div>
+    <style>
+        #pageLoader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 20, 35, 0.55);
+            -webkit-backdrop-filter: blur(3px);
+            backdrop-filter: blur(3px);
+            opacity: 1;
+            visibility: visible;
+            transition: opacity .25s ease, visibility .25s ease;
+        }
+        #pageLoader.page-loader-hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .page-loader-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            padding: 32px 44px;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.45);
+        }
+        .page-loader-spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid #e6e9f5;
+            border-top-color: #405189;
+            border-radius: 50%;
+            animation: pageLoaderSpin .7s linear infinite;
+        }
+        #pageLoader .page-loader-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #405189;
+            letter-spacing: .4px;
+        }
+        @@keyframes pageLoaderSpin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        (function () {
+            var overlay = document.getElementById('pageLoader');
+            if (!overlay) return;
+            var navTimerKey = '__navTimer';
+            var hideNow = function () { overlay.classList.add('page-loader-hide'); };
+
+            if (sessionStorage.getItem(navTimerKey) === '1') {
+                sessionStorage.removeItem(navTimerKey);
+                var start = performance.now();
+                var minDelay = 600;
+                var fallback = setTimeout(hideNow, 4000);
+                var done = false;
+                var finish = function () {
+                    if (done) return;
+                    done = true;
+                    clearTimeout(fallback);
+                    var remain = Math.max(0, minDelay - (performance.now() - start));
+                    setTimeout(hideNow, remain);
+                };
+                window.addEventListener('load', finish);
+                document.addEventListener('DOMContentLoaded', function () {
+                    if (performance.now() - start >= minDelay) finish();
+                });
+            } else {
+                requestAnimationFrame(hideNow);
+            }
+
+            document.addEventListener('click', function (e) {
+                var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+                if (!a || a.getAttribute('target') === '_blank') return;
+                if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+                if (e.defaultPrevented) return;
+                var href = (a.getAttribute('href') || '').trim().split('?')[0].split('#')[0];
+                if (!href || href === '#' || href.indexOf('javascript:') === 0) return;
+                if (href.indexOf('://') >= 0 || href.indexOf('mailto:') >= 0 || href.indexOf('tel:') >= 0) return;
+                if (href.indexOf('/') !== 0) return;
+                var path = window.location.pathname;
+                if (href === path || (href.length > 1 && path.indexOf(href) === 0)) return;
+
+                overlay.classList.remove('page-loader-hide');
+                sessionStorage.setItem(navTimerKey, '1');
+                var stillHere = setTimeout(function () {
+                    overlay.classList.add('page-loader-hide');
+                    sessionStorage.removeItem(navTimerKey);
+                }, 1500);
+                window.addEventListener('beforeunload', function () { clearTimeout(stillHere); });
+            });
+        })();
+    </script>
+
+    <!-- Begin page -->
+    <div id="layout-wrapper">
+        @Html.Partial("~/Views/Shared/_menu.cshtml")
+
+        <!-- ============================================================== -->
+        <!-- Start right Content here -->
+        <!-- ============================================================== -->
+        <div class="main-content">
+
+            <div class="page-content">
+                <div class="container-fluid">
+                    @Html.Partial("~/Views/Shared/_page_title.cshtml")
+
+                    @RenderBody()
+                </div>
+            </div>
+
+            @RenderSection("externalhtml", required: false)
+            @Html.Partial("~/Views/Shared/_footer.cshtml")
+        </div>
+
+    </div>
+    <!-- END layout-wrapper -->
+    @Html.Partial("~/Views/Shared/_customizer.cshtml")
+
+    @Html.Partial("~/Views/Shared/_vendor_scripts.cshtml")
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Job Card Issue Report";
+    var columnsJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ColumnNames ?? new List<string>());
+    var typesJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ColumnTypes ?? new Dictionary<string, string>());
+    var itemsJson = System.Text.Json.JsonSerializer.Serialize(ViewBag.ItemsData ?? new List<object>());
+    var errorJson = System.Text.Json.JsonSerializer.Serialize((string)(ViewBag.ErrorMessage ?? ""));
+}
+
+@section styles {
+    <link href="~/assets/libs/gridjs/theme/mermaid.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" type="text/css" />
+    <link href="~/css/jobcard-issue.css" rel="stylesheet" type="text/css" />
+}
+
+<div class="row mb-3">
+    <partial name="Partials/_StatCards" />
+</div>
+
+<div class="row">
+    <partial name="Partials/_FilterPanel" />
+</div>
+
+<div class="row table-section">
+    <partial name="Partials/_TablePanel" />
+</div>
+
+<partial name="Partials/_ViewModal" />
+
+@section scripts {
+    <script src="~/assets/libs/gridjs/dist/gridjs.production.min.js"></script>
+    <script src="~/assets/libs/toastify-js/src/toastify.js"></script>
+    <script>
+        window.__JC_COLUMNS__ = @Html.Raw(columnsJson);
+        window.__JC_TYPES__ = @Html.Raw(typesJson);
+        window.__JC_DATA__ = @Html.Raw(itemsJson);
+        window.__JC_ERROR__ = @Html.Raw(errorJson);
+    </script>
+    <script src="~/js/jobcard-issue.js?v=@DateTime.UtcNow.Ticks"></script>
+}

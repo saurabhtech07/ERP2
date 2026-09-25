@@ -1,0 +1,47 @@
+<div id="itemModal" class="modal fade" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Add New Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="item-form">
+                <div class="modal-body">
+                    <input type="hidden" id="f-id" value="0">
+                    <div class="mb-3">
+                        <label class="form-label" for="f-name">Name *</label>
+                        <input type="text" id="f-name" class="form-control" placeholder="e.g. 1097 FAB" required>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label" for="f-cat1">Category 1 *</label>
+                            <select id="f-cat1" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="f-cat2">Category 2 *</label>
+                            <select id="f-cat2" class="form-select" required></select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label" for="f-unit">Unit *</label>
+                            <select id="f-unit" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="f-status">Status</label>
+                            <select id="f-status" class="form-select"></select>
+                        </div>
+                    </div>
+                    <div class="mb-0 mt-3">
+                        <label class="form-label" for="f-hsn">HSN Code</label>
+                        <input type="text" id="f-hsn" class="form-control" placeholder="e.g. 60063200">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

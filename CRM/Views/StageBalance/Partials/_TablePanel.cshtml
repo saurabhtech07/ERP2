@@ -1,0 +1,24 @@
+<div class="col-xl-12">
+    <div class="card table-panel">
+        <div class="card-header align-items-center d-flex py-2">
+            <h4 class="card-title mb-0 flex-grow-1 fs-15">Stage Balance Records <span class="fs-13 text-muted fw-normal" id="record-count"></span></h4>
+            <div class="d-flex align-items-center gap-2">
+                <small class="text-muted fs-12 fw-medium">Rows / page</small>
+                <select id="page-size" class="form-select form-select-sm">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="loading" class="text-center py-5">
+                <i class="ri-loader-4-line ri-spin fs-2 text-primary"></i>
+                <p class="text-muted mb-0 mt-2 fs-14">Loading stage balance...</p>
+            </div>
+            <div id="sb-grid" class="d-none"></div>
+        </div>
+    </div>
+</div>

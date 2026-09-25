@@ -93,9 +93,312 @@
             background: var(--vz-card-bg);
         }
 
-        #dynamicGrid .gridjs-th-sort:hover,
+#dynamicGrid .gridjs-th-sort:hover,
         #dynamicGrid .gridjs-th-sort:focus {
             background: none;
+        }
+    </style>
+    <style>
+        /* ================================================================
+           POLISH - Pure CSS, logic/DOM untouched.
+           Reverse ke liye bas ye poora block delete kar dena.
+           ================================================================ */
+
+        /* ---------- Filter panel ---------- */
+        .filter-panel {
+            position: relative;
+            border: 1px solid #e8edf4;
+            border-radius: 14px;
+            box-shadow: 0 6px 22px -12px rgba(15, 23, 42, 0.16);
+        }
+        .filter-panel::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 12px;
+            bottom: 12px;
+            width: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #405189, #06b6d4, #10b981);
+        }
+        .filter-panel .fs-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #405189;
+            margin-bottom: 0.6rem;
+        }
+        .filter-panel .fs-label i { color: #06b6d4; font-size: 14px; }
+        .filter-panel .form-label,
+        .filter-panel .fs-label-sm { font-weight: 600; color: #475569; }
+
+        .filter-panel input[type="date"],
+        .filter-panel .form-select,
+        .filter-panel .choices__inner {
+            border-radius: 9px;
+            transition: border-color .18s ease, box-shadow .18s ease;
+        }
+        .filter-panel input[type="date"]:focus,
+        .filter-panel .form-select:focus,
+        .filter-panel .choices.is-focused .choices__inner,
+        .filter-panel .choices.is-open .choices__inner {
+            border-color: #405189 !important;
+            box-shadow: 0 0 0 3px rgba(64, 81, 137, 0.14);
+        }
+        .filter-panel .choices__inner {
+            background: #ffffff;
+            min-height: 38px;
+        }
+        .filter-panel .choices__list--dropdown {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 16px 34px -14px rgba(15, 23, 42, 0.22);
+            margin-top: 5px;
+        }
+        .filter-panel .choices__list--dropdown .choices__item--selectable.is-highlighted {
+            background: #eef4fb;
+        }
+
+        /* ---------- Search (pill) ---------- */
+        #drcFromWrap, #drcToWrap { min-width: 150px; }
+        #drcFromWrap input[type="date"], #drcToWrap input[type="date"] { width: 155px; }
+        #reportSearch {
+            border-radius: 999px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        }
+        #reportSearch:focus {
+            border-color: #405189;
+            box-shadow: 0 0 0 3px rgba(64, 81, 137, 0.14);
+        }
+        #reportSearch:focus ~ .search-icon { color: #405189; }
+        .search-icon { color: #94a3b8; }
+
+        /* ---------- Action buttons ---------- */
+        #btn-excel, #btn-csv, #btn-print, #btn-clear { border-radius: 9px; }
+        #btn-excel { box-shadow: 0 8px 16px -10px rgba(18, 183, 106, 0.65); }
+        #btn-csv   { box-shadow: 0 8px 16px -10px rgba(59, 130, 246, 0.65); }
+        #btn-print { box-shadow: 0 8px 16px -10px rgba(139, 92, 246, 0.65); }
+        #btn-clear:hover { background: #f1f5f9; border-color: #dbe3ed; }
+
+/* ---------- Cards (corporate KPI style - full revamp) ---------- */
+        #drcCards { margin-top: 0.5rem; }
+        #drcCards .stat-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e6eaf0;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -14px rgba(16, 24, 40, 0.10);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+        #drcCards .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: #d8dfe9;
+            box-shadow: 0 2px 4px rgba(16, 24, 40, 0.05), 0 18px 34px -16px rgba(16, 24, 40, 0.18);
+        }
+
+        /* old gradient bar + radial glow hataya */
+        #drcCards .stat-card::after {
+            display: none !important;
+            background: transparent !important;
+        }
+        /* thin tone accent on the left */
+        #drcCards .stat-card::before {
+            content: "" !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 0;
+            opacity: 1;
+            background: transparent !important;
+        }
+        #drcCards .stat-orange::before { background: #f59e0b !important; }
+        #drcCards .stat-blue::before   { background: #3b82f6 !important; }
+        #drcCards .stat-grey::before   { background: #64748b !important; }
+        #drcCards .stat-green::before  { background: #10b981 !important; }
+
+        #drcCards .stat-card .card-body {
+            padding: 0.85rem 1rem;
+            gap: 8px;
+        }
+        #drcCards .stat-card .avatar-title {
+            width: 46px;
+            height: 46px;
+            min-width: 46px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        #drcCards .stat-card .avatar-title i { font-size: 22px; }
+        #drcCards .stat-orange .avatar-title { background: #fff5e6 !important; }
+        #drcCards .stat-orange .avatar-title i { color: #f59e0b !important; }
+        #drcCards .stat-blue .avatar-title { background: #eef4ff !important; }
+        #drcCards .stat-blue .avatar-title i { color: #3b82f6 !important; }
+        #drcCards .stat-grey .avatar-title { background: #f1f5f9 !important; }
+        #drcCards .stat-grey .avatar-title i { color: #64748b !important; }
+        #drcCards .stat-green .avatar-title { background: #ecfdf5 !important; }
+        #drcCards .stat-green .avatar-title i { color: #10b981 !important; }
+
+        #drcCards .stat-card .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #64748b;
+            line-height: 1.25;
+            margin-bottom: 2px;
+        }
+        #drcCards .stat-card .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+        #drcCards .stat-card .chart-mini { flex-shrink: 0; opacity: 0.85; }
+        #drcCards .stat-card .chart-mini svg { width: 38px; height: 34px; }
+
+        /* soft entrance */
+        #drcCards .stat-card { animation: drcCardIn .45s ease both; }
+        #drcCards .stat-card:nth-child(2) { animation-delay: .06s; }
+        #drcCards .stat-card:nth-child(3) { animation-delay: .12s; }
+        #drcCards .stat-card:nth-child(4) { animation-delay: .18s; }
+        @@keyframes drcCardIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* ---------- Premium loading shimmer ---------- */
+        #loading .skeleton-card {
+            border: 1px solid #e9ecef;
+            border-radius: 0.6rem;
+            padding: 0.85rem 1rem;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            overflow: hidden;
+        }
+        #loading .skeleton {
+            position: relative;
+            background: #eef1f5;
+            border-radius: 6px;
+            height: 14px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        #loading .skeleton-head { height: 18px; width: 42%; margin-bottom: 16px; }
+        #loading .skeleton-sk-1 { width: 100%; }
+        #loading .skeleton-sk-2 { width: 78%; }
+        #loading .skeleton-sk-3 { width: 92%; }
+        #loading .skeleton-sk-4 { width: 64%; }
+        #loading .skeleton-sk-5 { width: 85%; }
+        #loading .skeleton::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+            animation: skeletonShimmer 1.4s ease infinite;
+        }
+        @@keyframes skeletonShimmer { to { transform: translateX(100%); } }
+
+        /* ---------- Search clear (x) ---------- */
+        #reportSearch { padding-right: 2.4rem; }
+        .search-clear {
+            right: 0.45rem;
+            width: 22px;
+            height: 22px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: color .15s ease, background .15s ease;
+        }
+        .search-clear i { font-size: 14px; }
+        .search-clear:hover { color: #f06548; background: #f1f5f9; }
+
+        /* ---------- Pagination ---------- */
+        #dynamicGrid .gridjs-pagination .gridjs-summary { color: #64748b; font-weight: 500; font-size: 12.5px; }
+        #dynamicGrid .gridjs-pagination .gridjs-pages button {
+            border-radius: 8px;
+            min-width: 30px;
+            height: 30px;
+            padding: 0 8px;
+            box-sizing: border-box;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            font-size: 12.5px;
+            line-height: 1;
+            transition: all .15s ease;
+        }
+        #dynamicGrid .gridjs-pagination .gridjs-pages button:hover:not(:disabled) {
+            background: #eef4fb;
+            border-color: #c3cbdc;
+            color: #405189;
+        }
+        #dynamicGrid .gridjs-pagination .gridjs-pages button.gridjs-currentPage {
+            background: #405189 !important;
+            border-color: #405189 !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            box-shadow: 0 4px 10px -4px rgba(64, 81, 137, 0.5);
+        }
+        #dynamicGrid .gridjs-pagination .gridjs-pages button:disabled { opacity: 0.55; }
+
+        /* ---------- Grid header + record pill ---------- */
+        #reportTableSection .card-header {
+            background: #f9fafc;
+            border-bottom: 1px solid #eceff4;
+        }
+        .drc-report-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .report-icon-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            background: #eef1f9;
+            color: #405189;
+            font-size: 16px;
+        }
+        #reportName {
+            font-weight: 800;
+            color: #0f172a;
+            font-size: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .record-count-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #eef2f7;
+            color: #64748b;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid #e2e8f0;
+            white-space: nowrap;
         }
     </style>
 }
@@ -173,24 +476,27 @@
         <div class="card filter-panel">
             <div class="card-body">
                 <label class="form-label fs-label"><i class="ri-filter-3-line me-1"></i>Filters</label>
-                <div class="row g-2 align-items-end">
-                    <div class="col-6 col-lg-2" id="drcFromWrap" style="display:none;">
-                        <label class="form-label fs-label-sm">From Date</label>
-                        <input type="date" class="form-control" id="drcFromDate">
-                    </div>
-                    <div class="col-6 col-lg-2" id="drcToWrap" style="display:none;">
-                        <label class="form-label fs-label-sm">To Date</label>
-                        <input type="date" class="form-control" id="drcToDate">
-                    </div>
-<div class="col-12" id="drcFilterMounts" style="display:none;">
+<div class="row g-2 align-items-end">
+                    <div class="col-12" id="drcFilterMounts" style="display:none;">
                         <div class="row g-2" id="drcFilterRow"></div>
                     </div>
                 </div>
 
-                <div class="d-flex flex-wrap gap-2 align-items-center mt-2 pt-2 border-top">
-                    <div class="position-relative flex-grow-1" style="min-width:220px">
+<div class="d-flex flex-wrap gap-2 align-items-end mt-2 pt-2 border-top">
+                    <div class="d-flex flex-column" id="drcFromWrap" style="display:none;">
+                        <label class="form-label fs-label-sm mb-1">From Date</label>
+                        <input type="date" class="form-control" id="drcFromDate">
+                    </div>
+                    <div class="d-flex flex-column" id="drcToWrap" style="display:none;">
+                        <label class="form-label fs-label-sm mb-1">To Date</label>
+                        <input type="date" class="form-control" id="drcToDate">
+                    </div>
+<div class="position-relative flex-grow-1" style="min-width:220px">
                         <input type="text" id="reportSearch" class="form-control ps-5" placeholder="Search in report...">
                         <i class="ri-search-line position-absolute top-50 translate-middle-y ms-3 search-icon"></i>
+                        <button type="button" id="searchClear" class="search-clear position-absolute top-50 translate-middle-y" style="display:none;" tabindex="-1" aria-label="Clear search" title="Clear search">
+                            <i class="ri-close-line"></i>
+                        </button>
                     </div>
                     <button type="button" class="btn btn-light btn-action" id="btn-clear">
                         <i class="ri-refresh-line me-1"></i>Clear
@@ -214,10 +520,14 @@
     <div class="col-xl-12">
         <div class="card table-panel">
             <div class="card-header align-items-center d-flex py-2">
-                <h4 class="card-title mb-0 flex-grow-1 fs-15"><span id="reportName">@ViewBag.ReportName</span> <span class="fs-13 text-muted fw-normal" id="record-count"></span></h4>
+                <h4 class="card-title mb-0 flex-grow-1 fs-15 drc-report-title">
+                    <span class="report-icon-chip"><i class="ri-database-2-line"></i></span>
+                    <span id="reportName">@ViewBag.ReportName</span>
+                    <span class="record-count-pill" id="record-count"></span>
+                </h4>
                 <div class="d-flex align-items-center gap-2">
-                    <small class="text-muted fs-12 fw-medium">Rows / page</small>
-                    <select id="drcPageSize" class="form-select form-select-sm">
+                    <small class="text-muted fs-12 fw-medium">Rows per page</small>
+                    <select id="page-size" class="form-select form-select-sm">
                         <option value="10" selected>10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
@@ -226,9 +536,15 @@
                 </div>
             </div>
             <div class="card-body">
-                <div id="loading" class="text-center py-5" style="display: none;">
-                    <i class="ri-loader-4-line ri-spin fs-2 text-primary"></i>
-                    <p class="text-muted mb-0 mt-2 fs-14">Loading data...</p>
+<div id="loading" style="display: none;">
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-head"></div>
+                        <div class="skeleton skeleton-sk-1"></div>
+                        <div class="skeleton skeleton-sk-2"></div>
+                        <div class="skeleton skeleton-sk-3"></div>
+                        <div class="skeleton skeleton-sk-4"></div>
+                        <div class="skeleton skeleton-sk-5"></div>
+                    </div>
                 </div>
                 <div id="dynamicGrid"></div>
             </div>
@@ -258,15 +574,23 @@
                 document.getElementById('dynamicGrid').innerHTML = '<div class="alert alert-info">Please select a report from the sidebar.</div>';
             }
 
-            // Search logic
-            document.getElementById('reportSearch').addEventListener('input', function (e) {
+// Search logic
+            var searchInput = document.getElementById('reportSearch');
+            var searchClear = document.getElementById('searchClear');
+            function applySearchKeyword(kw) {
                 if (grid) {
-                    grid.updateConfig({
-                        search: {
-                            keyword: e.target.value
-                        }
-                    }).forceRender();
+                    grid.updateConfig({ search: { keyword: kw } }).forceRender();
                 }
+            }
+            searchInput.addEventListener('input', function (e) {
+                searchClear.style.display = e.target.value ? 'inline-flex' : 'none';
+                applySearchKeyword(e.target.value);
+            });
+            searchClear.addEventListener('click', function () {
+                searchInput.value = '';
+                searchClear.style.display = 'none';
+                searchInput.focus();
+                applySearchKeyword('');
             });
 
 // Date / dropdown filter events
@@ -378,16 +702,10 @@
             document.getElementById('btn-print').addEventListener('click', printTable);
 
             // Rows per page
-            document.getElementById('drcPageSize').addEventListener('change', function () {
-                if (!grid) return;
-                grid.updateConfig({
-                    pagination: {
-                        enabled: true,
-                        limit: parseInt(this.value, 10) || 10
-                    }
-                });
-                grid.forceRender();
+            document.getElementById('page-size').addEventListener('change', function () {
                 this.blur();
+                if (!grid) return;
+                renderGrid(allColumns, currentRows && currentRows.length ? currentRows : allRows);
             });
 
             // Record count
@@ -413,6 +731,8 @@ if (data.success) {
                             if (nameEl && data.reportName) {
                                 nameEl.textContent = data.reportName;
                                 if (document.title) document.title = data.reportName;
+                                var sEl = document.getElementById('reportSearch');
+                                if (sEl) sEl.placeholder = 'Search in ' + data.reportName + '...';
                             }
                             initFilters();
                             renderCards(allColumns, allRows);
@@ -429,14 +749,15 @@ if (data.success) {
                     });
             }
 
-            function renderGrid(columns, rows) {
+function renderGrid(columns, rows) {
                 var gridWrapper = document.getElementById('dynamicGrid');
-                gridWrapper.innerHTML = ''; 
-
                 if (!columns || columns.length === 0) {
                     gridWrapper.innerHTML = '<p class="text-muted">No data found.</p>';
                     return;
                 }
+
+                var kw = document.getElementById('reportSearch').value.trim();
+                var limit = parseInt(document.getElementById('page-size').value, 10) || 10;
 
                 var gridColumns = columns.map(c => ({
                     name: c.charAt(0).toUpperCase() + c.slice(1),
@@ -451,18 +772,42 @@ if (data.success) {
                     return obj;
                 });
 
-                grid = new gridjs.Grid({
-                    columns: gridColumns,
-                    data: gridData,
-                    pagination: {
-                        limit: 10
-                    },
-                    sort: true,
-                    search: true, // GridJS internal search used programmatically
-                    className: {
-                        table: 'table table-hover table-striped align-middle mb-0'
+                try {
+                    if (!grid) {
+                        // create once ...
+                        grid = new gridjs.Grid({
+                            columns: gridColumns,
+                            data: gridData,
+                            pagination: {
+                                enabled: true,
+                                limit: limit
+                            },
+                            sort: true,
+                            search: kw ? { keyword: kw } : true, // live search keyword folded in fresh grid
+                            className: {
+                                table: 'table table-hover table-striped align-middle mb-0'
+                            }
+                        }).render(gridWrapper);
+                    } else {
+                        // ... refresh via config (avoids fragile re-instantiation)
+                        grid = grid.updateConfig({
+                            columns: gridColumns,
+                            data: gridData,
+                            pagination: {
+                                enabled: true,
+                                limit: limit
+                            },
+                            search: kw ? { keyword: kw } : true
+                        });
+                        grid.forceRender();
                     }
-                }).render(gridWrapper);
+                } catch (err) {
+                    console.error('[DynRep] renderGrid error:', err);
+                    gridWrapper.innerHTML = '<div class="alert alert-warning">Table render error: ' +
+                        escHtml(err && err.message ? err.message : String(err)) +
+                        '. Data is still available in CSV / Excel / Print.</div>';
+                    return;
+                }
 
                 // Hide the default GridJS search box since we have our custom one
                 setTimeout(() => {
@@ -895,11 +1240,6 @@ currentRows = rows;
                 renderCards(allColumns, rows);
                 renderGrid(allColumns, rows);
                 updateRecordCount(rows);
-
-                var kw = document.getElementById('reportSearch').value;
-                if (kw) {
-                    grid.updateConfig({ search: { keyword: kw } }).forceRender();
-                }
             }
         });
     </script>

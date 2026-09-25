@@ -155,6 +155,14 @@ namespace CRM.Data
             await cmd.ExecuteNonQueryAsync();
         }
 
+        private static readonly (string FieldName, string[] ColumnNames)[] FilterFieldDefinitions =
+        {
+            ("Date", new[] { "Date", "FilterDate", "Filter_Date", "DateFilter", "Date_Filter" }),
+            ("Client Name", new[] { "Client Name", "ClientName", "Client_Name", "FilterClientName", "Filter_ClientName", "ClientNameFilter", "Client_Name_Filter" }),
+            ("Category", new[] { "Category", "CategoryFilter", "Category_Filter", "FilterCategory", "Filter_Category" }),
+            ("Status", new[] { "Status", "StatusFilter", "Status_Filter", "FilterStatus", "Filter_Status" })
+        };
+
         public async Task<List<ReportMenuItem>> GetWebTblMasterAsync()
         {
             var menuItems = new List<ReportMenuItem>();
@@ -165,16 +173,18 @@ namespace CRM.Data
                 {
                     CommandType = CommandType.StoredProcedure
                 };
-                
+
                 await conn.OpenAsync();
                 using var reader = await cmd.ExecuteReaderAsync();
-                
+
                 while (await reader.ReadAsync())
                 {
                     menuItems.Add(new ReportMenuItem
                     {
-                        Tbl_View_Name = reader["Tbl_View_Name"]?.ToString() ?? string.Empty,
-                        Report_Name = reader["Report_Name"]?.ToString() ?? string.Empty
+                        Tbl_View_Name = ReadStringValue(reader, "Tbl_View_Name", "TblViewName"),
+                        Report_Name = ReadStringValue(reader, "Report_Name", "ReportName"),
+                        Report_Type = ReadStringValue(reader, "Report_Type", "ReportType", "Type", "Menu_Head", "MenuHead"),
+                        FilterFields = ReadFilterFields(reader)
                     });
                 }
             }
@@ -184,6 +194,197 @@ namespace CRM.Data
                 throw;
             }
             return menuItems;
+        }
+
+        private static List<ReportFilterField> ReadFilterFields(SqlDataReader reader)
+        {
+            var filterFields = new List<ReportFilterField>();
+
+            foreach (var definition in FilterFieldDefinitions)
+            {
+                AddFilterField(reader, definition.FieldName, definition.ColumnNames, filterFields);
+            }
+
+            AddPositionalFilterFields(reader, filterFields);
+
+            if (filterFields.Count == 0 && TryReadValue(reader, new[] { "FilterFields", "Filter_Field", "Filters" }, out var combinedValue))
+            {
+                AddFilterValue(filterFields, combinedValue, string.Empty);
+            }
+
+            return filterFields;
+        }
+
+        private static void AddPositionalFilterFields(SqlDataReader reader, List<ReportFilterField> filterFields)
+        {
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                var normalizedColumnName = NormalizeMetadataColumnName(reader.GetName(i));
+                if (!normalizedColumnName.StartsWith("filter", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var positionText = normalizedColumnName.Substring("filter".Length);
+                if (!int.TryParse(positionText, out _))
+                {
+                    continue;
+                }
+
+                var value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                AddFilterValue(filterFields, value, string.Empty);
+            }
+        }
+
+        private static void AddFilterField(SqlDataReader reader, string defaultFieldName, IEnumerable<string> columnNames, List<ReportFilterField> filterFields)
+        {
+            var visibilityColumnNames = new[]
+            {
+                defaultFieldName + "Visible",
+                defaultFieldName + "_Visible",
+                "Visible" + defaultFieldName,
+                "Is" + defaultFieldName + "Visible"
+            };
+            var hasVisibility = TryReadValue(reader, visibilityColumnNames, out var visibilityValue);
+
+            if (hasVisibility && !ParseBooleanValue(visibilityValue, true))
+            {
+                AddFilterField(filterFields, defaultFieldName, false);
+                return;
+            }
+
+            if (TryReadValue(reader, columnNames, out var value) && value != null && value != DBNull.Value)
+            {
+                AddFilterValue(filterFields, value, defaultFieldName);
+                return;
+            }
+
+            if (hasVisibility)
+            {
+                AddFilterField(filterFields, defaultFieldName, ParseBooleanValue(visibilityValue, true));
+            }
+        }
+
+        private static void AddFilterValue(List<ReportFilterField> filterFields, object? value, string defaultFieldName)
+        {
+            if (value == null || value == DBNull.Value)
+            {
+                return;
+            }
+
+            if (value is bool booleanValue)
+            {
+                AddFilterField(filterFields, defaultFieldName, booleanValue);
+                return;
+            }
+
+            var text = value.ToString()?.Trim() ?? string.Empty;
+            if (text.Length == 0)
+            {
+                return;
+            }
+
+            var values = text.Split(new[] { ',', ';', '|' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var item in values)
+            {
+                var fieldName = item.Trim();
+                if (fieldName.Length == 0)
+                {
+                    continue;
+                }
+
+                if (IsBooleanFalse(fieldName))
+                {
+                    AddFilterField(filterFields, defaultFieldName, false);
+                }
+                else if (IsBooleanTrue(fieldName))
+                {
+                    AddFilterField(filterFields, defaultFieldName, true);
+                }
+                else
+                {
+                    AddFilterField(filterFields, fieldName, true);
+                }
+            }
+        }
+
+        private static void AddFilterField(List<ReportFilterField> filterFields, string fieldName, bool visible)
+        {
+            var normalizedName = fieldName.Trim();
+            if (normalizedName.Length == 0 || filterFields.Any(x => string.Equals(x.FieldName, normalizedName, StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            filterFields.Add(new ReportFilterField
+            {
+                FieldName = normalizedName,
+                Visible = visible
+            });
+        }
+
+        private static bool ParseBooleanValue(object? value, bool defaultValue)
+        {
+            if (value is bool booleanValue)
+            {
+                return booleanValue;
+            }
+
+            var text = value?.ToString()?.Trim().ToLowerInvariant() ?? string.Empty;
+            if (text == "true" || text == "1" || text == "yes" || text == "y" || text == "on")
+            {
+                return true;
+            }
+
+            if (text == "false" || text == "0" || text == "no" || text == "n" || text == "off")
+            {
+                return false;
+            }
+
+            return defaultValue;
+        }
+
+        private static bool IsBooleanTrue(string value)
+        {
+            var normalizedValue = value.Trim().ToLowerInvariant();
+            return normalizedValue == "true" || normalizedValue == "1" || normalizedValue == "yes" || normalizedValue == "y" || normalizedValue == "on";
+        }
+
+        private static bool IsBooleanFalse(string value)
+        {
+            var normalizedValue = value.Trim().ToLowerInvariant();
+            return normalizedValue == "false" || normalizedValue == "0" || normalizedValue == "no" || normalizedValue == "n" || normalizedValue == "off";
+        }
+
+        private static string ReadStringValue(SqlDataReader reader, params string[] columnNames)
+        {
+            return TryReadValue(reader, columnNames, out var value)
+                ? value?.ToString()?.Trim() ?? string.Empty
+                : string.Empty;
+        }
+
+        private static bool TryReadValue(SqlDataReader reader, IEnumerable<string> columnNames, out object? value)
+        {
+            var normalizedColumnNames = columnNames
+                .Select(NormalizeMetadataColumnName)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                if (normalizedColumnNames.Contains(NormalizeMetadataColumnName(reader.GetName(i))))
+                {
+                    value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                    return true;
+                }
+            }
+
+            value = null;
+            return false;
+        }
+
+        private static string NormalizeMetadataColumnName(string value)
+        {
+            return new string(value.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
         }
     }
 }

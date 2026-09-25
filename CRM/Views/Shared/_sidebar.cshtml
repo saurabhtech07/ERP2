@@ -1,14 +1,8 @@
 @using CRM.Data
-@using Microsoft.Extensions.Caching.Memory
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
-@inject IMemoryCache MemoryCache
 @{
-    var dynamicReportsList = await MemoryCache.GetOrCreateAsync("SidebarDynamicReports", async entry =>
-    {
-        entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2);
-        var dataAccess = new DataAccess(Configuration.GetConnectionString("DefaultConnection"));
-        return await dataAccess.GetWebTblMasterAsync();
-    });
+    var dataAccess = new DataAccess(Configuration.GetConnectionString("DefaultConnection")!);
+    var dynamicReportsList = await dataAccess.GetWebTblMasterAsync();
 }
 <!-- ========== App Menu ========== -->
 <div class="app-menu navbar-menu">

@@ -562,6 +562,8 @@
             let initialTable = '@Html.Raw(ViewBag.SelectedTable ?? "")';
             let allColumns = [];
             let allRows = [];
+            let allColumnTypes = [];
+            let filterDefinitions = [];
             let dateCol = null;
             let filterCols = [];
             let choicesInstances = {};
@@ -723,9 +725,11 @@
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('loading').style.display = 'none';
-if (data.success) {
+                        if (data.success) {
                             allColumns = data.columns || [];
                             allRows = data.rows || [];
+                            allColumnTypes = data.columnTypes || [];
+                            filterDefinitions = Array.isArray(data.filterFields) ? data.filterFields : [];
                             exportCols = allColumns.map(function (c) { return { key: c, label: c.charAt(0).toUpperCase() + c.slice(1) }; });
                             var nameEl = document.getElementById('reportName');
                             if (nameEl && data.reportName) {
@@ -1055,15 +1059,47 @@ function renderGrid(columns, rows) {
                 return isNaN(d.getTime()) ? null : d;
             }
 
+            function normalizeFieldName(name) {
+                return String(name == null ? '' : name)
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]/g, '');
+            }
+
+            function getFilterFieldName(item) {
+                if (typeof item === 'string') return item;
+                if (!item) return '';
+                return item.field || item.FieldName || item.name || '';
+            }
+
+            function isFilterFieldVisible(item) {
+                if (typeof item === 'string') return true;
+                if (!item) return false;
+                if (typeof item.visible === 'string') {
+                    return ['false', '0', 'no', 'n', 'off'].indexOf(item.visible.trim().toLowerCase()) < 0;
+                }
+                return item.visible !== false;
+            }
+
+            var filterFieldAliases = {
+                date: ['date', 'docdate', 'edate', 'createdate', 'modifydate'],
+                clientname: ['clientname', 'client'],
+                category: ['category', 'category1', 'cat1'],
+                status: ['status']
+            };
+
             function getColumnEntries(name) {
                 var out = [];
                 if (!allColumns || !allColumns.length) return out;
-                var lower = name.toLowerCase();
-                allColumns.forEach(function (c) {
-                    if (c.toLowerCase() === lower) out.push(c);
-                });
-                allColumns.forEach(function (c) {
-                    if (c.toLowerCase() !== lower && c.toLowerCase().indexOf(lower) >= 0) out.push(c);
+                var requested = normalizeFieldName(name);
+                if (!requested) return out;
+                var aliases = filterFieldAliases[requested] || [requested];
+                aliases.forEach(function (alias) {
+                    allColumns.forEach(function (column) {
+                        if (normalizeFieldName(column) === alias && out.indexOf(column) < 0) {
+                            out.push(column);
+                        }
+                    });
                 });
                 return out;
             }
@@ -1079,18 +1115,28 @@ function renderGrid(columns, rows) {
                 return vals > 0 && (parseable / vals) >= 0.6;
             }
 
+            function getColumnType(col) {
+                var index = allColumns.indexOf(col);
+                return index >= 0 && allColumnTypes[index]
+                    ? String(allColumnTypes[index]).toLowerCase()
+                    : '';
+            }
+
+            function isDateColumn(col) {
+                return getColumnType(col).indexOf('date') >= 0 || isDateColCandidate(col);
+            }
+
             function detectDateCol() {
-                var prio = ['docdate', 'edate', 'createdate', 'create_date', 'modifieddate', 'modifydate', 'date'];
-                for (var i = 0; i < prio.length; i++) {
-                    var found = getColumnEntries(prio[i]);
+                for (var i = 0; i < filterDefinitions.length; i++) {
+                    if (!isFilterFieldVisible(filterDefinitions[i])) continue;
+                    var field = getFilterFieldName(filterDefinitions[i]);
+                    var fieldKey = normalizeFieldName(field);
+                    var found = getColumnEntries(field);
                     for (var j = 0; j < found.length; j++) {
-                        if (!isBlankCol(found[j], allRows) && isDateColCandidate(found[j])) return found[j];
-                    }
-                }
-                if (allColumns) {
-                    for (var k = 0; k < allColumns.length; k++) {
-                        var c = allColumns[k].toLowerCase();
-                        if (c.indexOf('date') >= 0 && !isBlankCol(allColumns[k], allRows) && isDateColCandidate(allColumns[k])) return allColumns[k];
+                        var columnKey = normalizeFieldName(found[j]);
+                        if (fieldKey === 'date' || columnKey === 'date' || columnKey.indexOf('date') >= 0 || isDateColumn(found[j])) {
+                            return found[j];
+                        }
                     }
                 }
                 return null;
@@ -1111,26 +1157,24 @@ function renderGrid(columns, rows) {
                 return vals;
             }
 
-function detectFilterCols() {
+            function detectFilterCols() {
                 var out = [];
-                if (!allColumns || !allColumns.length) return out;
-                var prio = ['status', 'category1', 'cat1', 'category2', 'cat2', 'category3', 'client', 'clientname', 'fabricator', 'salesman', 'unit', 'type', 'color'];
+                if (!allColumns || !allColumns.length || !filterDefinitions.length) return out;
                 var usedCols = {};
-                if (dateCol) usedCols[dateCol.toLowerCase()] = 1;
-                for (var i = 0; i < prio.length && out.length < 4; i++) {
-                    var found = getColumnEntries(prio[i]);
-                    for (var j = 0; j < found.length; j++) {
-                        var col = found[j];
-                        if (usedCols[col.toLowerCase()]) continue;
-                        if (isBlankCol(col, allRows)) continue;
-                        var opts = buildFilterOptions(col);
-                        if (opts.length < 2 || opts.length > 300) continue;
-                        out.push({ col: col, options: opts });
-                        usedCols[col.toLowerCase()] = 1;
-                    }
+                for (var i = 0; i < filterDefinitions.length; i++) {
+                    if (!isFilterFieldVisible(filterDefinitions[i])) continue;
+                    var field = getFilterFieldName(filterDefinitions[i]);
+                    var found = getColumnEntries(field);
+                    if (!found.length) continue;
+                    var col = found[0];
+                    var columnKey = normalizeFieldName(col);
+                    if (usedCols[columnKey] || col === dateCol || isDateColumn(col)) continue;
+                    out.push({ col: col, label: field || col, options: buildFilterOptions(col) });
+                    usedCols[columnKey] = 1;
                 }
                 return out;
             }
+
 
             function humanLabel(col) {
                 var s = col.split(/[^A-Za-z0-9]+/).join(' ');
@@ -1163,13 +1207,13 @@ function detectFilterCols() {
                         div.className = 'col-6 col-lg-3';
                         var lbl = document.createElement('label');
                         lbl.className = 'form-label fs-label-sm';
-                        lbl.textContent = humanLabel(res.col);
+                        lbl.textContent = humanLabel(res.label || res.col);
                         var sel = document.createElement('select');
                         sel.className = 'form-select drc-filter-select';
                         sel.dataset.col = res.col;
                         var allOpt = document.createElement('option');
                         allOpt.value = '__ALL__';
-                        allOpt.textContent = 'All ' + humanLabel(res.col);
+                        allOpt.textContent = 'All ' + humanLabel(res.label || res.col);
                         sel.appendChild(allOpt);
                         res.options.forEach(function (o) {
                             var opt = document.createElement('option');

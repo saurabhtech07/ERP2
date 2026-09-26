@@ -868,14 +868,6 @@ function renderGrid(columns, rows) {
                 return new Intl.NumberFormat('en-IN').format(Math.round(n * 100) / 100);
             }
 
-            function isBlankCol(col, rows) {
-                for (var i = 0; i < rows.length; i++) {
-                    var v = rows[i][col];
-                    if (v !== null && v !== undefined && String(v).trim() !== '' && String(v).trim() !== '-') return false;
-                }
-                return true;
-            }
-
             function distinctCount(col, rows) {
                 var s = new Set();
                 for (var i = 0; i < rows.length; i++) {
@@ -902,7 +894,13 @@ function renderGrid(columns, rows) {
                     if (v === null || v === undefined || String(v).trim() === '') continue;
                     return isFinite(parseFloat(String(v).replace(/[^\d.\-]/g, '')));
                 }
-                return false;
+                // Data nahi aaya (ya poora blank) - tab SP ke column type se decide karo.
+                // Type column se aata hai, value se nahi, isliye empty data par bhi sahi rehta hai.
+                return isNumericColumnType(getColumnType(col));
+            }
+
+            function isNumericColumnType(type) {
+                return /int|double|decimal|single|float|long|short|byte|uint|ulong|ushort/.test(String(type || '').toLowerCase());
             }
 
             // KPI 2/3/4 - database (Kpi2/Kpi3/Kpi4) se. Value format: "Column" ya "Column|Custom Label"
@@ -913,7 +911,8 @@ function renderGrid(columns, rows) {
                 if (!found.length) return null;
 
                 var col = found[0];
-                if (isBlankCol(col, rows)) return null;
+                // Note: column match ho gaya to card dikhega, chahe data na aaye.
+                // Data khaali hone par value 0 rahega (SUM ya DISTINCT COUNT - type se decide).
 
                 var numeric = isNumericCol(col, rows);
                 var money = /amount|amt|mrp|wsp|price|cost|rate/i.test(col);
@@ -944,7 +943,8 @@ function renderGrid(columns, rows) {
             }
 
             function renderCards(columns, rows) {
-                if (!columns || columns.length === 0) return;
+                rows = rows || [];
+                // columns khali ho tab bhi Card 1 (row count) dikhega; Card 2/3/4 apne aap chhupenge
 
                 // KPI 1 - hamesha row count (fixed)
                 var cards = [{

@@ -146,7 +146,7 @@ namespace CRM.Controllers
                 return Redirect(returnUrl);
             }
 
-            return RedirectToAction("Index", "Dashboard");
+            return RedirectToAction("Index", "ItemMaster");
         }
 
         // Logout

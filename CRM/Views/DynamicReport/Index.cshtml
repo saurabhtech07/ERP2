@@ -596,6 +596,7 @@
             let allRows = [];
             let allColumnTypes = [];
             let filterDefinitions = [];
+            let cardDefinitions = [];
             let dateCol = null;
             let filterCols = [];
             let choicesInstances = {};
@@ -612,18 +613,23 @@
             var searchInput = document.getElementById('reportSearch');
             var searchClear = document.getElementById('searchClear');
             function applySearchKeyword(kw) {
+                // Cards + record count bhi update hon, isliye ek hi path se filter karo
                 if (grid) {
-                    grid.updateConfig({ search: { keyword: kw } }).forceRender();
+                    applyFilters();
                 }
             }
+            var searchDebounce = null;
             searchInput.addEventListener('input', function (e) {
                 searchClear.style.display = e.target.value ? 'inline-flex' : 'none';
-                applySearchKeyword(e.target.value);
+                // har keystroke pe full re-render bhaari ho sakta hai, isliye debounce
+                clearTimeout(searchDebounce);
+                searchDebounce = setTimeout(function () { applySearchKeyword(e.target.value); }, 250);
             });
             searchClear.addEventListener('click', function () {
                 searchInput.value = '';
                 searchClear.style.display = 'none';
                 searchInput.focus();
+                clearTimeout(searchDebounce);
                 applySearchKeyword('');
             });
 
@@ -634,6 +640,8 @@
             // Clear button
             document.getElementById('btn-clear').addEventListener('click', function () {
                 document.getElementById('reportSearch').value = '';
+                document.getElementById('searchClear').style.display = 'none';
+                clearTimeout(searchDebounce);
                 document.getElementById('drcFromDate').value = '';
                 document.getElementById('drcToDate').value = '';
                 filterCols.forEach(function (f) {
@@ -671,16 +679,8 @@
             }
 
             function getExportRows() {
-                var rows = (currentRows && currentRows.length) ? currentRows.slice() : allRows.slice();
-                var kw = document.getElementById('reportSearch').value.trim().toLowerCase();
-                if (!kw) return rows;
-                return rows.filter(function (r) {
-                    for (var i = 0; i < exportCols.length; i++) {
-                        var v = r[exportCols[i].key];
-                        if (String(v == null ? '' : v).toLowerCase().indexOf(kw) >= 0) return true;
-                    }
-                    return false;
-                });
+                // currentRows already carries date + dropdown + search filters (applyFilters)
+                return (currentRows ? currentRows : allRows).slice();
             }
 
             function exportCsv() {
@@ -739,7 +739,7 @@
             document.getElementById('page-size').addEventListener('change', function () {
                 this.blur();
                 if (!grid) return;
-                renderGrid(allColumns, currentRows && currentRows.length ? currentRows : allRows);
+                renderGrid(allColumns, currentRows);
             });
 
             // Record count
@@ -763,8 +763,10 @@
                                 ? data.sourceColumns
                                 : allColumns.slice();
                             allRows = data.rows || [];
+                            currentRows = allRows;
                             allColumnTypes = data.columnTypes || [];
                             filterDefinitions = Array.isArray(data.filterFields) ? data.filterFields : [];
+                            cardDefinitions = Array.isArray(data.cardFields) ? data.cardFields : [];
                             exportCols = allColumns.map(function (c, index) {
                                 var label = String(sourceColumns[index] || c);
                                 return { key: c, label: label };
@@ -798,7 +800,6 @@ function renderGrid(columns, rows) {
                     return;
                 }
 
-                var kw = document.getElementById('reportSearch').value.trim();
                 var limit = parseInt(document.getElementById('page-size').value, 10) || 10;
 
                 var gridColumns = columns.map(function (c, index) {
@@ -827,7 +828,7 @@ function renderGrid(columns, rows) {
                                 limit: limit
                             },
                             sort: true,
-                            search: kw ? { keyword: kw } : true, // live search keyword folded in fresh grid
+                            search: false, // custom #reportSearch box (applyFilters) hi single source of truth
                             className: {
                                 table: 'table table-hover table-striped align-middle mb-0'
                             }
@@ -841,7 +842,7 @@ function renderGrid(columns, rows) {
                                 enabled: true,
                                 limit: limit
                             },
-                            search: kw ? { keyword: kw } : true
+                            search: false
                         });
                         grid.forceRender();
                     }
@@ -875,13 +876,6 @@ function renderGrid(columns, rows) {
                 return true;
             }
 
-            function findCol(columns, pat, rows) {
-                for (var i = 0; i < columns.length; i++) {
-                    if (pat.test(columns[i]) && !isBlankCol(columns[i], rows)) return columns[i];
-                }
-                return null;
-            }
-
             function distinctCount(col, rows) {
                 var s = new Set();
                 for (var i = 0; i < rows.length; i++) {
@@ -889,15 +883,6 @@ function renderGrid(columns, rows) {
                     if (v !== null && v !== undefined && String(v).trim() !== '') s.add(String(v).trim());
                 }
                 return s.size;
-            }
-
-            function nonEmptyCount(col, rows) {
-                var c = 0;
-                for (var i = 0; i < rows.length; i++) {
-                    var v = rows[i][col];
-                    if (v !== null && v !== undefined && String(v).trim() !== '') c++;
-                }
-                return c;
             }
 
             function sumNumeric(col, rows) {
@@ -920,139 +905,29 @@ function renderGrid(columns, rows) {
                 return false;
             }
 
-            function activeCount(col, rows) {
-                var c = 0;
-                for (var i = 0; i < rows.length; i++) {
-                    var v = rows[i][col];
-                    if (v === null || v === undefined) continue;
-                    if (/active/i.test(String(v))) c++;
-                }
-                return c;
-            }
+            // KPI 2/3/4 - database (Kpi2/Kpi3/Kpi4) se. Value format: "Column" ya "Column|Custom Label"
+            function resolveKpiCard(def, rows) {
+                if (!def || !def.field) return null;
 
-            function isIgnoredFallback(col) {
-                var c = String(col).trim();
-                if (/^(id|name|client|clientname|remarks?|remark|unit|username|colno|itemid|row ?no|log ?id|user ?id|hsn ?code|status)$/i.test(c)) return true;
-                if (/^add\d?$|^city$|^pin$|address/.test(c)) return true;
-                if (/date$|date_|time/.test(c)) return true;
-                if (/^(cat\d*|category\d*|size|size ?name|size ?head|color|box ?no|fabricator|salesman)$/i.test(c)) return true;
-                return false;
-            }
+                var found = getColumnEntries(def.field);
+                if (!found.length) return null;
 
-            function findFallbackCol(columns, rows, used) {
-                // Pass 1: meaningful, non-blank, unused
-                for (var i = 0; i < columns.length; i++) {
-                    var c = columns[i];
-                    if (used.indexOf(c) >= 0) continue;
-                    if (isBlankCol(c, rows)) continue;
-                    if (isIgnoredFallback(c)) continue;
-                    return c;
-                }
-                // Pass 2: any non-blank unused
-                for (var j = 0; j < columns.length; j++) {
-                    var c2 = columns[j];
-                    if (used.indexOf(c2) >= 0) continue;
-                    if (isBlankCol(c2, rows)) continue;
-                    return c2;
-                }
-                // Pass 3: first non-blank
-                for (var k = 0; k < columns.length; k++) {
-                    if (!isBlankCol(columns[k], rows)) return columns[k];
-                }
-                return null;
-            }
+                var col = found[0];
+                if (isBlankCol(col, rows)) return null;
 
-            function pickQty(columns, rows, used) {
-                var pat = /(qty|quantity|fg_qty|rm_qty|jobqty|cutqty|issueqty|balqty|balissue|sizeqty|invqty|soqty|pendqty|r_qty|i_qty|grossqty)/i;
-                var best = null;
-                var any = null;
-                for (var i = 0; i < columns.length; i++) {
-                    if (!pat.test(columns[i])) continue;
-                    if (isBlankCol(columns[i], rows)) continue;
-                    if (any === null) any = columns[i];
-                    if (used.indexOf(columns[i]) < 0) { best = columns[i]; break; }
-                }
-                return best || any;
-            }
+                var numeric = isNumericCol(col, rows);
+                var money = /amount|amt|mrp|wsp|price|cost|rate/i.test(col);
 
-            function pickAmount(columns, rows, used) {
-                var strong = /(amount|grossamt|totalamt)/i;
-                var broad = /(^amt$|amt|cost|price|^mrp$|^wsp$|balance|rate)/i;
-                var any = null;
-                for (var i = 0; i < columns.length; i++) {
-                    if (!broad.test(columns[i]) && !strong.test(columns[i])) continue;
-                    if (isBlankCol(columns[i], rows)) continue;
-                    if (any === null) any = columns[i];
-                    if (strong.test(columns[i]) && used.indexOf(columns[i]) < 0) return columns[i];
-                }
-                for (var j = 0; j < columns.length; j++) {
-                    if (!broad.test(columns[j])) continue;
-                    if (isBlankCol(columns[j], rows)) continue;
-                    if (used.indexOf(columns[j]) < 0) return columns[j];
-                }
-                return any;
-            }
-
-            function resolveCard1(columns, rows, used) {
-                var col = findCol(columns, /(^\s*order ?no\s*$|orderno)/i, rows);
-                if (col) return { label: 'Total Orders', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'total', icon: 'ri-file-list-3-line', num: false };
-                col = findCol(columns, /(^\s*doc ?no\s*$|^docno$|^doc_no$)/i, rows);
-                if (col) return { label: 'Total Documents', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'total', icon: 'ri-file-list-3-line', num: false };
-                col = findFallbackCol(columns, rows, used);
-                if (!col) return { label: 'Total Records', value: rows.length, col: 'â€”', calc: 'ROW COUNT', tone: 'total', icon: 'ri-file-list-3-line', num: false };
-                var calc = isNumericCol(col, rows) ? 'RECORD COUNT' : 'DISTINCT COUNT';
-                var val = isNumericCol(col, rows) ? nonEmptyCount(col, rows) : distinctCount(col, rows);
-                return { label: 'Total Records', value: val, col: col, calc: calc, tone: 'total', icon: 'ri-file-list-3-line', num: false };
-            }
-
-            function resolveCard2(columns, rows, used) {
-                var col = findCol(columns, /(^\s*job ?card ?no\s*$|^jobcardno$|^job_card_no$)/i, rows);
-                if (col) return { label: 'Total Job Cards', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'job', icon: 'ri-tools-line', num: false };
-                col = findCol(columns, /(^\s*barcode\s*$)/i, rows);
-                if (col) return { label: 'Total Barcodes', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'job', icon: 'ri-barcode-line', num: false };
-                col = pickQty(columns, rows, []);
-                if (col) return { label: 'Total Quantity', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'qty', icon: 'ri-stack-line', num: true };
-                col = findFallbackCol(columns, rows, used);
-                if (!col) return { label: 'Total Records', value: rows.length, col: 'â€”', calc: 'ROW COUNT', tone: 'job', icon: 'ri-tools-line', num: false };
-                var calc = isNumericCol(col, rows) ? 'RECORD COUNT' : 'DISTINCT COUNT';
-                var val = isNumericCol(col, rows) ? nonEmptyCount(col, rows) : distinctCount(col, rows);
-                return { label: 'Total Records', value: val, col: col, calc: calc, tone: 'job', icon: 'ri-tools-line', num: false };
-            }
-
-            function resolveCard3(columns, rows, used) {
-                var col = findCol(columns, /(^\s*status\s*$|^status|^close ?yn$)/i, rows);
-                if (col) {
-                    var act = activeCount(col, rows);
-                    if (act > 0) return { label: 'Active', value: act, col: col, calc: 'ACTIVE COUNT', tone: 'active', icon: 'ri-checkbox-circle-line', num: false };
-                    return { label: 'Status', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'active', icon: 'ri-checkbox-circle-line', num: false };
-                }
-                col = pickAmount(columns, rows, []);
-                if (col) return { label: 'Total Amount', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'total', icon: 'ri-money-dollar-circle-line', num: true };
-                col = pickQty(columns, rows, used);
-                if (col) return { label: 'Total Quantity', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'qty', icon: 'ri-stack-line', num: true };
-                col = findFallbackCol(columns, rows, used);
-                if (!col) return { label: 'Total Records', value: rows.length, col: 'â€”', calc: 'ROW COUNT', tone: 'active', icon: 'ri-checkbox-circle-line', num: false };
-                var calc = isNumericCol(col, rows) ? 'RECORD COUNT' : 'DISTINCT COUNT';
-                var val = isNumericCol(col, rows) ? nonEmptyCount(col, rows) : distinctCount(col, rows);
-                return { label: 'Total Records', value: val, col: col, calc: calc, tone: 'active', icon: 'ri-checkbox-circle-line', num: false };
-            }
-
-            function resolveCard4(columns, rows, used) {
-                var col = findCol(columns, /(gst ?amount|gst ?amt|cgst ?amt|sgst ?amt|igst ?amt|^cgst$|^sgst$|^igst$)/i, rows);
-                if (col) return { label: 'Total GST', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'gst', icon: 'ri-percent-line', num: true };
-                col = findCol(columns, /(^\s*gstin\s*$|^\s*gst ?no\s*$|gst ?no$|^gst$)/i, rows);
-                if (col) return { label: 'GST Register', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'gst', icon: 'ri-percent-line', num: false };
-                col = findCol(columns, /(gst ?per|igst1?_per|gst_per)|(^((cgst|sgst|igst)?(per|percent))$)/i, rows);
-                if (col) return { label: 'GST Rates', value: distinctCount(col, rows), col: col, calc: 'DISTINCT COUNT', tone: 'gst', icon: 'ri-percent-line', num: false };
-                col = pickQty(columns, rows, used);
-                if (col) return { label: 'Total Quantity', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'qty', icon: 'ri-stack-line', num: true };
-                col = pickAmount(columns, rows, used);
-                if (col) return { label: 'Total Amount', value: sumNumeric(col, rows), col: col, calc: 'SUM', tone: 'total', icon: 'ri-money-dollar-circle-line', num: true };
-                col = findFallbackCol(columns, rows, used);
-                if (!col) return { label: 'Total Records', value: rows.length, col: 'â€”', calc: 'ROW COUNT', tone: 'gst', icon: 'ri-percent-line', num: false };
-                var calc = isNumericCol(col, rows) ? 'RECORD COUNT' : 'DISTINCT COUNT';
-                var val = isNumericCol(col, rows) ? nonEmptyCount(col, rows) : distinctCount(col, rows);
-                return { label: 'Total Records', value: val, col: col, calc: calc, tone: 'gst', icon: 'ri-percent-line', num: false };
+                return {
+                    label: def.label ? def.label : ('Total ' + humanLabel(col)),
+                    value: numeric ? sumNumeric(col, rows) : distinctCount(col, rows),
+                    col: col,
+                    calc: numeric ? 'SUM' : 'DISTINCT COUNT',
+                    tone: money ? 'total' : 'qty',
+                    icon: numeric
+                        ? (money ? 'ri-money-dollar-circle-line' : 'ri-stack-line')
+                        : 'ri-file-list-3-line'
+                };
             }
 
             function chartSvg(color) {
@@ -1070,22 +945,44 @@ function renderGrid(columns, rows) {
 
             function renderCards(columns, rows) {
                 if (!columns || columns.length === 0) return;
-                var used = [];
-                var cards = [resolveCard1(columns, rows, used), resolveCard2(columns, rows, used), resolveCard3(columns, rows, used), resolveCard4(columns, rows, used)];
-                var colorMap = { total: 'orange', job: 'blue', qty: 'blue', active: 'green', gst: 'orange' };
 
-                for (var i = 0; i < cards.length; i++) {
+                // KPI 1 - hamesha row count (fixed)
+                var cards = [{
+                    label: 'Total Records',
+                    value: rows.length,
+                    col: '-',
+                    calc: 'ROW COUNT',
+                    tone: 'total',
+                    icon: 'ri-file-list-3-line'
+                }];
+
+                // KPI 2, 3, 4 - database se (Kpi2/Kpi3/Kpi4)
+                var bySlot = {};
+                cardDefinitions.forEach(function (d) { bySlot[d.slot] = d; });
+                for (var s = 2; s <= 4; s++) {
+                    cards.push(resolveKpiCard(bySlot[s], rows));
+                }
+
+                var colorMap = { total: 'orange', qty: 'blue', active: 'green', gst: 'orange' };
+                var cardEls = document.getElementById('drcCards').querySelectorAll('.stat-card');
+
+                for (var i = 0; i < cardEls.length; i++) {
                     var c = cards[i];
-                    var n = i + 1;
-                    var color = colorMap[c.tone] || 'orange';
-                    var cardEl = document.getElementById('drcCards').querySelectorAll('.stat-card')[i];
+                    var cardEl = cardEls[i];
                     if (!cardEl) continue;
+
+                    if (!c) {
+                        cardEl.parentElement.classList.add('d-none');
+                        continue;
+                    }
+                    cardEl.parentElement.classList.remove('d-none');
+
+                    var color = colorMap[c.tone] || 'orange';
                     cardEl.className = 'card stat-card h-100 stat-' + color;
                     cardEl.querySelector('.avatar-title').className = 'avatar-title rounded-xl icon-44 bg-solid-' + color;
                     cardEl.querySelector('.avatar-title i').className = c.icon + ' text-white';
                     cardEl.querySelector('.stat-label').textContent = c.label;
-                    var cardTitle = 'Column: ' + c.col + ' | Calculation: ' + c.calc;
-                    cardEl.title = cardTitle;
+                    cardEl.title = 'Column: ' + c.col + ' | Calculation: ' + c.calc;
                     cardEl.querySelector('.stat-label').title = '';
                     var valueEl = cardEl.querySelector('.stat-value');
                     valueEl.textContent = nfmt(c.value);
@@ -1116,15 +1013,41 @@ function renderGrid(columns, rows) {
                 return item.visible !== false;
             }
 
+            function colSrcName(i) {
+                return String(sourceColumns[i] == null ? allColumns[i] : sourceColumns[i]);
+            }
+
+            function normKey(s) {
+                return String(s == null ? '' : s).replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+            }
+
             function getColumnEntries(name) {
                 var out = [];
                 if (!allColumns || !allColumns.length) return out;
                 var requested = String(name == null ? '' : name).trim().toLowerCase();
                 if (!requested) return out;
+                var want = normKey(name);
+
+                // Tier 1 - exact (original behaviour, always wins)
                 for (var i = 0; i < allColumns.length; i++) {
-                    var source = String(sourceColumns[i] == null ? allColumns[i] : sourceColumns[i]).trim().toLowerCase();
-                    if (source === requested && out.indexOf(allColumns[i]) < 0) {
+                    if (colSrcName(i).trim().toLowerCase() === requested && out.indexOf(allColumns[i]) < 0) {
                         out.push(allColumns[i]);
+                    }
+                }
+                if (out.length) return out;
+
+                // Tier 2 - normalized (ignores spaces/underscores: "Client Name" <-> "Clientname")
+                for (var j = 0; j < allColumns.length; j++) {
+                    if (normKey(colSrcName(j)) === want && out.indexOf(allColumns[j]) < 0) {
+                        out.push(allColumns[j]);
+                    }
+                }
+                if (out.length) return out;
+
+                // Tier 3 - contains ("Date" <-> "DocDate", "Category" <-> "Category1")
+                for (var k = 0; k < allColumns.length; k++) {
+                    if (normKey(colSrcName(k)).indexOf(want) >= 0 && out.indexOf(allColumns[k]) < 0) {
+                        out.push(allColumns[k]);
                     }
                 }
                 return out;
@@ -1162,6 +1085,10 @@ function renderGrid(columns, rows) {
                             return found[j];
                         }
                     }
+                }
+                // Config name se koi date column na mile to koi bhi date column utha lo.
+                for (var k = 0; k < allColumns.length; k++) {
+                    if (isDateColumn(allColumns[k])) return allColumns[k];
                 }
                 return null;
             }
@@ -1303,6 +1230,18 @@ function renderGrid(columns, rows) {
                         return String(v === null || v === undefined ? '' : v).trim() === fv;
                     });
                 });
+
+// search keyword (same matching jo getExportRows() use karta hai)
+                var kw = document.getElementById('reportSearch').value.trim().toLowerCase();
+                if (kw) {
+                    rows = rows.filter(function (r) {
+                        for (var ci = 0; ci < allColumns.length; ci++) {
+                            var cv = r[allColumns[ci]];
+                            if (String(cv === null || cv === undefined ? '' : cv).toLowerCase().indexOf(kw) >= 0) return true;
+                        }
+                        return false;
+                    });
+                }
 
 currentRows = rows;
                 renderCards(allColumns, rows);

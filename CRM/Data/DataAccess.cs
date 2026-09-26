@@ -181,7 +181,8 @@ namespace CRM.Data
                         Tbl_View_Name = ReadStringValue(reader, "Tbl_View_Name", "TblViewName"),
                         Report_Name = ReadStringValue(reader, "Report_Name", "ReportName"),
                         Report_Type = ReadStringValue(reader, "Menu_Head", "MenuHead", "Report_Type", "ReportType", "Type"),
-                        FilterFields = ReadFilterFields(reader)
+                        FilterFields = ReadFilterFields(reader),
+                        CardFields = ReadCardFields(reader)
                     });
                 }
             }
@@ -199,6 +200,52 @@ namespace CRM.Data
             AddPositionalFilterFields(reader, filterFields);
             ApplyVisibility(reader, filterFields);
             return filterFields;
+        }
+
+        private static List<ReportCardField> ReadCardFields(SqlDataReader reader)
+        {
+            var cardFields = new List<ReportCardField>();
+
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                var normalizedColumnName = NormalizeMetadataColumnName(reader.GetName(i));
+                if (!normalizedColumnName.StartsWith("kpi", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (!int.TryParse(normalizedColumnName.Substring("kpi".Length), out var slot) || slot < 2 || slot > 4)
+                {
+                    continue;
+                }
+
+                if (reader.IsDBNull(i))
+                {
+                    continue;
+                }
+
+                var text = reader.GetValue(i)?.ToString()?.Trim() ?? string.Empty;
+                if (text.Length == 0)
+                {
+                    continue;
+                }
+
+                var parts = text.Split(new[] { '|' }, 2);
+                var fieldName = parts[0].Trim();
+                if (fieldName.Length == 0)
+                {
+                    continue;
+                }
+
+                cardFields.Add(new ReportCardField
+                {
+                    Slot = slot,
+                    FieldName = fieldName,
+                    Label = parts.Length > 1 ? parts[1].Trim() : string.Empty
+                });
+            }
+
+            return cardFields.OrderBy(x => x.Slot).ToList();
         }
 
         private static void AddPositionalFilterFields(SqlDataReader reader, List<ReportFilterField> filterFields)

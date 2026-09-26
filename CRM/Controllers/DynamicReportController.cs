@@ -50,6 +50,10 @@ namespace CRM.Controllers
                     .Select(x => (object)new { field = x.FieldName, visible = x.Visible })
                     .ToList() ?? new List<object>();
 
+                var cardFields = menuItem?.CardFields
+                    .Select(x => (object)new { slot = x.Slot, field = x.FieldName, label = x.Label })
+                    .ToList() ?? new List<object>();
+
                 return Json(new
                 {
                     success = data.ErrorMessage == null,
@@ -61,7 +65,8 @@ namespace CRM.Controllers
                     sourceColumns = data.SourceColumnNames,
                     columnTypes = data.ColumnTypes,
                     rows = data.Rows,
-                    filterFields = filterFields
+                    filterFields = filterFields,
+                    cardFields = cardFields
                 });
             }
             catch (Exception ex)

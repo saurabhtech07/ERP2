@@ -3,5 +3,4 @@ html, body { background-color: #ffffff !important; }
 
 #navbar-nav li:has(.nav-link span[data-key="t-dashboards"]){display:none !important}
 .customizer-setting,.customizer-setting *{display:none !important}
-#theme-settings-offcanvas{display:none !important}
 /*# sourceMappingURL=custom.min.css.map */

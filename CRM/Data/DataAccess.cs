@@ -160,6 +160,220 @@ namespace CRM.Data
             await cmd.ExecuteNonQueryAsync();
         }
 
+        // ---- Dynamic master record access ---------------------------------
+        // Every table/column name used below comes from the static
+        // MasterEditability map, never from the request body, so these
+        // statements cannot be turned into arbitrary SQL.
+
+        private static string QuoteIdent(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new InvalidOperationException("Column name is required.");
+            foreach (var ch in name)
+            {
+                if (!char.IsLetterOrDigit(ch) && ch != '_')
+                    throw new InvalidOperationException("Invalid column name.");
+            }
+            return "[" + name + "]";
+        }
+
+        private static string TrimBrackets(string quotedIdent) =>
+            quotedIdent.Trim('[', ']');
+
+        private static string BuildKeyPredicate(MasterEditability map, string idParam)
+        {
+            var sql = QuoteIdent(map.KeyColumn) + " = " + idParam;
+            if (!string.IsNullOrWhiteSpace(map.KeyFilter))
+                sql += " AND (" + map.KeyFilter + ")";
+            return sql;
+        }
+
+        public async Task<RecordResult> GetMasterRecordAsync(string viewName, string keyValue)
+        {
+            var map = MasterEditability.For(viewName);
+            if (!map.IsEditable)
+                return RecordResult.Fail("This report is read-only.");
+
+            try
+            {
+                // Restrict to the columns the master actually exposes, rather
+                // than SELECT * - these tables carry many more columns
+                // (Item_Raw has 24, address has 59) that are not part of
+                // the master screen and must not be editable from here.
+                var available = await GetWritableColumnsAsync(map.PhysicalTable);
+                if (available.Count == 0)
+                    return RecordResult.Fail("Table not found: " + map.PhysicalTable);
+
+                var selection = new List<string>();
+                foreach (var requested in map.EditableColumns)
+                {
+                    var actual = available.FirstOrDefault(c =>
+                        string.Equals(c, requested, StringComparison.OrdinalIgnoreCase));
+                    if (actual != null)
+                        selection.Add(QuoteIdent(actual));
+                }
+
+                // Always include the key so the caller can identify the record.
+                // Compare case-insensitively - the map says "Id" but the table
+                // column is "id", and an exact match would insert it twice.
+                if (!selection.Any(s =>
+                        string.Equals(TrimBrackets(s), map.KeyColumn, StringComparison.OrdinalIgnoreCase)))
+                    selection.Insert(0, QuoteIdent(map.KeyColumn));
+
+                var sql = "SELECT " + string.Join(", ", selection) +
+                          " FROM " + QuoteIdent(map.PhysicalTable) +
+                          " WITH (NOLOCK) WHERE " + BuildKeyPredicate(map, "@KeyValue");
+
+                using var conn = new SqlConnection(_connString);
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@KeyValue", keyValue);
+                await conn.OpenAsync();
+
+                using var adapter = new SqlDataAdapter(cmd);
+                var dt = new DataTable();
+                adapter.Fill(dt);
+
+                if (dt.Rows.Count == 0)
+                    return RecordResult.Fail("Record not found.");
+
+                var record = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+                foreach (DataColumn col in dt.Columns)
+                {
+                    record[NormalizeColumnName(col.ColumnName)] = dt.Rows[0][col] == DBNull.Value
+                        ? null
+                        : dt.Rows[0][col];
+                }
+
+                var label = record.TryGetValue(map.DisplayColumn.ToLowerInvariant(), out var dv)
+                    ? Convert.ToString(dv)
+                    : null;
+
+                return RecordResult.Ok(record, map, label ?? keyValue);
+            }
+            catch (Exception ex)
+            {
+                return RecordResult.Fail(ex.Message);
+            }
+        }
+
+        public async Task<RecordResult> UpdateMasterRecordAsync(string viewName, string keyValue, Dictionary<string, object?> values)
+        {
+            var map = MasterEditability.For(viewName);
+            if (!map.IsEditable)
+                return RecordResult.Fail("This report is read-only.");
+
+            var allowed = await GetWritableColumnsAsync(map.PhysicalTable);
+            var keyColumnNormalized = map.KeyColumn.ToLowerInvariant();
+
+            var sets = new List<string>();
+            var parameters = new List<SqlParameter>();
+            var index = 0;
+
+            foreach (var pair in values)
+            {
+                if (string.Equals(pair.Key, keyColumnNormalized, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var actual = allowed.FirstOrDefault(c =>
+                    string.Equals(NormalizeColumnName(c), NormalizeColumnName(pair.Key), StringComparison.OrdinalIgnoreCase));
+                if (actual == null)
+                    return RecordResult.Fail("Column '" + pair.Key + "' cannot be updated.");
+
+                index++;
+                var paramName = "@p" + index;
+                sets.Add(QuoteIdent(actual) + " = " + paramName);
+                parameters.Add(new SqlParameter(paramName, SqlDbType.VarChar, 4000)
+                {
+                    Value = pair.Value ?? (object)DBNull.Value
+                });
+            }
+
+            if (sets.Count == 0)
+                return RecordResult.Fail("No updatable fields were supplied.");
+
+            var sql = "UPDATE " + QuoteIdent(map.PhysicalTable) + " SET " + string.Join(", ", sets) +
+                      " WHERE " + BuildKeyPredicate(map, "@KeyValue");
+
+            try
+            {
+                using var conn = new SqlConnection(_connString);
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@KeyValue", keyValue);
+                foreach (var p in parameters)
+                    cmd.Parameters.Add(p);
+                await conn.OpenAsync();
+
+                var affected = await cmd.ExecuteNonQueryAsync();
+                if (affected == 0)
+                    return RecordResult.Fail("Record not found, or it was already deleted.");
+
+                return RecordResult.Ok(null, map, keyValue);
+            }
+            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+            {
+                return RecordResult.Fail("Another record already uses one of these values.");
+            }
+            catch (SqlException ex) when (ex.Number == 297 || ex.Number == 470)
+            {
+                return RecordResult.Fail("You do not have permission to update this master. Please ask your DBA to grant UPDATE access.");
+            }
+            catch (Exception ex)
+            {
+                return RecordResult.Fail(ex.Message);
+            }
+        }
+
+        public async Task<RecordResult> DeleteMasterRecordAsync(string viewName, string keyValue)
+        {
+            var map = MasterEditability.For(viewName);
+            if (!map.IsEditable)
+                return RecordResult.Fail("This report is read-only.");
+
+            var sql = "DELETE FROM " + QuoteIdent(map.PhysicalTable) +
+                      " WHERE " + BuildKeyPredicate(map, "@KeyValue");
+
+            try
+            {
+                using var conn = new SqlConnection(_connString);
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@KeyValue", keyValue);
+                await conn.OpenAsync();
+
+                var affected = await cmd.ExecuteNonQueryAsync();
+                if (affected == 0)
+                    return RecordResult.Fail("Record not found, or it was already deleted.");
+
+                return RecordResult.Ok(null, map, keyValue);
+            }
+            catch (SqlException ex) when (ex.Number == 547)
+            {
+                return RecordResult.Fail("This record is used elsewhere and cannot be deleted.");
+            }
+            catch (SqlException ex) when (ex.Number == 297 || ex.Number == 470)
+            {
+                return RecordResult.Fail("You do not have permission to delete records. Please ask your DBA to grant DELETE access.");
+            }
+            catch (Exception ex)
+            {
+                return RecordResult.Fail(ex.Message);
+            }
+        }
+
+        private async Task<List<string>> GetWritableColumnsAsync(string physicalTable)
+        {
+            using var conn = new SqlConnection(_connString);
+            using var cmd = new SqlCommand(
+                "SELECT name FROM sys.columns WHERE object_id = OBJECT_ID(@Table) ORDER BY column_id", conn);
+            cmd.Parameters.AddWithValue("@Table", physicalTable);
+            await conn.OpenAsync();
+
+            var names = new List<string>();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                names.Add(reader.GetString(0));
+            return names;
+        }
+
         public async Task<List<ReportMenuItem>> GetWebTblMasterAsync()
         {
             var menuItems = new List<ReportMenuItem>();
@@ -176,14 +390,17 @@ namespace CRM.Data
 
                 while (await reader.ReadAsync())
                 {
-                    menuItems.Add(new ReportMenuItem
+                    var viewName = ReadStringValue(reader, "Tbl_View_Name", "TblViewName");
+                    var menuItem = new ReportMenuItem
                     {
-                        Tbl_View_Name = ReadStringValue(reader, "Tbl_View_Name", "TblViewName"),
+                        Tbl_View_Name = viewName,
                         Report_Name = ReadStringValue(reader, "Report_Name", "ReportName"),
                         Report_Type = ReadStringValue(reader, "Menu_Head", "MenuHead", "Report_Type", "ReportType", "Type"),
                         FilterFields = ReadFilterFields(reader),
                         CardFields = ReadCardFields(reader)
-                    });
+                    };
+                    menuItem.ApplyEditability(MasterEditability.For(viewName));
+                    menuItems.Add(menuItem);
                 }
             }
             catch (Exception)

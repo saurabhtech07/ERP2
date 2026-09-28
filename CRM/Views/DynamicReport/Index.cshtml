@@ -1,10 +1,11 @@
-﻿@model IEnumerable<CRM.Models.ReportMenuItem>
+@model IEnumerable<CRM.Models.ReportMenuItem>
 @{
     ViewData["Title"] = ViewBag.ReportName;
 }
 
 @section styles {
 <link href="~/assets/libs/gridjs/theme/mermaid.min.css" rel="stylesheet" type="text/css" />
+<link href="~/css/dynamic-report-actions.css?v=2" rel="stylesheet" type="text/css" />
     <link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" type="text/css" />
     <link href="~/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" type="text/css" />
     <link href="~/css/item-master.css?v=2" rel="stylesheet" type="text/css" />
@@ -150,7 +151,10 @@
             bottom: 12px;
             width: 4px;
             border-radius: 999px;
-            background: linear-gradient(180deg, #405189, #06b6d4, #10b981);
+            background: linear-gradient(180deg,
+                var(--dr-primary, #405189) 0%,
+                color-mix(in srgb, var(--vz-primary, #405189) 78%, #06b6d4) 50%,
+                color-mix(in srgb, var(--vz-primary, #405189) 78%, #10b981) 100%);
         }
         .filter-panel .fs-label {
             display: flex;
@@ -215,8 +219,41 @@
         #btn-print { box-shadow: 0 8px 16px -10px rgba(139, 92, 246, 0.65); }
         #btn-clear:hover { background: #f1f5f9; border-color: #dbe3ed; }
 
+
 /* ---------- Cards (corporate KPI style - full revamp) ---------- */
         #drcCards { margin-top: 0.5rem; }
+        #drcCards .stat-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e6eaf0;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -14px rgba(16, 24, 40, 0.10);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+        #drcCards .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: #d8dfe9;
+            box-shadow: 0 2px 4px rgba(16, 24, 40, 0.05), 0 18px 34px -16px rgba(16, 24, 40, 0.18);
+        }
+
+        /* ---- Master theme ke saath matching ----
+           Ye page Velzon ke --vz-primary se chalata hai, to customizer ka
+           colour badalte hi cards + grid header + filter ek saath badhte hain.
+           Sirf ek jagah define hai, isliye page ka look hamesha consistent
+           rehta hai - koi element peeche na chhoode. */
+
+        /* Velzon sirf [data-theme-colors=green|purple|blue] par --vz-primary
+           define karta hai. Customizer ka pehla swatch "default" hai, aur uske
+           liye koi rule nahi - to var(--vz-primary) undefined reh jata tha aur
+           cards kabhi nahi badlite. Yahan "default" ke liye Velzon ka apna
+           navy (#405189) set kar rahe hain; green/purple/blue select karne par
+           Velzon ki apni rule inhe override kar degi (specificity zyada hai). */
+        [data-theme-colors="default"] {
+            --vz-primary: #405189;
+            --vz-primary-rgb: 64, 81, 137;
+        }
+
         #drcCards .stat-card {
             position: relative;
             overflow: hidden;
@@ -251,8 +288,19 @@
         }
         #drcCards .stat-orange::before { background: #f59e0b !important; }
         #drcCards .stat-blue::before   { background: #3b82f6 !important; }
+        #drcCards .stat-red::before    { background: #e11d48 !important; }
         #drcCards .stat-grey::before   { background: #64748b !important; }
         #drcCards .stat-green::before  { background: #10b981 !important; }
+        #drcCards .stat-violet::before { background: #8b5cf6 !important; }
+
+        /* Mini chart ka rang = us tone ka strong (icon) colour. Fixed hai, to
+           theme customizer par chart ka rang nahi badlega. */
+        #drcCards .stat-orange { --tone-ink: #f59e0b; }
+        #drcCards .stat-blue   { --tone-ink: #3b82f6; }
+        #drcCards .stat-red    { --tone-ink: #e11d48; }
+        #drcCards .stat-grey   { --tone-ink: #64748b; }
+        #drcCards .stat-green  { --tone-ink: #10b981; }
+        #drcCards .stat-violet { --tone-ink: #8b5cf6; }
 
         #drcCards .stat-card .card-body {
             padding: 0.85rem 1rem;
@@ -274,10 +322,14 @@
         #drcCards .stat-orange .avatar-title i { color: #f59e0b !important; }
         #drcCards .stat-blue .avatar-title { background: #eef4ff !important; }
         #drcCards .stat-blue .avatar-title i { color: #3b82f6 !important; }
+        #drcCards .stat-red .avatar-title { background: #fff1f2 !important; }
+        #drcCards .stat-red .avatar-title i { color: #e11d48 !important; }
         #drcCards .stat-grey .avatar-title { background: #f1f5f9 !important; }
         #drcCards .stat-grey .avatar-title i { color: #64748b !important; }
         #drcCards .stat-green .avatar-title { background: #ecfdf5 !important; }
         #drcCards .stat-green .avatar-title i { color: #10b981 !important; }
+        #drcCards .stat-violet .avatar-title { background: #f5f3ff !important; }
+        #drcCards .stat-violet .avatar-title i { color: #8b5cf6 !important; }
 
         #drcCards .stat-card .stat-label {
             font-size: 10px;
@@ -306,6 +358,73 @@
         @@keyframes drcCardIn {
             from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: none; }
+        }
+
+        /* ---------- Cards loading state (sidebar click / first paint) ----------
+           Sidebar ke link full page navigate karte hain, isliye server se aane
+           tak ye static markup hi dikhta hai. Structure wahi rakha hai jo
+           renderCards() bharta hai, isliye load hote hi text/classes replace
+           ho jate hain - sirf shimmer bars dikhte rahne hain. */
+        #drcCards .stat-card.stat-skeleton .stat-label,
+        #drcCards .stat-card.stat-skeleton .stat-value {
+            position: relative;
+            overflow: hidden;
+            background: #eef2f7;
+            color: transparent;
+            border-radius: 6px;
+            text-indent: -9999px;
+        }
+        #drcCards .stat-card.stat-skeleton .stat-label {
+            width: 78px;
+            height: 10px;
+            margin-bottom: 7px;
+        }
+        #drcCards .stat-card.stat-skeleton .stat-value {
+            width: 58px;
+            height: 24px;
+        }
+        #drcCards .stat-card.stat-skeleton .avatar-title {
+            position: relative;
+            overflow: hidden;
+            background: #e6ebf2 !important;
+            box-shadow: none !important;
+        }
+        #drcCards .stat-card.stat-skeleton .avatar-title i { color: transparent !important; }
+        #drcCards .stat-card.stat-skeleton .chart-mini {
+            position: relative;
+            overflow: hidden;
+            /* Real card ke chart-mini (svg 38x34) ke barabar. */
+            width: 38px;
+            height: 34px;
+            border-radius: 8px;
+            background: #e6ebf2;
+        }
+        #drcCards .stat-card.stat-skeleton:hover {
+            transform: none;
+            border-color: #eef1f6;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px -18px rgba(16, 24, 40, .22);
+        }
+
+        #drcCards .stat-skeleton .stat-label::after,
+        #drcCards .stat-skeleton .stat-value::after,
+        #drcCards .stat-skeleton .chart-mini::after,
+        #drcCards .stat-skeleton .avatar-title::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.9) 50%, transparent 100%);
+            animation: drcCardShimmer 1.25s ease-in-out infinite;
+        }
+        #drcCards .stat-skeleton .stat-label::after    { animation-delay: .1s; }
+        #drcCards .stat-skeleton .stat-value::after   { animation-delay: .22s; }
+        #drcCards .stat-skeleton .avatar-title::after { animation-delay: .04s; }
+        #drcCards .stat-skeleton .chart-mini::after   { animation-delay: .3s; }
+        @@keyframes drcCardShimmer {
+            from { transform: translateX(-100%); }
+            to   { transform: translateX(100%); }
         }
 
         /* ---------- Premium loading shimmer ---------- */
@@ -435,24 +554,28 @@
     <style>
         /* ===== THEME-AWARE ACCENT LAYER (appended) =====
            The hardcoded navy accents (#1e3a5f / #405189 / #3b82f6) in the
-           style blocks above are intentionally left untouched. Everything here
-           re-points them at Velzon's --vz-primary-rgb so this page follows the
-           Theme Customizer. Status colours (#10b981 / #f59e0b / #f06548 /
-           #64748b) are left alone - they are semantic, not themed.
-           Delete this block to revert. Tag: safety-before-theme-accent */
+            style blocks above are intentionally left untouched. Everything here
+            re-points them at Velzon's --vz-primary-rgb so this page follows the
+            Theme Customizer. KPI card tones bhi upar (line ~254) --vz-primary se
+            mix hote hain, isliye cards aur grid header customizer par ek saath
+            react karte hain.
+            Delete this block to revert. Tag: safety-before-theme-accent */
+
         :root {
-            --dr-primary:     rgb(var(--vz-primary-rgb, 30, 58, 95));
-            --dr-primary-dk:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 30, 58, 95)) 80%, #000);
-            --dr-primary-lt:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 30, 58, 95)) 72%, #fff);
-            --dr-tint:        color-mix(in srgb, rgb(var(--vz-primary-rgb, 30, 58, 95)) 12%, #fff);
-            --dr-tint-bd:     color-mix(in srgb, rgb(var(--vz-primary-rgb, 30, 58, 95)) 30%, #fff);
+            /* Fallback 64,81,137 = Velzon ka default navy (#405189). Pehle yahan
+               30,58,95 tha, jo customizer ke "default" swatch se match nahi
+               karta tha - isliye grid header/cards ka colour theme se alag tha. */
+            --dr-primary:     rgb(var(--vz-primary-rgb, 64, 81, 137));
+            --dr-primary-dk:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 80%, #000);
+            --dr-primary-lt:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 72%, #fff);
+            --dr-tint:        color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 12%, #fff);
+            --dr-tint-bd:     color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 30%, #fff);
             --dr-grad:        linear-gradient(135deg, var(--dr-primary-dk) 0%, var(--dr-primary) 100%);
         }
 
         /* ---- Grid table header ---- */
-        #dynamicGrid .gridjs-thead { background: var(--dr-grad); }
-        #dynamicGrid .gridjs-thead th { background-color: var(--dr-primary) !important; }
-        #dynamicGrid .gridjs-thead th:hover { background-color: var(--dr-primary-dk) !important; }
+        /* Cards aur table header ek hi master theme (--vz-primary) se aate
+           hain, isliye customizer par dono ek saath badhte hain. */
         #dynamicGrid .gridjs-table tbody tr:hover td { background-color: var(--dr-tint); }
 
         /* ---- Filter panel ---- */
@@ -463,7 +586,7 @@
         .filter-panel .choices.is-focused .choices__inner,
         .filter-panel .choices.is-open .choices__inner {
             border-color: var(--dr-primary) !important;
-            box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 30, 58, 95), 0.14);
+            box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.14);
         }
         .filter-panel .choices__list--dropdown .choices__item--selectable.is-highlighted {
             background: var(--dr-tint);
@@ -472,14 +595,25 @@
         /* ---- Search pill ---- */
         #reportSearch:focus {
             border-color: var(--dr-primary);
-            box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 30, 58, 95), 0.14);
+            box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.14);
         }
         #reportSearch:focus ~ .search-icon { color: var(--dr-primary); }
 
-        /* ---- KPI cards: the blue slot follows the theme ---- */
-        #drcCards .stat-blue::before { background: var(--dr-primary) !important; }
-        #drcCards .stat-blue .avatar-title { background: var(--dr-tint) !important; }
-        #drcCards .stat-blue .avatar-title i { color: var(--dr-primary) !important; }
+        /* ---- KPI cards: tones upar --vz-primary se derive ho rahe hain, isliye
+               customizer ka colour badalte hi cards bhi react karte hain. ---- */
+        /* Grid header ko bhi wahi treatment diya hai, taaki cards aur table
+           ek hi master theme se aayein. Velzon ke default header ko override
+           karke --vz-primary-rgb se gradient banaya gaya hai. */
+        #dynamicGrid .gridjs-thead {
+            background: var(--dr-grad) !important;
+        }
+        #dynamicGrid .gridjs-thead th {
+            background-color: transparent !important;
+            color: #fff !important;
+        }
+        #dynamicGrid .gridjs-thead th:hover { background-color: var(--dr-primary-dk) !important; }
+        #dynamicGrid .gridjs-thead th .gridjs-sort { filter: brightness(0) invert(1); }
+        #dynamicGrid .gridjs-thead th.gridjs-th-sortable:hover { color: #fff !important; }
 
         /* ---- Grid pagination ---- */
         #dynamicGrid .gridjs-pagination .gridjs-pages button:hover:not(:disabled) {
@@ -490,7 +624,7 @@
         #dynamicGrid .gridjs-pagination .gridjs-pages button.gridjs-currentPage {
             background: var(--dr-primary) !important;
             border-color: var(--dr-primary) !important;
-            box-shadow: 0 4px 10px -4px rgba(var(--vz-primary-rgb, 30, 58, 95), 0.5);
+            box-shadow: 0 4px 10px -4px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.5);
         }
 
         /* ---- Report title chip ---- */
@@ -504,14 +638,14 @@
 <!-- Dynamic summary cards (auto-detected per report) -->
 <div class="row g-3 mb-3" id="drcCards">
     <div class="col-xl-3 col-md-6">
-        <div class="card stat-card h-100 stat-orange">
+        <div class="card stat-card h-100 stat-orange stat-skeleton">
             <div class="card-body d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="avatar-title rounded-xl icon-44 bg-solid-orange">
-                        <i class="ri-tools-line text-white"></i>
+                    <span class="avatar-title rounded-xl icon-44">
+                        <i class="ri-tools-line"></i>
                     </span>
                     <div>
-                        <h4 class="fw-bold mb-1 stat-label" id="drc1lbl" title="Loading">Loading&hellip;</h4>
+                        <h4 class="fw-bold mb-1 stat-label" id="drc1lbl" >&nbsp;</h4>
                         <div class="stat-value" id="drc1val">&mdash;</div>
                     </div>
                 </div>
@@ -520,14 +654,14 @@
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="card stat-card h-100 stat-blue">
+        <div class="card stat-card h-100 stat-blue stat-skeleton">
             <div class="card-body d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="avatar-title rounded-xl icon-44 bg-solid-blue">
-                        <i class="ri-tools-line text-white"></i>
+                    <span class="avatar-title rounded-xl icon-44">
+                        <i class="ri-tools-line"></i>
                     </span>
                     <div>
-                        <h4 class="fw-bold mb-1 stat-label" id="drc2lbl" title="Loading">Loading&hellip;</h4>
+                        <h4 class="fw-bold mb-1 stat-label" id="drc2lbl" >&nbsp;</h4>
                         <div class="stat-value" id="drc2val">&mdash;</div>
                     </div>
                 </div>
@@ -536,14 +670,14 @@
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="card stat-card h-100 stat-grey">
+        <div class="card stat-card h-100 stat-red stat-skeleton">
             <div class="card-body d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="avatar-title rounded-xl icon-44 bg-solid-grey">
-                        <i class="ri-tools-line text-white"></i>
+                    <span class="avatar-title rounded-xl icon-44">
+                        <i class="ri-tools-line"></i>
                     </span>
                     <div>
-                        <h4 class="fw-bold mb-1 stat-label" id="drc3lbl" title="Loading">Loading&hellip;</h4>
+                        <h4 class="fw-bold mb-1 stat-label" id="drc3lbl" >&nbsp;</h4>
                         <div class="stat-value" id="drc3val">&mdash;</div>
                     </div>
                 </div>
@@ -552,14 +686,14 @@
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="card stat-card h-100 stat-green">
+        <div class="card stat-card h-100 stat-green stat-skeleton">
             <div class="card-body d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="avatar-title rounded-xl icon-44 bg-solid-green">
-                        <i class="ri-tools-line text-white"></i>
+                    <span class="avatar-title rounded-xl icon-44">
+                        <i class="ri-tools-line"></i>
                     </span>
                     <div>
-                        <h4 class="fw-bold mb-1 stat-label" id="drc4lbl" title="Loading">Loading&hellip;</h4>
+                        <h4 class="fw-bold mb-1 stat-label" id="drc4lbl" >&nbsp;</h4>
                         <div class="stat-value" id="drc4val">&mdash;</div>
                     </div>
                 </div>
@@ -650,10 +784,13 @@
     </div>
 </div>
 
+<partial name="Partials/_RowActionModals" />
+
 @section scripts {
 <script src="~/assets/libs/gridjs/dist/gridjs.production.min.js"></script>
     <script src="~/assets/libs/toastify-js/src/toastify.js"></script>
     <script src="~/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="~/js/dynamic-report-actions.js?v=@DateTime.UtcNow.Ticks"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             let grid = null;
@@ -669,6 +806,13 @@
             let choicesInstances = {};
             let currentRows = [];
             let exportCols = [];
+            let isEditableReport = false;
+            let keyColumn = '';
+            let displayColumn = 'Name';
+            let activeTableName = '';
+            let deleteTargetKey = null;
+            let recordModalInstance = null;
+            let deleteModalInstance = null;
 
             if (initialTable) {
                 loadReportData(initialTable);
@@ -727,6 +871,7 @@
             function escHtml(s) {
                 return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             }
+
 
             function csvVal(v) {
                 var s = String(v == null ? '' : v);
@@ -816,20 +961,43 @@
                 el.textContent = (rows ? rows.length : allRows.length) + ' of ' + allRows.length + ' records';
             }
 
+            // Data fail ho jaye to shimmer ko hata kar 'No data' dikhao, warna
+            // skeleton hamesha ke liye atak jayega.
+            function clearCardSkeletons() {
+                var cards = document.getElementById('drcCards').querySelectorAll('.stat-skeleton');
+                for (var i = 0; i < cards.length; i++) {
+                    cards[i].classList.remove('stat-skeleton');
+                    var lbl = cards[i].querySelector('.stat-label');
+                    var val = cards[i].querySelector('.stat-value');
+                    if (lbl && !lbl.textContent.trim()) lbl.textContent = 'No data';
+                    if (val) val.textContent = '\u2014';
+                }
+            }
+
             function loadReportData(tableName) {
                 document.getElementById('loading').style.display = 'block';
                 document.getElementById('dynamicGrid').innerHTML = '';
+                activeTableName = tableName;
 
                 fetch(`/DynamicReport/GetReportData?tableName=${encodeURIComponent(tableName)}`)
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('loading').style.display = 'none';
                         if (data.success) {
+                            isEditableReport = !!data.isEditable;
+                            keyColumn = data.keyColumn || 'Id';
+                            displayColumn = data.displayColumn || 'Name';
                             allColumns = data.columns || [];
                             sourceColumns = Array.isArray(data.sourceColumns) && data.sourceColumns.length === allColumns.length
                                 ? data.sourceColumns
                                 : allColumns.slice();
                             allRows = data.rows || [];
+                            // Stable per-row identity for the ACTIONS column. Reports that
+                            // are read-only have no real key, so stamp one on the row itself
+                            // - it survives filtering, searching, sorting and paging.
+                            allRows.forEach(function (r, i) {
+                                if (r) r.__drcRowKey = 'r' + i;
+                            });
                             currentRows = allRows;
                             allColumnTypes = data.columnTypes || [];
                             filterDefinitions = Array.isArray(data.filterFields) ? data.filterFields : [];
@@ -849,13 +1017,21 @@
                             renderCards(allColumns, allRows);
                             renderGrid(allColumns, allRows);
                             updateRecordCount(allRows);
+
+                            // Lets dynamic-report-actions.js refresh the grid
+                            // after a successful save or delete.
+                            window.drcReload = function () {
+                                loadReportData(activeTableName);
+                            };
                         } else {
+                            clearCardSkeletons();
                             Toastify({ text: data.message || "Failed to load report.", duration: 3000, close: true, gravity: "top", position: "right", backgroundColor: "#f06548" }).showToast();
                             document.getElementById('dynamicGrid').innerHTML = '<div class="alert alert-danger">Failed to load data.</div>';
                         }
                     })
                     .catch(err => {
                         document.getElementById('loading').style.display = 'none';
+                        clearCardSkeletons();
                         Toastify({ text: "Error connecting to server.", duration: 3000, close: true, gravity: "top", position: "right", backgroundColor: "#f06548" }).showToast();
                     });
             }
@@ -881,8 +1057,43 @@ function renderGrid(columns, rows) {
                     columns.forEach(col => {
                         obj[col] = row[col] === null || row[col] === undefined ? '' : row[col];
                     });
+                    obj.__drcRowKey = row ? (row.__drcRowKey || '') : '';
                     return obj;
                 });
+
+                // Editable masters get Edit + View + Delete; read-only reports still
+                // get the column so a row can be opened, just View only.
+                gridColumns.push({
+                    name: 'ACTIONS',
+                    id: '__drcActions',
+                    // Grid.js hands the formatter (cell, row, column) where `row` is its
+                    // own Row wrapper, not our data object - so the key has to travel
+                    // through the supported column `data` hook, which receives the raw row.
+                    data: function (row) {
+                        return row ? (row.__drcRowKey || '') : '';
+                    },
+                    width: isEditableReport ? '165px' : '70px',
+                    sort: false,
+                    // Grid.js escapes a plain string returned from a formatter, so the
+                    // buttons have to go through gridjs.html() - same as Item Master.
+                    formatter: function (cell) {
+                        if (typeof window.drcActionsHtml !== 'function') return '';
+                        return window.gridjs.html(window.drcActionsHtml(cell, isEditableReport));
+                    }
+                });
+
+                // Keep the in-memory row map in sync so View/Edit open instantly,
+                // same as Item Master's rowMap.
+                if (typeof window.drcSetState === 'function') {
+                    window.drcSetState({
+                        tableName: activeTableName,
+                        keyColumn: keyColumn,
+                        isEditable: isEditableReport,
+                        columns: allColumns,
+                        columnTypes: allColumnTypes,
+                        rows: allRows
+                    });
+                }
 
                 try {
                     if (!grid) {
@@ -996,17 +1207,19 @@ function renderGrid(columns, rows) {
                 };
             }
 
-            function chartSvg(color) {
-                if (color === 'blue') {
-                    return '<svg viewBox="0 0 24 24" fill="none"><rect x="0" y="12" width="4" height="12" rx="1.5" fill="#3b82f6" opacity="0.35"/><rect x="6" y="6" width="4" height="18" rx="1.5" fill="#3b82f6" opacity="0.65"/><rect x="12" y="2" width="4" height="22" rx="1.5" fill="#3b82f6"/><rect x="18" y="9" width="4" height="15" rx="1.5" fill="#3b82f6" opacity="0.5"/></svg>';
-                }
-                if (color === 'grey') {
-                    return '<svg viewBox="0 0 18 24" fill="none"><rect x="0" y="10" width="4" height="14" rx="1.5" fill="#6b7280" opacity="0.4"/><rect x="6" y="2" width="4" height="22" rx="1.5" fill="#6b7280"/><rect x="12" y="7" width="4" height="17" rx="1.5" fill="#6b7280" opacity="0.7"/></svg>';
-                }
-                if (color === 'green') {
-                    return '<svg viewBox="0 0 24 24" fill="none"><rect x="0" y="13" width="4" height="11" rx="1.5" fill="#10b981" opacity="0.4"/><rect x="6" y="5" width="4" height="19" rx="1.5" fill="#10b981" opacity="0.7"/><rect x="12" y="9" width="4" height="15" rx="1.5" fill="#10b981"/><circle cx="20" cy="4" r="2.5" fill="#10b981"/><rect x="18" y="11" width="4" height="13" rx="1.5" fill="#10b981" opacity="0.55"/></svg>';
-                }
-                return '<svg viewBox="0 0 18 24" fill="none"><rect x="0" y="14" width="4" height="10" rx="1.5" fill="#ff8c00" opacity="0.35"/><rect x="6" y="4" width="4" height="20" rx="1.5" fill="#ff8c00"/><rect x="12" y="8" width="4" height="16" rx="1.5" fill="#ff8c00" opacity="0.65"/></svg>';
+            // Mini chart ka fill var(--tone-ink) hai, jo har card tone ka apna
+            // strong (icon) colour hai - fixed, to theme customizer par chart
+            // ka rang nahi badlega. Shape variant se badalta hai taaki 4 cards
+            // ek jaise na lagein.
+            function chartSvg(variant) {
+                var v = (variant || 0) % 3;
+                var bars =
+                    v === 0
+                        ? '<rect x="0" y="13" width="4" height="11" rx="1.5" opacity="0.4"/><rect x="6" y="9" width="4" height="15" rx="1.5" opacity="0.65"/><rect x="12" y="4" width="4" height="20" rx="1.5"/><rect x="18" y="11" width="4" height="13" rx="1.5" opacity="0.5"/>'
+                        : v === 1
+                        ? '<rect x="0" y="12" width="4" height="12" rx="1.5" opacity="0.35"/><rect x="6" y="6" width="4" height="18" rx="1.5" opacity="0.65"/><rect x="12" y="2" width="4" height="22" rx="1.5"/><rect x="18" y="9" width="4" height="15" rx="1.5" opacity="0.5"/>'
+                        : '<rect x="0" y="10" width="4" height="14" rx="1.5" opacity="0.4"/><rect x="6" y="14" width="4" height="10" rx="1.5" opacity="0.55"/><rect x="12" y="7" width="4" height="17" rx="1.5" opacity="0.85"/><rect x="18" y="3" width="4" height="21" rx="1.5"/>';
+                return '<svg viewBox="0 0 24 24" fill="none" style="fill: var(--tone-ink);">' + bars + '</svg>';
             }
 
             function renderCards(columns, rows) {
@@ -1030,8 +1243,11 @@ function renderGrid(columns, rows) {
                     cards.push(resolveKpiCard(bySlot[s], rows));
                 }
 
-                var colorMap = { total: 'orange', qty: 'blue', active: 'green', gst: 'orange' };
+                var colorMap = { total: 'orange', qty: 'blue', active: 'green', gst: 'red' };
+                var toneOrder = ['blue', 'red', 'orange', 'green'];
                 var cardEls = document.getElementById('drcCards').querySelectorAll('.stat-card');
+                var visible = 0;
+                var usedTones = {};
 
                 for (var i = 0; i < cardEls.length; i++) {
                     var c = cards[i];
@@ -1043,18 +1259,49 @@ function renderGrid(columns, rows) {
                         continue;
                     }
                     cardEl.parentElement.classList.remove('d-none');
+                    visible++;
 
+                    // DB tone normally use hota hai, par agar wahi colour pehle
+                    // kisi aur card ne le liya hai to next free slot shift kar
+                    // dete hain - isse har card ka icon colour alag rehta hai
+                    // (Total Records hamesha tone 'total' deta hai, isliye
+                    // bina iske card 1 aur 2 same orange ho jaate the).
                     var color = colorMap[c.tone] || 'orange';
+                    if (usedTones[color]) {
+                        for (var t = 0; t < toneOrder.length; t++) {
+                            if (!usedTones[toneOrder[t]]) { color = toneOrder[t]; break; }
+                        }
+                    }
+                    usedTones[color] = true;
+
                     cardEl.className = 'card stat-card h-100 stat-' + color;
-                    cardEl.querySelector('.avatar-title').className = 'avatar-title rounded-xl icon-44 bg-solid-' + color;
-                    cardEl.querySelector('.avatar-title i').className = c.icon + ' text-white';
+                    cardEl.querySelector('.avatar-title').className = 'avatar-title rounded-xl icon-44';
+                    cardEl.querySelector('.avatar-title i').className = c.icon;
                     cardEl.querySelector('.stat-label').textContent = c.label;
                     cardEl.title = 'Column: ' + c.col + ' | Calculation: ' + c.calc;
                     cardEl.querySelector('.stat-label').title = '';
                     var valueEl = cardEl.querySelector('.stat-value');
                     valueEl.textContent = nfmt(c.value);
                     valueEl.title = '';
-                    cardEl.querySelector('.chart-mini').innerHTML = chartSvg(color);
+                    cardEl.querySelector('.chart-mini').innerHTML = chartSvg(i);
+                }
+
+                // Sirf 3 cards ho to teesra poora width le. 1, 2 aur 4 cards
+                // default 4-column layout me hi rehte hain - jaisa pehle tha.
+                // Count database se aata hai, isliye har report me khud set hota hai.
+                var layout = {
+                    1: ['col-xl-3', 'col-md-6'],
+                    2: ['col-xl-3', 'col-md-6'],
+                    3: ['col-xl-4', 'col-md-4'],
+                    4: ['col-xl-3', 'col-md-6']
+                }[visible] || ['col-xl-3', 'col-md-6'];
+
+                for (var k = 0; k < cardEls.length; k++) {
+                    var wrap = cardEls[k].parentElement;
+                    wrap.classList.remove('col-xl-12', 'col-xl-6', 'col-xl-4', 'col-xl-3', 'col-md-12', 'col-md-4');
+                    if (!wrap.classList.contains('d-none')) {
+                        wrap.classList.add(layout[0], layout[1]);
+                    }
                 }
             }
 
@@ -1088,7 +1335,14 @@ function renderGrid(columns, rows) {
                 return String(s == null ? '' : s).replace(/[^A-Za-z0-9]/g, '').toLowerCase();
             }
 
-            function getColumnEntries(name) {
+            // strict = true  -> sirf exact / normalized match. Filter fields ke
+            // liye ye chahiye: config me likha hua naam tabhi dikhna chahiye jab
+            // SP ka result set me wo column SACH me ho. warna "Alice" jaise
+            // galat ya stale config entries bhi dropdown me aa jaate the.
+            // strict = false -> Tier 3 bhi (substring). KPI cards ke liye ye
+            // chahiye, kyunki wahan config 'DocDate' likhta hai aur column
+            // 'Date' hota hai.
+            function getColumnEntries(name, strict) {
                 var out = [];
                 if (!allColumns || !allColumns.length) return out;
                 var requested = String(name == null ? '' : name).trim().toLowerCase();
@@ -1109,7 +1363,7 @@ function renderGrid(columns, rows) {
                         out.push(allColumns[j]);
                     }
                 }
-                if (out.length) return out;
+                if (out.length || strict) return out;
 
                 // Tier 3 - contains ("Date" <-> "DocDate", "Category" <-> "Category1")
                 for (var k = 0; k < allColumns.length; k++) {
@@ -1146,7 +1400,7 @@ function renderGrid(columns, rows) {
                 for (var i = 0; i < filterDefinitions.length; i++) {
                     if (!isFilterFieldVisible(filterDefinitions[i])) continue;
                     var field = getFilterFieldName(filterDefinitions[i]);
-                    var found = getColumnEntries(field);
+                    var found = getColumnEntries(field, true);
                     for (var j = 0; j < found.length; j++) {
                         if (String(field).trim().toLowerCase() === 'date' || isDateColumn(found[j])) {
                             return found[j];
@@ -1182,12 +1436,15 @@ function renderGrid(columns, rows) {
                 for (var i = 0; i < filterDefinitions.length; i++) {
                     if (!isFilterFieldVisible(filterDefinitions[i])) continue;
                     var field = getFilterFieldName(filterDefinitions[i]);
-                    var found = getColumnEntries(field);
+                    // strict: config me 'Alice' likha hai par SP me wo column
+                    // nahi hai to filter bilkul nahi dikhega.
+                    var found = getColumnEntries(field, true);
                     if (!found.length) continue;
                     var col = found[0];
                     var columnKey = String(col).trim().toLowerCase();
                     if (usedCols[columnKey] || col === dateCol || isDateColumn(col)) continue;
-                    out.push({ col: col, label: field || col, options: buildFilterOptions(col) });
+                    // Label SP ke asli column se - config ka stale text nahi.
+                    out.push({ col: col, label: colSrcName(allColumns.indexOf(col)) || col, options: buildFilterOptions(col) });
                     usedCols[columnKey] = 1;
                 }
                 return out;

@@ -54,6 +54,13 @@ namespace CRM.Controllers
                     .Select(x => (object)new { slot = x.Slot, field = x.FieldName, label = x.Label })
                     .ToList() ?? new List<object>();
 
+                // Read-only reports still get an ACTIONS column (View only), so the
+                // grid needs a column to identify a row by. Editable masters declare
+                // their own key; everything else falls back to a best-effort match.
+                var keyColumn = menuItem?.KeyColumn;
+                if (string.IsNullOrWhiteSpace(keyColumn))
+                    keyColumn = ResolveRowKeyColumn(data.SourceColumnNames, data.ColumnNames);
+
                 return Json(new
                 {
                     success = data.ErrorMessage == null,
@@ -61,6 +68,9 @@ namespace CRM.Controllers
                     tableName = tableName,
                     reportName = reportName,
                     reportType = menuItem?.Report_Type ?? string.Empty,
+                    isEditable = menuItem?.IsEditable ?? false,
+                    keyColumn = keyColumn,
+                    displayColumn = menuItem?.DisplayColumn ?? "Name",
                     columns = data.ColumnNames,
                     sourceColumns = data.SourceColumnNames,
                     columnTypes = data.ColumnTypes,
@@ -73,6 +83,84 @@ namespace CRM.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Picks the column used to label a row in the ACTIONS column. Prefers a real
+        /// key (Id, then any *Id), then a code column, and finally the first column -
+        /// so every report can show the column even when it is read-only.
+        /// </summary>
+        private static string ResolveRowKeyColumn(
+            List<string>? sourceColumns,
+            List<string>? columns)
+        {
+            if (columns == null || columns.Count == 0)
+                return string.Empty;
+
+            string? FirstMatch(Func<string, bool> test)
+            {
+                for (int i = 0; i < columns.Count; i++)
+                {
+                    var name = sourceColumns != null && i < sourceColumns.Count &&
+                               !string.IsNullOrWhiteSpace(sourceColumns[i])
+                        ? sourceColumns[i]
+                        : columns[i];
+                    if (test(name)) return columns[i];
+                }
+                return null;
+            }
+
+            return FirstMatch(n => n.Equals("Id", StringComparison.OrdinalIgnoreCase))
+                ?? FirstMatch(n => n.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
+                ?? FirstMatch(n => n.Equals("Code", StringComparison.OrdinalIgnoreCase)
+                                || n.EndsWith("Code", StringComparison.OrdinalIgnoreCase))
+                ?? FirstMatch(n => !string.Equals(n, "Name", StringComparison.OrdinalIgnoreCase))
+                ?? columns[0];
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetRecord(string tableName, string key)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                return Json(new { success = false, message = "Record key is required." });
+
+            var result = await _data.GetMasterRecordAsync(tableName, key);
+            return Json(new
+            {
+                success = result.Success,
+                message = result.Error,
+                keyColumn = result.KeyColumn,
+                displayLabel = result.DisplayLabel,
+                isEditable = result.IsEditable,
+                record = result.Record
+            });
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> UpdateRecord([FromBody] RecordUpdateRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Key))
+                return Json(new { success = false, message = "Record key is required." });
+
+            var result = await _data.UpdateMasterRecordAsync(
+                request.TableName ?? string.Empty,
+                request.Key,
+                request.Values ?? new Dictionary<string, object?>());
+
+            return Json(new { success = result.Success, message = result.Error });
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> DeleteRecord([FromBody] RecordKeyRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Key))
+                return Json(new { success = false, message = "Record key is required." });
+
+            var result = await _data.DeleteMasterRecordAsync(
+                request.TableName ?? string.Empty,
+                request.Key);
+
+            return Json(new { success = result.Success, message = result.Error });
         }
     }
 }

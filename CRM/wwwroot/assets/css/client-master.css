@@ -1183,3 +1183,116 @@ mark.cm-match::selection { background: rgba(250, 204, 21, .75); }
         justify-content: center;
     }
 }
+
+/* ==========================================================================
+   THEME-AWARE ACCENT LAYER  (appended — do not edit the rules above)
+   --------------------------------------------------------------------------
+   The original hardcoded navy accent (#405189 family) is intentionally left
+   untouched. Everything below re-points the accent colour at Velzon's
+   --vz-primary-rgb so tables / cards follow the Theme Customizer.
+
+   Every value falls back to the original navy, so if the Velzon variable is
+   ever unavailable the original look is reproduced exactly.
+   Delete this whole block to revert. Safety tag: safety-before-theme-accent
+   ========================================================================== */
+
+:root {
+    --cm-primary:    rgb(var(--vz-primary-rgb, 64, 81, 137));
+    --cm-primary-lt: color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 82%, #fff);
+    --cm-primary-dk: color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 74%, #000);
+    --cm-primary-dkr: color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 56%, #000);
+    --cm-primary-hd:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 80%, #000);
+    --cm-tint:       color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 12%, #fff);
+    --cm-tint-bd:    color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 30%, #fff);
+    /* dark -> base keeps white header text readable on light themes too */
+    --cm-grad-primary: linear-gradient(135deg,
+        var(--cm-primary-hd) 0%,
+        var(--cm-primary) 100%);
+
+    --cm-navy: var(--cm-primary);
+    --cm-navy-600: var(--cm-primary-lt);
+    --cm-navy-800: var(--cm-primary-dk);
+    --cm-navy-900: var(--cm-primary-dkr);
+    --cm-grad-navy: var(--cm-grad-primary);
+}
+
+/* ---- Page title / breadcrumb ---- */
+.page-title-box h4 { color: var(--cm-primary-dkr); }
+.breadcrumb-item a { color: var(--cm-primary) !important; }
+
+/* ---- Stat cards ---- */
+.cm-stat-card:hover {
+    box-shadow: 0 14px 30px -14px rgba(var(--vz-primary-rgb, 64, 81, 137), .35), 0 6px 16px -10px rgba(56, 65, 74, .2);
+}
+.cm-stat-unit {
+    background: var(--cm-tint);
+    border-color: var(--cm-tint-bd);
+}
+
+/* ---- Toolbar / filter bars ---- */
+.cm-toolbar {
+    background: linear-gradient(180deg, rgba(var(--vz-primary-rgb, 64, 81, 137), .05) 0%, rgba(var(--vz-primary-rgb, 64, 81, 137), 0) 55%), #fff;
+}
+.cm-filter-bar {
+    background: linear-gradient(180deg, rgba(var(--vz-primary-rgb, 64, 81, 137), .07) 0%, rgba(var(--vz-primary-rgb, 64, 81, 137), 0) 45%), #fff;
+}
+
+/* ---- Focus rings ---- */
+.cm-pg-control:focus-within { box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), .1), inset 0 1px 0 rgba(255, 255, 255, .8); }
+.cm-size-select:focus { box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), .12); }
+.cm-search-input:focus { box-shadow: 0 0 0 4px rgba(var(--vz-primary-rgb, 64, 81, 137), .14); }
+.cm-filter-group:focus-within { box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), .1), inset 0 1px 0 rgba(255, 255, 255, .8); }
+.cm-filter-input:focus,
+.cm-combo-input:focus,
+.cm-filter-bar .cm-filter-select:focus { box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), .14); }
+
+/* ---- Search / filter chip shadows ---- */
+.cm-search-chip { box-shadow: 0 4px 10px -3px rgba(var(--vz-primary-rgb, 64, 81, 137), .5); }
+.cm-search-wrap:focus-within .cm-search-chip { box-shadow: 0 6px 14px -4px rgba(var(--vz-primary-rgb, 64, 81, 137), .6); }
+.cm-filter-chip { box-shadow: 0 3px 8px -3px rgba(var(--vz-primary-rgb, 64, 81, 137), .45); }
+
+/* ---- Loader / scrollbar ---- */
+.cm-loader { color: var(--cm-primary); }
+.cm-scroll-wrapper::-webkit-scrollbar-thumb { background: var(--cm-grad-primary); }
+.cm-scroll-wrapper::-webkit-scrollbar-thumb:hover { background: var(--cm-primary-dk); }
+.cm-scroll-wrapper { scrollbar-color: var(--cm-primary) #f1f5f9; }
+
+/* ---- Table header states ---- */
+.cm-table thead th:hover {
+    background: linear-gradient(90deg, var(--cm-primary-dk) 0%, var(--cm-primary) 100%) !important;
+}
+.cm-table thead th.cm-sorted {
+    background: linear-gradient(90deg, var(--cm-primary-dkr) 0%, var(--cm-primary-dk) 100%) !important;
+}
+.cm-table thead th.cm-sorted::after {
+    background: linear-gradient(90deg, var(--cm-primary-lt), var(--cm-primary));
+}
+
+/* ---- Table row hover ---- */
+.cm-table tbody tr:hover td { background-color: var(--cm-tint) !important; }
+.cm-table tbody tr:hover td:first-child { background: var(--cm-tint) !important; }
+
+/* ---- Pagination ---- */
+.cm-pagination .page-item.active .page-link { box-shadow: 0 6px 12px -6px rgba(var(--vz-primary-rgb, 64, 81, 137), .5); }
+.cm-pagination .page-link:hover {
+    background-color: var(--cm-tint);
+    border-color: var(--cm-tint-bd);
+}
+
+/* ---- Row action buttons ---- */
+.cm-edit-btn {
+    background: var(--cm-tint);
+    border-color: var(--cm-tint-bd);
+}
+.cm-edit-btn:hover { box-shadow: 0 6px 14px -6px rgba(var(--vz-primary-rgb, 64, 81, 137), .55); }
+
+/* ---- Range presets ---- */
+.cm-range-preset:hover { background: var(--cm-tint); }
+.cm-range-preset-active { box-shadow: 0 6px 12px -6px rgba(var(--vz-primary-rgb, 64, 81, 137), .55); }
+
+/* ---- Filter bar actions ---- */
+.cm-filter-apply { box-shadow: 0 8px 16px -8px rgba(var(--vz-primary-rgb, 64, 81, 137), .6); }
+.cm-filter-apply:hover { box-shadow: 0 12px 20px -8px rgba(var(--vz-primary-rgb, 64, 81, 137), .7); }
+
+/* ---- Combo list ---- */
+.cm-combo-list li:hover { background: var(--cm-tint); }

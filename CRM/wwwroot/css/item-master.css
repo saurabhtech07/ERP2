@@ -787,3 +787,99 @@
 .fsd-opt.s-active { color: #10b981; font-weight: 600; }
 .fsd-opt.s-inactive { color: #f5484f; font-weight: 600; }
 .fsd-empty { padding: 14px 10px; text-align: center; color: #94a3b8; font-size: 12px; }
+
+/* ==========================================================================
+   THEME-AWARE ACCENT LAYER  (appended — do not edit the rules above)
+   --------------------------------------------------------------------------
+   Re-points the hardcoded blue accent (#2563eb / #3b82f6 / #06b6d4 family) at
+   Velzon's --vz-primary-rgb so this page follows the Theme Customizer.
+   Status colours (.stat-orange/.stat-green/.stat-grey, s-active/s-inactive,
+   btn-excel) are intentionally left alone — they are semantic, not themed.
+   Delete this whole block to revert. Safety tag: safety-before-theme-accent
+   ========================================================================== */
+
+:root {
+    --im-primary:     rgb(var(--vz-primary-rgb, 37, 99, 235));
+    --im-primary-lt:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 37, 99, 235)) 80%, #fff);
+    --im-primary-dk:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 37, 99, 235)) 76%, #000);
+    --im-primary-hd:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 37, 99, 235)) 80%, #000);
+    --im-tint:        color-mix(in srgb, rgb(var(--vz-primary-rgb, 37, 99, 235)) 12%, #fff);
+    --im-tint-bd:     color-mix(in srgb, rgb(var(--vz-primary-rgb, 37, 99, 235)) 32%, #fff);
+    /* dark -> base keeps white text readable on light themes too */
+    --im-grad:        linear-gradient(135deg,
+                          var(--im-primary-hd) 0%,
+                          var(--im-primary) 100%);
+    --im-grad-v:      linear-gradient(90deg,
+                          var(--im-primary-hd) 0%,
+                          var(--im-primary) 100%);
+}
+
+/* ---- Blue stat card + solid avatar follow the theme ---- */
+.stat-blue::before { background: var(--im-grad-v); }
+.stat-blue::after { background: radial-gradient(circle, rgba(var(--vz-primary-rgb, 37, 99, 235), 0.12), transparent 70%); }
+.stat-blue:hover { box-shadow: 0 14px 26px -10px rgba(var(--vz-primary-rgb, 37, 99, 235), 0.45); }
+.stat-blue .icon-44 { box-shadow: 0 8px 16px -6px rgba(var(--vz-primary-rgb, 37, 99, 235), 0.55); }
+.bg-solid-blue { background: var(--im-grad); }
+
+/* ---- Filter panel accents ---- */
+.filter-panel .filter-icon {
+    background: rgba(var(--vz-primary-rgb, 37, 99, 235), 0.12);
+    color: var(--im-primary);
+}
+.filter-panel .label-ic.blue {
+    background: var(--im-tint);
+    color: var(--im-primary);
+}
+.filter-panel .input-group-text { color: var(--im-primary); }
+.filter-panel #search-client:focus {
+    box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 37, 99, 235), 0.14);
+    border-color: var(--im-primary);
+}
+.filter-panel #search-client:focus ~ .search-icon { color: var(--im-primary); }
+.filter-panel .btn-csv { background: var(--im-grad); }
+
+/* ---- Inline-group category 1 accents ---- */
+.ig-cat1 .input-group-text {
+    background: var(--im-tint);
+    color: var(--im-primary);
+}
+.ig-cat1:focus-within {
+    border-color: var(--im-primary);
+    box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 37, 99, 235), 0.15), 0 8px 20px -6px rgba(var(--vz-primary-rgb, 37, 99, 235), 0.3);
+}
+.ig-cat1:focus-within .input-group-text,
+.ig-cat1:focus-within .form-select { background: var(--im-grad); }
+.ig-cat1:focus-within .select-chevron {
+    color: var(--im-primary);
+    background: rgba(var(--vz-primary-rgb, 37, 99, 235), 0.14);
+}
+
+/* ---- Table panel page-size ---- */
+.table-panel #page-size:hover { border-color: var(--im-primary); }
+.table-panel #page-size:focus {
+    box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 37, 99, 235), 0.14);
+    border-color: var(--im-primary);
+}
+
+/* ---- View modal header icon ---- */
+#viewModal .view-modal-icon { background: var(--im-grad); }
+
+/* ---- Field-select dropdown: category 1 ---- */
+.fsd.acc-cat1 .fsd-ic {
+    background: var(--im-tint);
+    color: var(--im-primary);
+}
+.fsd.acc-cat1 .fsd-box.open {
+    border-color: var(--im-primary);
+    box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 37, 99, 235), 0.15), 0 8px 20px -6px rgba(var(--vz-primary-rgb, 37, 99, 235), 0.3);
+}
+.fsd.acc-cat1 .fsd-box.open .fsd-ic { background: var(--im-grad); }
+
+/* ---- Field-select option states ---- */
+.fsd-opt:hover,
+.fsd-opt.act { background: var(--im-tint); }
+.fsd-opt.sel {
+    background: var(--im-tint);
+    color: var(--im-primary);
+}
+.fsd-check { color: var(--im-primary); }

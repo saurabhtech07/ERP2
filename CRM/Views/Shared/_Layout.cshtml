@@ -1,6 +1,6 @@
 ﻿
 <!doctype html>
-<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default" data-bs-theme="light" data-layout-width="fluid" data-layout-position="fixed" data-layout-style="default" data-body-image="none" data-sidebar-visibility="show" data-font-family="hkgrotesk">
 <head>
     @Html.Partial("~/Views/Shared/_title_meta.cshtml")
     @RenderSection("styles", required: false)
@@ -32,6 +32,12 @@
         #pageLoader.page-loader-hide {
             opacity: 0;
             visibility: hidden;
+        }
+        [data-preloader=disable] #pageLoader {
+            display: none !important;
+        }
+        #preloader-preview-spinner {
+            animation: none;
         }
         .page-loader-inner {
             display: flex;

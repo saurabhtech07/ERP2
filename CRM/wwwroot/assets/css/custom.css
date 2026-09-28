@@ -2,7 +2,7 @@
    BESTIT ENTERPRISE CRM - UNIFIED CONTINUOUS CANVAS ARCHITECTURE
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+/* Plus Jakarta Sans is now self-hosted via theme-fonts.css (no Google Fonts call) */
 
 :root {
     --primary-blue: #2563eb;

@@ -7,7 +7,7 @@
 <link href="~/assets/libs/gridjs/theme/mermaid.min.css" rel="stylesheet" type="text/css" />
     <link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" type="text/css" />
     <link href="~/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" type="text/css" />
-    <link href="~/css/item-master.css" rel="stylesheet" type="text/css" />
+    <link href="~/css/item-master.css?v=2" rel="stylesheet" type="text/css" />
     <style>
         .fs-label-sm {
             display: block;
@@ -430,6 +430,73 @@
             border-radius: 999px;
             border: 1px solid #e2e8f0;
             white-space: nowrap;
+        }
+    </style>
+    <style>
+        /* ===== THEME-AWARE ACCENT LAYER (appended) =====
+           The hardcoded navy accents (#1e3a5f / #405189 / #3b82f6) in the
+           style blocks above are intentionally left untouched. Everything here
+           re-points them at Velzon's --vz-primary-rgb so this page follows the
+           Theme Customizer. Status colours (#10b981 / #f59e0b / #f06548 /
+           #64748b) are left alone - they are semantic, not themed.
+           Delete this block to revert. Tag: safety-before-theme-accent */
+        :root {
+            --dr-primary:     rgb(var(--vz-primary-rgb, 30, 58, 95));
+            --dr-primary-dk:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 30, 58, 95)) 80%, #000);
+            --dr-primary-lt:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 30, 58, 95)) 72%, #fff);
+            --dr-tint:        color-mix(in srgb, rgb(var(--vz-primary-rgb, 30, 58, 95)) 12%, #fff);
+            --dr-tint-bd:     color-mix(in srgb, rgb(var(--vz-primary-rgb, 30, 58, 95)) 30%, #fff);
+            --dr-grad:        linear-gradient(135deg, var(--dr-primary-dk) 0%, var(--dr-primary) 100%);
+        }
+
+        /* ---- Grid table header ---- */
+        #dynamicGrid .gridjs-thead { background: var(--dr-grad); }
+        #dynamicGrid .gridjs-thead th { background-color: var(--dr-primary) !important; }
+        #dynamicGrid .gridjs-thead th:hover { background-color: var(--dr-primary-dk) !important; }
+        #dynamicGrid .gridjs-table tbody tr:hover td { background-color: var(--dr-tint); }
+
+        /* ---- Filter panel ---- */
+        .filter-panel .fs-label { color: var(--dr-primary); }
+        .filter-panel .fs-label i { color: var(--dr-primary-lt); }
+        .filter-panel input[type="date"]:focus,
+        .filter-panel .form-select:focus,
+        .filter-panel .choices.is-focused .choices__inner,
+        .filter-panel .choices.is-open .choices__inner {
+            border-color: var(--dr-primary) !important;
+            box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 30, 58, 95), 0.14);
+        }
+        .filter-panel .choices__list--dropdown .choices__item--selectable.is-highlighted {
+            background: var(--dr-tint);
+        }
+
+        /* ---- Search pill ---- */
+        #reportSearch:focus {
+            border-color: var(--dr-primary);
+            box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 30, 58, 95), 0.14);
+        }
+        #reportSearch:focus ~ .search-icon { color: var(--dr-primary); }
+
+        /* ---- KPI cards: the blue slot follows the theme ---- */
+        #drcCards .stat-blue::before { background: var(--dr-primary) !important; }
+        #drcCards .stat-blue .avatar-title { background: var(--dr-tint) !important; }
+        #drcCards .stat-blue .avatar-title i { color: var(--dr-primary) !important; }
+
+        /* ---- Grid pagination ---- */
+        #dynamicGrid .gridjs-pagination .gridjs-pages button:hover:not(:disabled) {
+            background: var(--dr-tint);
+            border-color: var(--dr-tint-bd);
+            color: var(--dr-primary);
+        }
+        #dynamicGrid .gridjs-pagination .gridjs-pages button.gridjs-currentPage {
+            background: var(--dr-primary) !important;
+            border-color: var(--dr-primary) !important;
+            box-shadow: 0 4px 10px -4px rgba(var(--vz-primary-rgb, 30, 58, 95), 0.5);
+        }
+
+        /* ---- Report title chip ---- */
+        .report-icon-chip {
+            background: var(--dr-tint);
+            color: var(--dr-primary);
         }
     </style>
 }

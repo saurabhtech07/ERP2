@@ -974,7 +974,7 @@ File: Main Js File
 
 	// notification cart dropdown
 	function initTopbarComponents() {
-		if (document.getElementsByClassName("dropdown-item-cart")) {
+		if (document.getElementsByClassName("dropdown-item-cart").length > 0) {
 			var dropdownItemCart = document.querySelectorAll(".dropdown-item-cart").length;
 			Array.from(document.querySelectorAll("#page-topbar .dropdown-menu-cart .remove-item-btn")).forEach(function (item) {
 				item.addEventListener("click", function (e) {
@@ -1015,7 +1015,7 @@ File: Main Js File
 		}
 
 		// notification messages
-		if (document.getElementsByClassName("notification-check")) {
+		if (document.getElementsByClassName("notification-check").length > 0) {
 			function emptyNotification() {
 				Array.from(document.querySelectorAll("#notificationItemsTabContent .tab-pane")).forEach(function (elem) {
 					if (elem.querySelectorAll(".notification-item").length > 0) {
@@ -1791,6 +1791,29 @@ File: Main Js File
 						}
 						break;
 				}
+
+				switch (isLayoutAttributes["data-font-family"]) {
+					case "poppins":
+					case "public-sans":
+					case "nunito":
+					case "saira":
+					case "outfit":
+					case "inter":
+					case "open-sans":
+					case "ibm-plex-sans":
+					case "rubik":
+					case "jost":
+					case "roboto":
+						getElementUsingTagname("data-font-family", isLayoutAttributes["data-font-family"]);
+						document.documentElement.setAttribute("data-font-family", isLayoutAttributes["data-font-family"]);
+						sessionStorage.setItem("data-font-family", isLayoutAttributes["data-font-family"]);
+						break;
+					default:
+						getElementUsingTagname("data-font-family", "hkgrotesk");
+						document.documentElement.setAttribute("data-font-family", "hkgrotesk");
+						sessionStorage.setItem("data-font-family", "hkgrotesk");
+						break;
+				}
 			default:
 				break;
 		}
@@ -1826,6 +1849,10 @@ File: Main Js File
 				document.documentElement.setAttribute(ele, x.value);
 				sessionStorage.setItem(ele, x.value);
 				initLanguage();
+
+				if (ele == "data-font-family") {
+					window.dispatchEvent(resizeEvent);
+				}
 
 				if (ele == "data-layout-width" && x.value == "boxed") {
 					document.documentElement.setAttribute("data-sidebar-size", "sm-hover");
@@ -2007,6 +2034,8 @@ File: Main Js File
 			isLayoutAttributes["data-body-image"] = sessionStorage.getItem("data-body-image");
 			isLayoutAttributes["data-theme"] = sessionStorage.getItem("data-theme");
 			isLayoutAttributes["data-theme-colors"] = sessionStorage.getItem("data-theme-colors");
+			isLayoutAttributes["data-sidebar-visibility"] = sessionStorage.getItem("data-sidebar-visibility");
+			isLayoutAttributes["data-font-family"] = sessionStorage.getItem("data-font-family");
 			layoutSwitch(isLayoutAttributes);
 		}
 
@@ -2083,13 +2112,66 @@ File: Main Js File
 		}
 	}
 
+	var layoutResetDefaults = {
+		"data-layout": "vertical",
+		"data-topbar": "light",
+		"data-sidebar": "dark",
+		"data-sidebar-size": "lg",
+		"data-sidebar-image": "none",
+		"data-preloader": "disable",
+		"data-theme": "default",
+		"data-theme-colors": "default",
+		"data-bs-theme": "light",
+		"data-layout-width": "fluid",
+		"data-layout-position": "fixed",
+		"data-layout-style": "default",
+		"data-body-image": "none",
+		"data-sidebar-visibility": "show",
+		"data-font-family": "hkgrotesk"
+	};
+
 	function resetLayout() {
-		if (document.getElementById("reset-layout")) {
-			document.getElementById("reset-layout").addEventListener("click", function () {
-				sessionStorage.clear();
-				window.location.reload();
-			});
+		var resetBtn = document.getElementById("reset-layout");
+		if (!resetBtn) {
+			return;
 		}
+
+		resetBtn.addEventListener("click", function () {
+			var resetAttributes = {};
+			try {
+				resetAttributes = JSON.parse(sessionStorage.getItem("defaultAttribute") || "{}");
+			} catch (err) {
+				resetAttributes = {};
+			}
+
+			Object.keys(layoutResetDefaults).forEach(function (key) {
+				if (!(key in resetAttributes)) {
+					resetAttributes[key] = layoutResetDefaults[key];
+				}
+			});
+
+			sessionStorage.clear();
+
+			Object.keys(resetAttributes).forEach(function (key) {
+				sessionStorage.setItem(key, resetAttributes[key]);
+				document.documentElement.setAttribute(key, resetAttributes[key]);
+			});
+
+			sessionStorage.setItem("defaultAttribute", JSON.stringify(resetAttributes));
+
+			document.documentElement.removeAttribute("data-sidebar-user-show");
+			document.getElementById("sidebarUserProfile") ?
+				document.getElementById("sidebarUserProfile").checked = false : "";
+
+			var settingsPanel = document.getElementById("theme-settings-offcanvas");
+			settingsPanel ? settingsPanel.querySelectorAll('input[type="radio"][name]').forEach(function (input) {
+				if (input.name in resetAttributes) {
+					input.checked = input.value === resetAttributes[input.name];
+				}
+			}) : "";
+
+			window.location.reload();
+		});
 	}
 
 	function init() {

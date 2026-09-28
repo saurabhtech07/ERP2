@@ -61,6 +61,9 @@ namespace CRM.Controllers
                 if (string.IsNullOrWhiteSpace(keyColumn))
                     keyColumn = ResolveRowKeyColumn(data.SourceColumnNames, data.ColumnNames);
 
+                var dateFilterColumn = ResolveDateFilterColumn(
+                    menuItem?.FilterFields, data.SourceColumnNames, data.ColumnNames, data.ColumnTypes);
+
                 return Json(new
                 {
                     success = data.ErrorMessage == null,
@@ -71,6 +74,7 @@ namespace CRM.Controllers
                     isEditable = menuItem?.IsEditable ?? false,
                     keyColumn = keyColumn,
                     displayColumn = menuItem?.DisplayColumn ?? "Name",
+                    dateFilterColumn = dateFilterColumn,
                     columns = data.ColumnNames,
                     sourceColumns = data.SourceColumnNames,
                     columnTypes = data.ColumnTypes,
@@ -83,6 +87,50 @@ namespace CRM.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Picks the column the From/To range filter runs on. A config field from
+        /// Web_tbl_master counts only when the SP result set really has a column
+        /// with that exact name AND the SP reports its type as a date. No alias,
+        /// no substring match, no "grab whichever column looks like a date"
+        /// fallback - that is what used to open the filter on Item_Raw, whose
+        /// only date column is the audit field Modify_Date while the config says
+        /// "Date". Returns null when nothing matches, and the filter stays hidden.
+        /// </summary>
+        private static string? ResolveDateFilterColumn(
+            List<ReportFilterField>? filterFields,
+            List<string>? sourceColumns,
+            List<string>? columns,
+            List<string>? columnTypes)
+        {
+            if (filterFields == null || sourceColumns == null ||
+                columns == null || columnTypes == null)
+            {
+                return null;
+            }
+
+            foreach (var field in filterFields)
+            {
+                if (!field.Visible) continue;
+
+                var wanted = (field.FieldName ?? string.Empty).Trim();
+                if (wanted.Length == 0) continue;
+
+                for (int i = 0; i < columns.Count && i < sourceColumns.Count && i < columnTypes.Count; i++)
+                {
+                    if (!string.Equals(sourceColumns[i]?.Trim(), wanted, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    if (columnTypes[i] != null &&
+                        columnTypes[i].Contains("Date", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return columns[i];
+                    }
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

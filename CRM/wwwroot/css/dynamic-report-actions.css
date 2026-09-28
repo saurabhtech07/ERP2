@@ -1,8 +1,3 @@
-/* =========================================================
-   Dynamic Report - row action buttons (View / Edit / Delete)
-   Loaded only by Views/DynamicReport/Index.cshtml
-   ========================================================= */
-
 #dynamicGrid .drc-action-cell {
     white-space: nowrap;
     text-align: right;

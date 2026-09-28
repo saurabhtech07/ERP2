@@ -167,6 +167,24 @@
             color: #405189;
             margin-bottom: 0.6rem;
         }
+        .drc-filter-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .drc-filter-heading .fs-label { margin-bottom: 0; }
+        .drc-filter-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 1px solid #dbe3ed;
+            border-radius: 8px;
+            background: #fff;
+            color: var(--dr-primary, #405189);
+            font-size: 20px;
+            line-height: 1;
+        }
+        .drc-filter-toggle:hover { background: #eef4fb; }
+        #drcFilterBody[hidden] { display: none !important; }
         .filter-panel .fs-label i { color: #06b6d4; font-size: 14px; }
         .filter-panel .form-label,
         .filter-panel .fs-label-sm { font-weight: 600; color: #475569; }
@@ -201,8 +219,10 @@
         /* ---------- Search (pill) ---------- */
         #drcFromWrap, #drcToWrap { min-width: 150px; }
         #drcFromWrap input[type="date"], #drcToWrap input[type="date"] { width: 155px; }
+        #drcFromWrap[hidden], #drcToWrap[hidden] { display: none !important; }
+        #drcFiltersSection[hidden] { display: none !important; }
         #reportSearch {
-            border-radius: 999px;
+            border-radius: 9px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
         }
         #reportSearch:focus {
@@ -550,6 +570,46 @@
             border: 1px solid #e2e8f0;
             white-space: nowrap;
         }
+        .drc-table-toolbar {
+            display: grid;
+            grid-template-columns: minmax(270px, 1fr) auto minmax(190px, 1fr);
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #eceff4;
+        }
+        .drc-page-size,
+        .drc-export-buttons,
+        .drc-search { min-width: 0; }
+        .drc-page-size { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .drc-page-size select { width: 78px; }
+        .drc-export-buttons { display: flex; justify-content: center; gap: 8px; }
+        .drc-export-buttons .btn-action {
+            border: 1px solid transparent;
+            padding: 0.4rem 0.9rem;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            min-height: 38px;
+            transition: all 0.2s ease;
+        }
+        .drc-export-buttons .btn-excel { background: linear-gradient(135deg, #12b76a, #0f9d58); }
+        .drc-export-buttons .btn-csv { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+        .drc-export-buttons .btn-print { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+        .drc-export-buttons .btn-action:hover {
+            background: var(--dr-primary-dk);
+            border-color: var(--dr-primary-dk);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px -8px rgba(15, 23, 42, 0.4);
+        }
+        .drc-search { justify-self: end; width: min(100%, 280px); }
+        @@media (max-width: 767.98px) {
+            .drc-table-toolbar { grid-template-columns: minmax(0, 1fr) auto; padding: 12px; }
+            .drc-search { grid-column: 1 / -1; justify-self: stretch; width: 100%; }
+            .drc-page-size { flex-wrap: wrap; }
+        }
     </style>
     <style>
         /* ===== THEME-AWARE ACCENT LAYER (appended) =====
@@ -562,14 +622,19 @@
             Delete this block to revert. Tag: safety-before-theme-accent */
 
         :root {
+            --drc-surface: var(--vz-secondary-bg, var(--bs-body-bg, #ffffff));
+            --drc-surface-muted: var(--vz-tertiary-bg, var(--bs-secondary-bg, #f3f6f9));
+            --drc-text: var(--vz-body-color, var(--bs-body-color, #495057));
+            --drc-muted: var(--vz-secondary-color, var(--bs-secondary-color, #74788d));
+            --drc-border: var(--vz-border-color, var(--bs-border-color, #e9ecef));
             /* Fallback 64,81,137 = Velzon ka default navy (#405189). Pehle yahan
                30,58,95 tha, jo customizer ke "default" swatch se match nahi
                karta tha - isliye grid header/cards ka colour theme se alag tha. */
             --dr-primary:     rgb(var(--vz-primary-rgb, 64, 81, 137));
             --dr-primary-dk:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 80%, #000);
             --dr-primary-lt:  color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 72%, #fff);
-            --dr-tint:        color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 12%, #fff);
-            --dr-tint-bd:     color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 30%, #fff);
+            --dr-tint:        color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 12%, var(--drc-surface));
+            --dr-tint-bd:     color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 30%, var(--drc-surface));
             --dr-grad:        linear-gradient(135deg, var(--dr-primary-dk) 0%, var(--dr-primary) 100%);
         }
 
@@ -631,6 +696,121 @@
         .report-icon-chip {
             background: var(--dr-tint);
             color: var(--dr-primary);
+        }
+
+        .filter-panel,
+        #reportTableSection .table-panel,
+        #drcCards .stat-card {
+            background: var(--drc-surface) !important;
+            border-color: var(--drc-border) !important;
+            color: var(--drc-text);
+        }
+
+        #reportTableSection .card-header,
+        .drc-table-toolbar {
+            background: var(--drc-surface-muted);
+            border-color: var(--drc-border);
+        }
+
+        #dynamicGrid {
+            background: var(--drc-surface);
+            border-color: var(--drc-border);
+        }
+
+        #dynamicGrid .gridjs-wrapper,
+        #dynamicGrid .gridjs-container,
+        #dynamicGrid .gridjs-content,
+        #dynamicGrid .gridjs-footer {
+            background: var(--drc-surface);
+            color: var(--drc-text);
+        }
+
+        #dynamicGrid .gridjs-tbody,
+        #dynamicGrid td.gridjs-td {
+            background: var(--drc-surface) !important;
+            border-color: var(--drc-border) !important;
+            color: var(--drc-text) !important;
+        }
+
+        #dynamicGrid .gridjs-tr:nth-child(even) td.gridjs-td {
+            background: var(--drc-surface-muted) !important;
+        }
+
+        #dynamicGrid .gridjs-tr:hover td.gridjs-td {
+            background: color-mix(in srgb, var(--dr-primary) 18%, var(--drc-surface)) !important;
+        }
+
+        #dynamicGrid .gridjs-container,
+        #dynamicGrid .gridjs-pagination .gridjs-summary,
+        #drcCards .stat-label,
+        .filter-panel .form-label,
+        .filter-panel .fs-label-sm {
+            color: var(--drc-muted);
+        }
+
+        #dynamicGrid .gridjs-pagination .gridjs-pages button:not(.gridjs-currentPage) {
+            background: var(--drc-surface);
+            border-color: var(--drc-border);
+            color: var(--drc-text);
+        }
+
+        #dynamicGrid .gridjs-pagination .gridjs-pages button:hover:not(:disabled):not(.gridjs-currentPage) {
+            background: var(--drc-surface-muted);
+            border-color: var(--dr-primary);
+            color: var(--drc-text);
+        }
+
+        #drcCards .stat-value,
+        #reportName {
+            color: var(--drc-text);
+        }
+
+        #drcCards .stat-card .avatar-title {
+            background: color-mix(in srgb, var(--tone-ink) 16%, var(--drc-surface)) !important;
+        }
+
+        .record-count-pill {
+            background: var(--drc-surface-muted);
+            border-color: var(--drc-border);
+            color: var(--drc-muted);
+        }
+
+        .drc-filter-toggle {
+            background: var(--drc-surface-muted);
+            border-color: var(--drc-border);
+            color: var(--dr-primary-lt);
+        }
+
+        .drc-filter-toggle:hover,
+        #btn-clear:hover {
+            background: color-mix(in srgb, var(--dr-primary) 18%, var(--drc-surface)) !important;
+            border-color: var(--dr-primary);
+            color: var(--drc-text);
+        }
+
+        .filter-panel input[type="date"],
+        .filter-panel .form-select,
+        .filter-panel .choices__inner,
+        .filter-panel .choices__list--dropdown,
+        .filter-panel .choices__list[aria-expanded] {
+            background: var(--drc-surface-muted);
+            border-color: var(--drc-border);
+            color: var(--drc-text);
+        }
+
+        .filter-panel .choices__list--dropdown .choices__item,
+        .filter-panel .choices__list[aria-expanded] .choices__item {
+            color: var(--drc-text);
+        }
+
+        .filter-panel .choices__list--dropdown .choices__item--selectable.is-highlighted,
+        .filter-panel .choices__list[aria-expanded] .choices__item--selectable.is-highlighted {
+            background: var(--dr-tint);
+            color: var(--drc-text);
+        }
+
+        html[data-bs-theme="dark"] .filter-panel .fs-label {
+            color: var(--dr-primary-lt);
         }
     </style>
 }
@@ -703,11 +883,15 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row" id="drcFiltersSection" hidden>
     <div class="col-xl-12">
         <div class="card filter-panel">
             <div class="card-body">
-                <label class="form-label fs-label"><i class="ri-filter-3-line me-1"></i>Filters</label>
+                <div class="drc-filter-heading mb-2">
+                    <label class="form-label fs-label"><i class="ri-filter-3-line me-1"></i><span id="drcFilterTitle">Filters</span></label>
+                    <button type="button" class="drc-filter-toggle" id="drcFilterToggle" aria-label="Collapse filters" title="Collapse filters" aria-expanded="true" aria-controls="drcFilterBody">−</button>
+                </div>
+                <div id="drcFilterBody">
 <div class="row g-2 align-items-end">
                     <div class="col-12" id="drcFilterMounts" style="display:none;">
                         <div class="row g-2" id="drcFilterRow"></div>
@@ -715,33 +899,15 @@
                 </div>
 
 <div class="d-flex flex-wrap gap-2 align-items-end mt-2 pt-2 border-top">
-                    <div class="d-flex flex-column" id="drcFromWrap" style="display:none;">
-                        <label class="form-label fs-label-sm mb-1">From Date</label>
+                    <div class="d-flex flex-column" id="drcFromWrap" hidden>
+                        <label class="form-label fs-label-sm mb-1" id="drcFromLbl">From Date</label>
                         <input type="date" class="form-control" id="drcFromDate">
                     </div>
-                    <div class="d-flex flex-column" id="drcToWrap" style="display:none;">
-                        <label class="form-label fs-label-sm mb-1">To Date</label>
+                    <div class="d-flex flex-column" id="drcToWrap" hidden>
+                        <label class="form-label fs-label-sm mb-1" id="drcToLbl">To Date</label>
                         <input type="date" class="form-control" id="drcToDate">
                     </div>
-<div class="position-relative flex-grow-1" style="min-width:220px">
-                        <input type="text" id="reportSearch" class="form-control ps-5" placeholder="Search in report...">
-                        <i class="ri-search-line position-absolute top-50 translate-middle-y ms-3 search-icon"></i>
-                        <button type="button" id="searchClear" class="search-clear position-absolute top-50 translate-middle-y" style="display:none;" tabindex="-1" aria-label="Clear search" title="Clear search">
-                            <i class="ri-close-line"></i>
-                        </button>
-                    </div>
-                    <button type="button" class="btn btn-light btn-action" id="btn-clear">
-                        <i class="ri-refresh-line me-1"></i>Clear
-                    </button>
-                    <button type="button" class="btn btn-action btn-excel" id="btn-excel">
-                        <i class="ri-file-excel-line me-1"></i>Excel
-                    </button>
-                    <button type="button" class="btn btn-action btn-csv" id="btn-csv">
-                        <i class="ri-file-list-line me-1"></i>CSV
-                    </button>
-                    <button type="button" class="btn btn-action btn-print" id="btn-print">
-                        <i class="ri-printer-line me-1"></i>Print
-                    </button>
+                </div>
                 </div>
             </div>
         </div>
@@ -751,20 +917,43 @@
 <div class="row table-section" id="reportTableSection">
     <div class="col-xl-12">
         <div class="card table-panel">
-            <div class="card-header align-items-center d-flex py-2">
-                <h4 class="card-title mb-0 flex-grow-1 fs-15 drc-report-title">
+            <div class="card-header py-2">
+                <h4 class="card-title mb-2 fs-15 drc-report-title">
                     <span class="report-icon-chip"><i class="ri-database-2-line"></i></span>
                     <span id="reportName">@ViewBag.ReportName</span>
                     <span class="record-count-pill" id="record-count"></span>
                 </h4>
-                <div class="d-flex align-items-center gap-2">
-                    <small class="text-muted fs-12 fw-medium">Rows per page</small>
-                    <select id="page-size" class="form-select form-select-sm">
-                        <option value="10" selected>10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
+                <div class="drc-table-toolbar">
+                    <div class="drc-page-size">
+                        <label class="text-muted fs-12 fw-medium mb-0" for="page-size">Records per page</label>
+                        <select id="page-size" class="form-select form-select-sm">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <button type="button" class="btn btn-light btn-action" id="btn-clear">
+                            <i class="ri-refresh-line me-1"></i>Clear
+                        </button>
+                    </div>
+                    <div class="drc-export-buttons">
+                        <button type="button" class="btn btn-action btn-excel" id="btn-excel">
+                            <i class="ri-file-excel-line me-1"></i>Excel
+                        </button>
+                        <button type="button" class="btn btn-action btn-csv" id="btn-csv">
+                            <i class="ri-file-list-line me-1"></i>CSV
+                        </button>
+                        <button type="button" class="btn btn-action btn-print" id="btn-print">
+                            <i class="ri-printer-line me-1"></i>Print
+                        </button>
+                    </div>
+                    <div class="drc-search position-relative">
+                        <input type="text" id="reportSearch" class="form-control ps-5" placeholder="Search records..." autocomplete="off">
+                        <i class="ri-search-line position-absolute top-50 translate-middle-y ms-3 search-icon"></i>
+                        <button type="button" id="searchClear" class="search-clear position-absolute top-50 translate-middle-y" style="display:none;" tabindex="-1" aria-label="Clear search" title="Clear search">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -860,6 +1049,16 @@
                     if (ch) { try { ch.setChoiceByValue('__ALL__'); } catch (e) { } }
                 });
                 applyFilters();
+            });
+
+            document.getElementById('drcFilterToggle').addEventListener('click', function () {
+                var expanded = this.getAttribute('aria-expanded') === 'true';
+                var nextLabel = expanded ? 'Expand filters' : 'Collapse filters';
+                this.setAttribute('aria-expanded', String(!expanded));
+                this.setAttribute('aria-label', nextLabel);
+                this.title = nextLabel;
+                this.textContent = expanded ? '+' : '−';
+                document.getElementById('drcFilterBody').hidden = expanded;
             });
 
 // Export buttons (ItemMaster-style)
@@ -1000,6 +1199,7 @@
                             });
                             currentRows = allRows;
                             allColumnTypes = data.columnTypes || [];
+                            dateCol = data.dateFilterColumn || null;
                             filterDefinitions = Array.isArray(data.filterFields) ? data.filterFields : [];
                             cardDefinitions = Array.isArray(data.cardFields) ? data.cardFields : [];
                             exportCols = allColumns.map(function (c, index) {
@@ -1010,8 +1210,6 @@
                             if (nameEl && data.reportName) {
                                 nameEl.textContent = data.reportName;
                                 if (document.title) document.title = data.reportName;
-                                var sEl = document.getElementById('reportSearch');
-                                if (sEl) sEl.placeholder = 'Search in ' + data.reportName + '...';
                             }
                             initFilters();
                             renderCards(allColumns, allRows);
@@ -1374,17 +1572,6 @@ function renderGrid(columns, rows) {
                 return out;
             }
 
-            function isDateColCandidate(col) {
-                var vals = 0, parseable = 0;
-                for (var i = 0; i < allRows.length; i++) {
-                    var v = allRows[i][col];
-                    if (v === null || v === undefined) continue;
-                    vals++;
-                    if (parseDate(v)) parseable++;
-                }
-                return vals > 0 && (parseable / vals) >= 0.6;
-            }
-
             function getColumnType(col) {
                 var index = allColumns.indexOf(col);
                 return index >= 0 && allColumnTypes[index]
@@ -1392,26 +1579,11 @@ function renderGrid(columns, rows) {
                     : '';
             }
 
+            // Sirf SP ke bataye hue column types. Value-sniffing (60% parseable
+            // hone par date maan lena) aur config/naam par 'date' alias - dono
+            // hata diye gaye, warna text columns bhi date filter khol dete the.
             function isDateColumn(col) {
-                return getColumnType(col).indexOf('date') >= 0 || isDateColCandidate(col);
-            }
-
-            function detectDateCol() {
-                for (var i = 0; i < filterDefinitions.length; i++) {
-                    if (!isFilterFieldVisible(filterDefinitions[i])) continue;
-                    var field = getFilterFieldName(filterDefinitions[i]);
-                    var found = getColumnEntries(field, true);
-                    for (var j = 0; j < found.length; j++) {
-                        if (String(field).trim().toLowerCase() === 'date' || isDateColumn(found[j])) {
-                            return found[j];
-                        }
-                    }
-                }
-                // Config name se koi date column na mile to koi bhi date column utha lo.
-                for (var k = 0; k < allColumns.length; k++) {
-                    if (isDateColumn(allColumns[k])) return allColumns[k];
-                }
-                return null;
+                return getColumnType(col).indexOf('date') >= 0;
             }
 
             function buildFilterOptions(col) {
@@ -1442,7 +1614,7 @@ function renderGrid(columns, rows) {
                     if (!found.length) continue;
                     var col = found[0];
                     var columnKey = String(col).trim().toLowerCase();
-                    if (usedCols[columnKey] || col === dateCol || isDateColumn(col)) continue;
+                    if (usedCols[columnKey] || isDateColumn(col)) continue;
                     // Label SP ke asli column se - config ka stale text nahi.
                     out.push({ col: col, label: colSrcName(allColumns.indexOf(col)) || col, options: buildFilterOptions(col) });
                     usedCols[columnKey] = 1;
@@ -1455,20 +1627,36 @@ function renderGrid(columns, rows) {
                 var s = col.split(/[^A-Za-z0-9]+/).join(' ');
                 return s.charAt(0).toUpperCase() + s.slice(1);
             }
+function initFilters() {
+    var fromWrap = document.getElementById('drcFromWrap');
+    var toWrap = document.getElementById('drcToWrap');
+    var fromLbl = document.getElementById('drcFromLbl');
+    var toLbl = document.getElementById('drcToLbl');
 
-            function initFilters() {
-                dateCol = detectDateCol();
-                var fromWrap = document.getElementById('drcFromWrap');
-                var toWrap = document.getElementById('drcToWrap');
-                if (dateCol) {
-                    fromWrap.style.display = '';
-                    toWrap.style.display = '';
-                    document.getElementById('drcFromDate').value = '';
-                    document.getElementById('drcToDate').value = '';
-                } else {
-                    fromWrap.style.display = 'none';
-                    toWrap.style.display = 'none';
-                }
+    // Sirf exact "Date" ho tabhi filter dikhao
+    if (dateCol) {
+        var boundName = colSrcName(allColumns.indexOf(dateCol)) || dateCol;
+        var boundNorm = normKey(boundName);
+        // agar Date nahi hai to null kar do
+        if (boundNorm !== 'date') {
+            dateCol = null;
+        }
+    }
+
+    if (dateCol) {
+        var bound = colSrcName(allColumns.indexOf(dateCol)) || dateCol;
+        fromLbl.textContent = 'From ' + bound;
+        toLbl.textContent = 'To ' + bound;
+        fromWrap.hidden = false;
+        toWrap.hidden = false;
+        document.getElementById('drcFromDate').value = '';
+        document.getElementById('drcToDate').value = '';
+    } else {
+        fromWrap.hidden = true;
+        toWrap.hidden = true;
+    }
+
+    // ... baaki ka filterCols wala code same rehne do
 
                 filterCols = [];
                 choicesInstances = {};
@@ -1517,6 +1705,16 @@ function renderGrid(columns, rows) {
                 } else {
                     mounts.style.display = 'none';
                 }
+
+                var hasFilters = filterCols.length > 0 || !!dateCol;
+                document.getElementById('drcFiltersSection').hidden = !hasFilters;
+                document.getElementById('drcFilterTitle').textContent = 'Filters for ' + getReportTitle();
+                var filterToggle = document.getElementById('drcFilterToggle');
+                filterToggle.setAttribute('aria-expanded', 'true');
+                filterToggle.setAttribute('aria-label', 'Collapse filters');
+                filterToggle.title = 'Collapse filters';
+                filterToggle.textContent = '−';
+                document.getElementById('drcFilterBody').hidden = false;
             }
 
             function applyFilters() {

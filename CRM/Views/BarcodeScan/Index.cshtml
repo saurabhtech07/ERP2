@@ -1,0 +1,24 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section styles {
+    <link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" type="text/css" />
+    <link href="~/css/item-master.css?v=2" rel="stylesheet" type="text/css" />
+    <link href="~/css/barcode-scan.css?v=22" rel="stylesheet" type="text/css" />
+}
+
+<div class="row mt-6 mb-6">
+    <partial name="Partials/_FilterPanel" />
+</div>
+
+<div class="row table-section">
+    <partial name="Partials/_TablePanel" />
+</div>
+
+<partial name="Partials/_MasterModal" />
+
+@section scripts {
+    <script src="~/assets/libs/toastify-js/src/toastify.js"></script>
+    <script src="~/js/barcode-scan.js?v=@DateTime.UtcNow.Ticks"></script>
+}

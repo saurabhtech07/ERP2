@@ -1,0 +1,28 @@
+<div class="row" id="drcFiltersSection">
+    <div class="col-xl-12">
+        <div class="card filter-panel">
+            <div class="card-body">
+                <div class="drc-filter-heading">
+                    <label class="form-label fs-label scan-heading"><i class="ri-qr-scan-2-line"></i><span>Scan Barcode</span></label>
+
+                    <div id="scanBody" class="scan-controls">
+                        <div class="input-group ig-scan">
+                            <span class="input-group-text"><i class="ri-barcode-box-line"></i></span>
+                            <input type="text" id="barcodeInput" class="form-control" placeholder="Enter barcode number..." autocomplete="off" spellcheck="false" aria-label="Barcode" />
+                        </div>
+
+                        <button type="button" class="btn btn-action btn-scan" id="scanBtn">
+                            <i class="ri-add-circle-line me-1"></i>Scan
+                        </button>
+
+                        <button type="button" class="btn btn-action btn-add-master" id="addMasterBtn">
+                            <i class="ri-database-2-line me-1"></i>Add Master
+                        </button>
+                    </div>
+                </div>
+
+                <div id="lastScanMsg" class="scan-msg" role="status" aria-live="polite"></div>
+            </div>
+        </div>
+    </div>
+</div>

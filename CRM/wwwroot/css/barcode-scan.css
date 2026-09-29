@@ -1,0 +1,1006 @@
+/* ============================================================
+   Barcode Scan page
+   Mirrors the Dynamic Report look: gradient-accent filter panel,
+   drc-table-toolbar (page-size | exports | search pill), record
+   count pill, sticky grid header. No KPI cards.
+   Base tokens come from item-master.css which Index.cshtml loads
+   first; this file only adds what the report page does not share.
+   ============================================================ */
+
+:root {
+    --drc-surface:        var(--vz-secondary-bg, var(--bs-body-bg, #ffffff));
+    --drc-surface-muted:  var(--vz-tertiary-bg, var(--bs-secondary-bg, #f3f6f9));
+    --drc-text:           var(--vz-body-color, var(--bs-body-color, #495057));
+    --drc-muted:          var(--vz-secondary-color, var(--bs-secondary-color, #74788d));
+    --drc-border:         var(--vz-border-color, var(--bs-border-color, #e9ecef));
+    --dr-primary:         rgb(var(--vz-primary-rgb, 64, 81, 137));
+    --dr-primary-dk:      color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 80%, #000);
+    --dr-primary-lt:      color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 72%, #fff);
+    --dr-tint:            color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 12%, var(--drc-surface));
+    --dr-tint-bd:         color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 30%, var(--drc-surface));
+    --dr-grad:            linear-gradient(135deg, var(--dr-primary-dk) 0%, var(--dr-primary) 100%);
+}
+
+/* Velzon sirf [data-theme-colors=green|purple|blue] par --vz-primary
+   define karta hai; "default" ke liye uska apna navy yahan set kar rahe
+   hain, taaki page hamesha consistent rahe. */
+[data-theme-colors="default"] {
+    --vz-primary: #405189;
+    --vz-primary-rgb: 64, 81, 137;
+}
+
+/* ============================== filter panel ============================== */
+
+/* Bootstrap here only ships spacing up to -5, so the -6 steps are added here.
+   Needed because .row carries a -1.5rem top margin that pulled the scan card
+   up against the BARCODE SCAN page-title box. */
+/* Tighter outer rhythm than a plain .row: the scan bar is a control strip,
+   not a section, so it hugs the page title above and the grid below. */
+.mt-6 { margin-top: 16px !important; }
+.mb-6 { margin-bottom: 0 !important; }
+.gap-6 { gap: 16px !important; }
+
+/* breathing room between the Scan Barcode panel and the Barcode Scan records panel */
+.row.table-section { margin-top: 16px; }
+
+.filter-panel {
+    position: relative;
+    border: 1px solid #e8edf4;
+    border-radius: 14px;
+    box-shadow: 0 6px 22px -12px rgba(15, 23, 42, 0.16);
+    background:
+        linear-gradient(180deg,
+            color-mix(in srgb, var(--dr-primary) 5%, var(--drc-surface)) 0%,
+            var(--drc-surface) 62%) !important;
+    border-color: var(--drc-border) !important;
+    color: var(--drc-text);
+    overflow: hidden;
+}
+
+.filter-panel::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg,
+        var(--dr-primary, #405189) 0%,
+        color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 78%, #06b6d4) 50%,
+        color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 78%, #10b981) 100%);
+}
+
+.filter-panel .card-body { padding: 0.7rem 0.85rem 0.75rem; }
+
+/* label | controls - two columns, the collapse toggle is gone */
+.drc-filter-heading {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+}
+
+/* input + buttons sit together in the second column */
+.scan-controls {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    min-width: 0;
+}
+.scan-controls .ig-scan { flex: 1; min-width: 0; }
+
+.filter-panel .fs-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--dr-primary);
+    margin-bottom: 0;
+}
+.filter-panel .fs-label i { color: #06b6d4; font-size: 14px; }
+
+/* ---- scan panel heading ----
+   Scoped under .filter-panel on purpose: the shared
+   `.filter-panel .fs-label` rule has more specificity than a bare
+   `.scan-heading`, so the black text, the heavy weight and the gradient
+   icon all have to be matched to it to win. */
+
+.filter-panel .scan-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #000 !important;
+    margin-bottom: 0 !important;
+    white-space: nowrap;
+    -webkit-text-fill-color: #000;
+    text-shadow: none;
+}
+.filter-panel .scan-heading span {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 4px;
+    font-weight: 900 !important;
+    color: #000;
+}
+/* short gradient rule under the word, so the heading reads as a labelled
+   control rather than plain text */
+.filter-panel .scan-heading span::after {
+    content: "";
+    position: absolute;
+    left: 1px;
+    bottom: 0;
+    width: 62%;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #405189 0%, #06b6d4 55%, #10b981 100%);
+}
+
+.filter-panel .scan-heading i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 24px;
+    line-height: 1;
+    color: #fff;
+    background: linear-gradient(135deg, #fb923c 0%, #f5484f 55%, #dc2626 100%);
+    box-shadow: 0 6px 14px -6px rgba(220, 38, 38, 0.65);
+    flex-shrink: 0;
+}
+
+@media (max-width: 991.98px) {
+    .drc-filter-heading { grid-template-columns: minmax(0, 1fr); row-gap: 10px; }
+    .scan-heading { grid-column: 1 / -1; }
+}
+
+/* ---- scan input ---- */
+
+.ig-scan {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 12px;
+    background: #fff;
+    border: 1.5px solid var(--drc-border);
+    box-shadow: 0 2px 6px -2px rgba(15, 23, 42, 0.10);
+    overflow: hidden;
+    transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+}
+
+.ig-scan .input-group-text {
+    background: transparent;
+    border: none;
+    color: var(--dr-primary);
+    min-width: 54px;
+    justify-content: center;
+    font-size: 21px;
+    padding-left: 16px;
+    transition: color .25s ease, transform .25s ease;
+}
+
+/* the icon breathes so the field reads as "ready to scan" */
+.ig-scan .input-group-text i {
+    display: inline-block;
+    animation: mbx-scan-pulse 2.1s ease-in-out infinite;
+}
+@keyframes mbx-scan-pulse {
+    0%, 100% { transform: scale(1);    opacity: 1; }
+    50%      { transform: scale(1.16); opacity: .62; }
+}
+
+.ig-scan .form-control {
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    color: var(--drc-text);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    min-height: 54px;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.ig-scan .form-control:focus { box-shadow: none; background: transparent; }
+.ig-scan .form-control::placeholder {
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0;
+    color: #94a3b8;
+}
+
+.ig-scan:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px -6px rgba(15, 23, 42, 0.18);
+}
+
+.ig-scan:focus-within {
+    border-color: var(--dr-primary);
+    background: #fff;
+    transform: translateY(-1px);
+    box-shadow:
+        0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.16),
+        0 10px 24px -8px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.45);
+}
+.ig-scan:focus-within .input-group-text {
+    color: #fff;
+    background: var(--dr-grad);
+    align-self: stretch;
+    border-radius: 0;
+    min-width: 54px;
+    padding-left: 0;
+    margin: -1.5px 0;
+}
+
+/* ---- scan input + button ---- */
+
+/* ---- Scan / Add Master : solid orange + teal ----
+   Scoped under .filter-panel on purpose. item-master.css ships
+   `.filter-panel .btn-action:hover { background-color: #1e3a5f !important }`,
+   which has more specificity than a bare `.btn-scan:hover` and was repainting
+   both buttons navy on hover. Matching its specificity wins on source order. */
+
+.filter-panel .btn-scan {
+    border: 1px solid #ea580c;
+    border-radius: 12px;
+    background: #f97316 !important;
+    background-image: none !important;
+    color: #fff !important;
+    font-size: 15px;
+    font-weight: 700;
+    min-height: 54px;
+    padding: 0 1.75rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 3px 10px -3px rgba(249, 115, 22, 0.6);
+    transition: background-color .15s ease, box-shadow .15s ease;
+}
+.filter-panel .btn-scan:hover {
+    background: #ea580c !important;
+    background-color: #ea580c !important;
+    background-image: none !important;
+    border-color: #c2410c !important;
+    color: #fff !important;
+    box-shadow: 0 5px 14px -4px rgba(249, 115, 22, 0.75);
+}
+.filter-panel .btn-scan:active { background: #c2410c !important; }
+.filter-panel .btn-scan:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.4); }
+.filter-panel .btn-scan:disabled { background: #fdba74 !important; border-color: #fdba74 !important; cursor: not-allowed; }
+.filter-panel .btn-scan i { color: #fff; font-size: 17px; vertical-align: -3px; }
+
+.filter-panel .btn-add-master {
+    border: 1px solid #0f766e;
+    border-radius: 12px;
+    background: #14b8a6 !important;
+    background-image: none !important;
+    color: #fff !important;
+    font-size: 15px;
+    font-weight: 700;
+    min-height: 54px;
+    padding: 0 1.6rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 3px 10px -3px rgba(20, 184, 166, 0.6);
+    transition: background-color .15s ease, box-shadow .15s ease;
+}
+.filter-panel .btn-add-master:hover {
+    background: #0d9488 !important;
+    background-color: #0d9488 !important;
+    background-image: none !important;
+    border-color: #0f766e !important;
+    color: #fff !important;
+    box-shadow: 0 5px 14px -4px rgba(20, 184, 166, 0.75);
+}
+.filter-panel .btn-add-master:active { background: #0f766e !important; }
+.filter-panel .btn-add-master:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.4); }
+.filter-panel .btn-add-master i { color: #fff; font-size: 17px; vertical-align: -3px; }
+
+@media (max-width: 575.98px) {
+    .btn-scan { width: 100%; }
+    .drc-filter-heading .btn-scan { grid-column: 1 / -1; }
+}
+
+.scan-msg {
+    margin-top: 0.55rem;
+    border-radius: 9px;
+    border: 1px solid var(--drc-border);
+    background: var(--drc-surface-muted);
+    padding: 8px 13px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--drc-muted);
+    display: none;
+}
+.scan-msg.show { display: block; animation: mbx-msg-in .25s ease both; }
+@keyframes mbx-msg-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: none; }
+}
+.scan-msg.ok   { border-color: #6ee7b7; background: #ecfdf5; color: #047857; font-weight: 600; }
+.scan-msg.err  { border-color: #fca5a5; background: #fef2f2; color: #b91c1c; font-weight: 600; }
+.scan-msg.busy { border-color: var(--drc-border); background: var(--drc-surface-muted); color: var(--drc-muted); }
+
+/* ============================== table panel ============================== */
+
+.table-section { margin-top: 0.5rem; }
+
+.table-panel {
+    position: relative;
+    background: var(--drc-surface) !important;
+    border-color: var(--drc-border) !important;
+    border-radius: 14px;
+    box-shadow: 0 6px 22px -12px rgba(15, 23, 42, 0.16);
+    color: var(--drc-text);
+    overflow: hidden;
+}
+
+/* Same accent rail the scan card carries, so the two panels read as one
+   set instead of two unrelated cards. */
+.table-panel::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg,
+        var(--dr-primary, #405189) 0%,
+        color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 78%, #8b5cf6) 50%,
+        color-mix(in srgb, rgb(var(--vz-primary-rgb, 64, 81, 137)) 78%, #f5484f) 100%);
+}
+
+/* Tighter body padding buys back vertical room for the grid. */
+.table-panel > .card-body { padding: 12px 14px 14px !important; }
+
+/* ---- compact card header: title row + toolbar on one tight band ---- */
+
+.table-panel .card-header {
+    background: var(--drc-surface-muted);
+    border-bottom: 1px solid var(--drc-border);
+    padding: 10px 14px 0 !important;
+}
+
+.drc-report-title { display: flex; align-items: center; gap: 8px; min-width: 0; margin-bottom: 0 !important; }
+
+.report-icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 7px;
+    background: var(--dr-tint);
+    color: var(--dr-primary);
+    font-size: 13px;
+}
+
+#reportName {
+    font-weight: 800;
+    color: var(--drc-text);
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.record-count-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--drc-surface);
+    color: var(--drc-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--drc-border);
+    white-space: nowrap;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+/* ---- 3 column toolbar: page-size | exports | search ---- */
+
+.drc-table-toolbar {
+    display: grid;
+    grid-template-columns: minmax(270px, 1fr) auto minmax(190px, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0 10px;
+    border-top: 1px solid var(--drc-border);
+    margin-top: 8px;
+}
+
+.drc-page-size,
+.drc-export-buttons,
+.drc-search { min-width: 0; }
+
+.drc-page-size { display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-wrap: wrap; }
+.drc-page-size select {
+    width: 72px;
+    min-height: 34px;
+    border-radius: 8px;
+    border-color: var(--drc-border);
+    background-color: var(--drc-surface);
+    color: var(--drc-text);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+.drc-page-size select:hover { border-color: var(--dr-primary); }
+.drc-page-size select:focus {
+    border-color: var(--dr-primary);
+    box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.14);
+}
+
+.drc-export-buttons { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+
+.drc-export-buttons .btn-action {
+    border: 1px solid transparent;
+    padding: 0.3rem 0.85rem;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 600;
+    min-height: 34px;
+    transition: all 0.2s ease;
+}
+.drc-export-buttons .btn-excel { background: linear-gradient(135deg, #12b76a, #0f9d58); }
+.drc-export-buttons .btn-csv   { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+.drc-export-buttons .btn-print { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+.drc-export-buttons .btn-add   { background: var(--dr-grad); }
+.drc-export-buttons .btn-action:hover {
+    background: var(--dr-primary-dk) !important;
+    background-image: none !important;
+    border-color: var(--dr-primary-dk) !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px -8px rgba(15, 23, 42, 0.4);
+}
+.drc-export-buttons .btn-excel { box-shadow: 0 8px 16px -10px rgba(18, 183, 106, 0.65); }
+.drc-export-buttons .btn-csv   { box-shadow: 0 8px 16px -10px rgba(59, 130, 246, 0.65); }
+.drc-export-buttons .btn-print { box-shadow: 0 8px 16px -10px rgba(139, 92, 246, 0.65); }
+
+#clearBtn {
+    border: 1px solid var(--drc-border);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12.5px;
+    min-height: 34px;
+    padding: 0.3rem 0.85rem;
+}
+#clearBtn:hover {
+    background: var(--dr-tint) !important;
+    border-color: var(--dr-primary) !important;
+    color: var(--drc-text) !important;
+}
+
+/* ---- search pill + clear, as one right-aligned group ---- */
+
+.drc-search-group {
+    grid-column: 3;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.drc-search { width: min(100%, 280px); position: relative; }
+
+#searchBox {
+    border: 1px solid var(--drc-border);
+    border-radius: 8px;
+    background: var(--drc-surface);
+    color: var(--drc-text);
+    font-size: 12.5px;
+    min-height: 34px;
+    padding-right: 2.4rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+#searchBox::placeholder { color: #94a3b8; }
+#searchBox:focus {
+    border-color: var(--dr-primary);
+    box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.14);
+}
+#searchBox:focus ~ .search-icon { color: var(--dr-primary); }
+.search-icon { color: #94a3b8; }
+
+.search-clear {
+    right: 0.45rem;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color .15s ease, background .15s ease;
+}
+.search-clear i { font-size: 14px; }
+.search-clear:hover { color: #f06548; background: #f1f5f9; }
+
+@media (max-width: 767.98px) {
+    .drc-table-toolbar { grid-template-columns: minmax(0, 1fr) auto; padding: 12px; }
+    .drc-search-group { grid-column: 1 / -1; justify-self: stretch; }
+    .drc-search { flex: 1; width: auto; }
+}
+
+/* ============================== grid ============================== */
+
+/* Height comes from the rows, not from a fixed floor: a page with 3 rows
+   is exactly 3 rows tall, so nothing hangs empty under the last one. The
+   cap alone stops a long page pushing the pager off a short screen, and
+   the shell still scrolls there. */
+.grid-shell {
+    position: relative;
+    border: 1px solid var(--drc-border);
+    border-radius: 0.6rem;
+    background: var(--drc-surface);
+    max-height: calc(100vh - 215px);
+    overflow: auto;
+    scrollbar-gutter: stable;
+}
+
+.mbx-table { margin: 0; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; }
+
+.mbx-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--dr-grad) !important;
+    color: #fff !important;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 12px;
+    border: none !important;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: filter .15s ease;
+}
+.mbx-table thead th:hover { filter: brightness(1.15); }
+.mbx-table thead th.sorted { filter: brightness(1.25); }
+
+.mbx-table thead th .th-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.mbx-table thead th .sort-ic {
+    font-size: 12px;
+    opacity: .3;
+    transition: opacity .15s ease;
+}
+.mbx-table thead th:hover .sort-ic { opacity: .65; }
+.mbx-table thead th.sorted .sort-ic { opacity: 1; }
+
+.mbx-table tbody td {
+    vertical-align: middle;
+    padding: 7px 12px;
+    background: var(--drc-surface) !important;
+    border-color: var(--drc-border) !important;
+    color: var(--drc-text) !important;
+    font-size: 13px;
+    white-space: nowrap;
+}
+.mbx-table tbody tr:nth-child(even) td { background: var(--drc-surface-muted) !important; }
+.mbx-table tbody tr { transition: background-color .15s ease, box-shadow .15s ease; }
+.mbx-table tbody tr:hover td {
+    background: color-mix(in srgb, var(--dr-primary) 16%, var(--drc-surface)) !important;
+    box-shadow: inset 3px 0 0 var(--dr-primary);
+}
+.mbx-table tbody td.mono {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 500;
+}
+
+.mbx-empty {
+    padding: 44px 16px !important;
+    text-align: center !important;
+    font-size: 13px;
+    color: var(--drc-muted);
+    white-space: normal !important;
+}
+/* Bare icon above the message (ri-inbox-line), so an empty grid does not
+   read as a broken table. */
+.mbx-empty::before {
+    content: "\ee4f";
+    display: block;
+    font-family: "remixicon" !important;
+    font-size: 34px;
+    line-height: 1;
+    color: var(--drc-border);
+    margin-bottom: 10px;
+    opacity: .9;
+}
+
+/* ---- pager (below the grid, gridjs look) ---- */
+
+.grid-pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 7px 12px;
+    border: 1px solid var(--drc-border);
+    border-radius: 8px;
+    background: var(--drc-surface-muted);
+}
+
+.grid-page-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    border: 1px solid var(--drc-border);
+    border-radius: 7px;
+    background: var(--drc-surface);
+    color: #475569;
+    font-size: 17px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s ease;
+}
+.grid-page-btn:hover:not(:disabled) {
+    background: var(--dr-primary);
+    border-color: var(--dr-primary);
+    color: #fff;
+    box-shadow: 0 4px 10px -4px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.6);
+}
+.grid-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.grid-page-info {
+    color: var(--drc-muted);
+    font-weight: 600;
+    font-size: 12.5px;
+    white-space: nowrap;
+    padding: 0 4px;
+}
+
+/* ---- barcode: black strip behind the number ---- */
+
+.mbx-barcode-cell { text-align: center; }
+
+.barcode-strip {
+    position: relative;
+    display: inline-block;
+    min-width: 76px;
+    padding: 4px 13px;
+    border-radius: 7px;
+    background: linear-gradient(180deg, #34393f 0%, #1c1f24 45%, #050608 100%);
+    border: 1px solid #000;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.07),
+        0 3px 8px -3px rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    line-height: 1.45;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+    white-space: nowrap;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+.barcode-strip:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+        0 6px 14px -4px rgba(0, 0, 0, 0.75);
+}
+
+.mbx-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 700;
+}
+.mbx-chip.ok  { background: #ecfdf5; color: #10b981; }
+.mbx-chip.err { background: #fef2f2; color: #f5484f; }
+
+.mbx-swatch {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 999px;
+    border: 1px solid #d4d4d8;
+    margin-right: 8px;
+    vertical-align: middle;
+    background: var(--sw, #fff);
+}
+
+.mbx-thumb {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid var(--drc-border);
+    display: block;
+}
+
+/* ============================== last scanned ============================== */
+
+.last-scanned {
+    border: 1px solid var(--drc-border);
+    border-radius: 12px;
+    background: var(--drc-surface);
+    box-shadow: 0 4px 14px -10px rgba(15, 23, 42, 0.35);
+    overflow: hidden;
+    display: none;
+}
+.last-scanned.show { display: block; }
+
+.ls-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    background: linear-gradient(90deg,
+        color-mix(in srgb, var(--dr-primary) 10%, var(--drc-surface-muted)),
+        var(--drc-surface-muted));
+    border-bottom: 1px solid var(--drc-border);
+}
+.ls-head > i { color: var(--dr-primary); font-size: 15px; }
+.ls-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--drc-muted);
+    flex: 1;
+}
+
+.mbx-alert {
+    height: 20px; min-width: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #64748b;
+    color: #fff;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.mbx-alert.ok  { background: #10b981; }
+.mbx-alert.err { background: #f5484f; }
+
+.ls-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 4px;
+}
+@media (min-width: 768px)  { .ls-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .ls-fields { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+.ls-field {
+    background: var(--drc-surface-muted);
+    border: 1px solid var(--drc-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin: 6px;
+    min-width: 0;
+    transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.ls-field:hover {
+    border-color: var(--dr-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px -8px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.6);
+}
+.ls-field-label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--drc-muted);
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+.ls-field-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--drc-text);
+    word-break: break-word;
+}
+.ls-field-value.mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* ============================== modal ============================== */
+
+.mbx-modal {
+    position: fixed; inset: 0;
+    z-index: 1055;
+    display: none;
+    overflow-y: auto;
+}
+/* Flex centring on the open state, with padding for breathing room on small
+   screens. The card's own `margin: auto` is what keeps a tall form reachable -
+   `align-items: center` alone would clip its top edge. */
+.mbx-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.mbx-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.mbx-modal-card {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    margin: auto;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    padding: 24px;
+}
+
+.mbx-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.mbx-modal-title { font-size: 15px; font-weight: 700; margin: 0; color: #0b0f19; }
+
+.mbx-modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 0;
+    background: #f1f5f9;
+    color: #64748b;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.mbx-modal-close:hover { background: #e2e8f0; color: #334155; }
+
+.mbx-modal-body { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+@media (max-width: 767px) { .mbx-modal-body { grid-template-columns: 1fr; } }
+
+.mbx-drop {
+    height: 280px;
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    background: #f8f9fa;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.mbx-drop:hover,
+.mbx-drop.over { border-color: var(--dr-primary); background: var(--dr-tint); }
+
+.mbx-drop-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--dr-grad);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 8px;
+    font-size: 18px;
+}
+.mbx-drop-title { font-size: 13px; font-weight: 600; color: #212529; }
+.mbx-drop-sub { font-size: 11px; color: #6c757d; margin-top: 4px; }
+.mbx-drop-hint { font-size: 10px; color: #94a3b8; margin-top: 8px; }
+
+.mbx-preview { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: none; }
+.mbx-preview.show { display: block; }
+
+.mbx-photo-remove {
+    margin-top: 8px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    color: #6c757d;
+    cursor: pointer;
+    display: none;
+}
+.mbx-photo-remove.show { display: block; }
+.mbx-photo-remove:hover { background: #f8f9fa; }
+
+.mbx-form { display: flex; flex-direction: column; gap: 12px; }
+
+.mbx-label {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+    color: #6c757d;
+    margin-bottom: 0.35rem;
+}
+
+.mbx-input {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: #334155;
+    background: #fff;
+    outline: none;
+    min-height: 38px;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.mbx-input.mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.mbx-input::placeholder { color: #94a3b8; }
+.mbx-input:focus { border-color: var(--dr-primary); box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb, 64, 81, 137), 0.14); }
+.mbx-input:disabled { background: #f8f9fa; color: #6c757d; cursor: not-allowed; }
+
+.mbx-row-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+.mbx-modal-foot { margin-top: 20px; display: flex; gap: 8px; justify-content: flex-end; }
+.mbx-modal-foot .btn-action { border-radius: 8px; font-weight: 600; font-size: 13px; }
+.mbx-modal-foot .btn-add {
+    background: #000;
+    border-color: #000;
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 0.35rem 0.9rem;
+}
+.mbx-modal-foot .btn-add:hover { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+
+/* ============================== print ============================== */
+
+@media print {
+    .filter-panel,
+    .drc-table-toolbar,
+    .grid-pager,
+    .mbx-toast,
+    .mbx-modal { display: none !important; }
+
+    .grid-shell { max-height: none; overflow: visible; border: none; }
+    .mbx-table thead th,
+    .mbx-table thead th.sorted,
+    .mbx-table thead th:hover { background: #1e3a5f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .mbx-table tbody td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .last-scanned { display: block !important; }
+}

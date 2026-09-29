@@ -5,10 +5,13 @@
             <h4 class="mb-sm-0">@ViewBag.ptitle</h4>
 
             <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="javascript: void(0);">@ViewBag.pagetitle</a></li>
-                    <li class="breadcrumb-item active">@ViewBag.ptitle</li>
-                </ol>
+                @if (!string.IsNullOrWhiteSpace(Convert.ToString(ViewBag.pagetitle)))
+                {
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">@ViewBag.pagetitle</a></li>
+                        <li class="breadcrumb-item active">@ViewBag.ptitle</li>
+                    </ol>
+                }
             </div>
 
         </div>

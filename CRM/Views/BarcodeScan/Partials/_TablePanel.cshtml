@@ -1,0 +1,74 @@
+<div class="col-xl-12">
+    <div class="card table-panel">
+        <div class="card-header py-2">
+            <h4 class="card-title mb-2 fs-15 drc-report-title">
+                <span class="report-icon-chip"><i class="ri-barcode-box-line"></i></span>
+                <span id="reportName">Barcode Scan Records</span>
+                <span class="record-count-pill" id="record-count"></span>
+            </h4>
+
+            <div class="drc-table-toolbar">
+                <div class="drc-page-size">
+                    <label class="text-muted fs-12 fw-medium mb-0" for="page-size">Records per page</label>
+                    <select id="page-size" class="form-select form-select-sm">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="0">All</option>
+                    </select>
+                </div>
+
+                <div class="drc-export-buttons">
+                    <button type="button" class="btn btn-action btn-excel" id="exportExcelBtn">
+                        <i class="ri-file-excel-line me-1"></i>Excel
+                    </button>
+                    <button type="button" class="btn btn-action btn-csv" id="exportCsvBtn">
+                        <i class="ri-file-list-line me-1"></i>CSV
+                    </button>
+                    <button type="button" class="btn btn-action btn-print" id="printBtn">
+                        <i class="ri-printer-line me-1"></i>Print
+                    </button>
+                </div>
+
+                <div class="drc-search-group">
+                    <div class="drc-search position-relative">
+                        <input type="text" id="searchBox" class="form-control ps-5" placeholder="Search records..." autocomplete="off">
+                        <i class="ri-search-line position-absolute top-50 translate-middle-y ms-3 search-icon"></i>
+                        <button type="button" id="searchClear" class="search-clear position-absolute top-50 translate-middle-y" style="display:none;" tabindex="-1" aria-label="Clear search" title="Clear search">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    </div>
+
+                    <button type="button" class="btn btn-light btn-action" id="clearBtn">
+                        <i class="ri-refresh-line me-1"></i>Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div id="lastScannedCard" class="last-scanned mb-3">
+                <div class="ls-head">
+                    <i class="ri-focus-3-line"></i>
+                    <span class="ls-title">Last Scanned Data</span>
+                    <span id="alertBadge" class="mbx-alert">&mdash;</span>
+                </div>
+                <div id="dynamicFields" class="ls-fields"></div>
+            </div>
+
+            <div class="grid-shell">
+                <table class="table table-bordered table-striped table-hover align-middle m-0 mbx-table">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="grid-pager">
+                <span class="grid-page-info" id="pageInfo">Page 1 of 1</span>
+                <button type="button" class="grid-page-btn" id="pagePrev" aria-label="Previous page" title="Previous page"><i class="ri-arrow-left-s-line"></i></button>
+                <button type="button" class="grid-page-btn" id="pageNext" aria-label="Next page" title="Next page"><i class="ri-arrow-right-s-line"></i></button>
+            </div>
+        </div>
+    </div>
+</div>

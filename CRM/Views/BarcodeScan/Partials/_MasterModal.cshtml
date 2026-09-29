@@ -1,0 +1,61 @@
+<div id="masterModal" class="mbx-modal" role="dialog" aria-modal="true" aria-labelledby="masterModalTitle">
+    <div id="modalOverlay" class="mbx-modal-overlay"></div>
+    <div class="mbx-modal-card">
+        <div class="mbx-modal-head">
+            <h2 id="masterModalTitle" class="mbx-modal-title">Add Master + Photo</h2>
+            <button id="closeModal" type="button" class="mbx-modal-close" aria-label="Close">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+
+        <div class="mbx-modal-body">
+            <div>
+                <div id="photoDrop" class="mbx-drop" tabindex="0" role="button" aria-label="Upload product photo">
+                    <div id="photoPreviewArea">
+                        <div class="mbx-drop-icon"><i class="ri-image-add-line"></i></div>
+                        <div class="mbx-drop-title">Upload Product Photo</div>
+                        <div class="mbx-drop-sub">Drag &amp; drop or click</div>
+                        <div class="mbx-drop-hint">JPG, PNG up to 5MB</div>
+                    </div>
+                    <img id="photoPreview" class="mbx-preview" alt="Photo preview" />
+                </div>
+                <input type="file" id="photoInput" accept="image/*" hidden />
+                <button id="removePhoto" type="button" class="mbx-photo-remove">Remove Photo</button>
+            </div>
+
+            <div class="mbx-form">
+                <div>
+                    <label class="mbx-label" for="fBarcode">Barcode</label>
+                    <input id="fBarcode" type="text" class="mbx-input mono" placeholder="160407 etc." />
+                </div>
+                <div>
+                    <label class="mbx-label" for="fName">Name</label>
+                    <input id="fName" type="text" class="mbx-input" placeholder="Name" />
+                </div>
+                <div>
+                    <label class="mbx-label" for="fCategory1">Category1</label>
+                    <input id="fCategory1" type="text" class="mbx-input" placeholder="Category1" />
+                </div>
+                <div class="mbx-row-2">
+                    <div>
+                        <label class="mbx-label" for="fColor">Color</label>
+                        <input id="fColor" type="text" class="mbx-input" placeholder="Color" />
+                    </div>
+                    <div>
+                        <label class="mbx-label" for="fCategory3">Category3</label>
+                        <input id="fCategory3" type="text" class="mbx-input" placeholder="Category3" />
+                    </div>
+                </div>
+                <div>
+                    <label class="mbx-label" for="fUser">User</label>
+                    <input id="fUser" type="text" class="mbx-input" value="@ViewBag.UserDisplay - Session se" disabled />
+                </div>
+            </div>
+        </div>
+
+        <div class="mbx-modal-foot">
+            <button id="cancelMaster" type="button" class="btn btn-light btn-action">Cancel</button>
+            <button id="saveMaster" type="button" class="btn btn-dark bg-black btn-add">Save</button>
+        </div>
+    </div>
+</div>

@@ -139,9 +139,10 @@
         /* ---------- Filter panel ---------- */
         .filter-panel {
             position: relative;
-            border: 1px solid #e8edf4;
-            border-radius: 14px;
-            box-shadow: 0 6px 22px -12px rgba(15, 23, 42, 0.16);
+            border: 1px solid var(--drc-border, #e2e8f0);
+            border-radius: 12px;
+            box-shadow: 0 10px 26px -20px rgba(15, 23, 42, 0.42);
+            overflow: visible;
         }
         .filter-panel::before {
             content: "";
@@ -160,15 +161,63 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            color: #405189;
-            margin-bottom: 0.6rem;
+            letter-spacing: 0;
+            color: var(--dr-primary, #405189);
+            margin-bottom: 0;
         }
-        .drc-filter-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .drc-filter-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0.65rem 0.8rem;
+            border-left: 4px solid var(--dr-primary, #405189);
+            border-bottom: 1px solid var(--drc-border, #e2e8f0);
+            border-radius: 8px;
+            background: color-mix(in srgb, var(--dr-primary, #405189) 8%, var(--drc-surface, #fff));
+        }
         .drc-filter-heading .fs-label { margin-bottom: 0; }
+        .drc-filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 0.75rem;
+            padding-top: 0.75rem;
+        }
+        #drcFilterMounts:not([hidden]),
+        #drcFilterRow { display: contents; }
+        #drcFilterMounts[hidden] { display: none !important; }
+        .drc-filter-item,
+        .drc-date-field { flex: 1 1 180px; min-width: 0; }
+        #drcFilterRow .drc-filter-item:only-child { flex: 0 1 280px; }
+        .drc-filter-item .choices {
+            width: 100%;
+            margin-bottom: 0;
+        }
+        .drc-filter-item .choices,
+        .drc-filter-item .form-select { width: 100%; }
+        .drc-date-range {
+            display: contents;
+        }
+        .drc-filter-item > .form-label,
+        .drc-date-field > .form-label {
+            margin-bottom: 0.35rem;
+            color: var(--drc-text, #334155);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .drc-date-field input[type="date"] { width: 100%; }
+        #drcDateRange[hidden] { display: none !important; }
+        .drc-filter-reset {
+            flex: 0 0 auto;
+            min-height: 42px;
+            align-self: end;
+            border-radius: 10px;
+            font-weight: 700;
+        }
         .drc-filter-toggle {
             display: inline-flex;
             align-items: center;
@@ -192,7 +241,11 @@
         .filter-panel input[type="date"],
         .filter-panel .form-select,
         .filter-panel .choices__inner {
-            border-radius: 9px;
+            height: 42px;
+            min-height: 42px;
+            border-radius: 10px;
+            border-color: var(--drc-border, #dbe3ed);
+            background: #f1f4f9;
             transition: border-color .18s ease, box-shadow .18s ease;
         }
         .filter-panel input[type="date"]:focus,
@@ -203,23 +256,21 @@
             box-shadow: 0 0 0 3px rgba(64, 81, 137, 0.14);
         }
         .filter-panel .choices__inner {
-            background: #ffffff;
-            min-height: 38px;
+            padding: 0.5rem 0.75rem;
         }
         .filter-panel .choices__list--dropdown {
             border: 1px solid #e2e8f0;
             border-radius: 12px;
             box-shadow: 0 16px 34px -14px rgba(15, 23, 42, 0.22);
             margin-top: 5px;
+            z-index: 20;
         }
+        .filter-panel .choices.is-open { z-index: 10; }
         .filter-panel .choices__list--dropdown .choices__item--selectable.is-highlighted {
             background: #eef4fb;
         }
 
         /* ---------- Search (pill) ---------- */
-        #drcFromWrap, #drcToWrap { min-width: 150px; }
-        #drcFromWrap input[type="date"], #drcToWrap input[type="date"] { width: 155px; }
-        #drcFromWrap[hidden], #drcToWrap[hidden] { display: none !important; }
         #drcFiltersSection[hidden] { display: none !important; }
         #reportSearch {
             border-radius: 9px;
@@ -233,11 +284,11 @@
         .search-icon { color: #94a3b8; }
 
         /* ---------- Action buttons ---------- */
-        #btn-excel, #btn-csv, #btn-print, #btn-clear { border-radius: 9px; }
+        #btn-excel, #btn-csv, #btn-print { border-radius: 9px; }
         #btn-excel { box-shadow: 0 8px 16px -10px rgba(18, 183, 106, 0.65); }
         #btn-csv   { box-shadow: 0 8px 16px -10px rgba(59, 130, 246, 0.65); }
         #btn-print { box-shadow: 0 8px 16px -10px rgba(139, 92, 246, 0.65); }
-        #btn-clear:hover { background: #f1f5f9; border-color: #dbe3ed; }
+        .drc-filter-reset:hover { background: #f1f5f9; border-color: #dbe3ed; }
 
 
 /* ---------- Cards (corporate KPI style - full revamp) ---------- */
@@ -609,6 +660,11 @@
             .drc-table-toolbar { grid-template-columns: minmax(0, 1fr) auto; padding: 12px; }
             .drc-search { grid-column: 1 / -1; justify-self: stretch; width: 100%; }
             .drc-page-size { flex-wrap: wrap; }
+            .drc-filter-item,
+            .drc-date-field { flex-basis: calc(50% - 0.375rem); }
+            html[data-bs-theme="dark"] .filter-panel input[type="date"],
+            html[data-bs-theme="dark"] .filter-panel .form-select,
+            html[data-bs-theme="dark"] .filter-panel .choices__inner { background: var(--drc-surface-muted); }
         }
     </style>
     <style>
@@ -812,6 +868,22 @@
         html[data-bs-theme="dark"] .filter-panel .fs-label {
             color: var(--dr-primary-lt);
         }
+
+        .filter-panel .drc-filter-item .form-select,
+        .filter-panel .drc-filter-item .choices__inner,
+        .filter-panel .drc-date-field input[type="date"] {
+            background: #f1f4f9;
+            height: 42px;
+            min-height: 42px;
+            border: 1px solid var(--drc-border);
+            border-radius: 10px;
+        }
+
+        html[data-bs-theme="dark"] .filter-panel .drc-filter-item .form-select,
+        html[data-bs-theme="dark"] .filter-panel .drc-filter-item .choices__inner,
+        html[data-bs-theme="dark"] .filter-panel .drc-date-field input[type="date"] {
+            background: var(--drc-surface-muted);
+        }
     </style>
 }
 
@@ -891,23 +963,23 @@
                     <label class="form-label fs-label"><i class="ri-filter-3-line me-1"></i><span id="drcFilterTitle">Filters</span></label>
                     <button type="button" class="drc-filter-toggle" id="drcFilterToggle" aria-label="Collapse filters" title="Collapse filters" aria-expanded="true" aria-controls="drcFilterBody">−</button>
                 </div>
-                <div id="drcFilterBody">
-<div class="row g-2 align-items-end">
-                    <div class="col-12" id="drcFilterMounts" style="display:none;">
-                        <div class="row g-2" id="drcFilterRow"></div>
+                <div id="drcFilterBody" class="drc-filter-controls">
+                    <div id="drcFilterMounts" hidden>
+                        <div id="drcFilterRow"></div>
                     </div>
-                </div>
-
-<div class="d-flex flex-wrap gap-2 align-items-end mt-2 pt-2 border-top">
-                    <div class="d-flex flex-column" id="drcFromWrap" hidden>
-                        <label class="form-label fs-label-sm mb-1" id="drcFromLbl">From Date</label>
-                        <input type="date" class="form-control" id="drcFromDate">
+                    <div class="drc-date-range" id="drcDateRange" hidden>
+                        <div class="d-flex flex-column drc-date-field" id="drcFromWrap">
+                            <label class="form-label fs-label-sm mb-1" id="drcFromLbl">From Date</label>
+                            <input type="date" class="form-control" id="drcFromDate">
+                        </div>
+                        <div class="d-flex flex-column drc-date-field" id="drcToWrap">
+                            <label class="form-label fs-label-sm mb-1" id="drcToLbl">To Date</label>
+                            <input type="date" class="form-control" id="drcToDate">
+                        </div>
                     </div>
-                    <div class="d-flex flex-column" id="drcToWrap" hidden>
-                        <label class="form-label fs-label-sm mb-1" id="drcToLbl">To Date</label>
-                        <input type="date" class="form-control" id="drcToDate">
-                    </div>
-                </div>
+                    <button type="button" class="btn btn-light btn-action drc-filter-reset" id="btn-clear" title="Reset filters">
+                        <i class="ri-refresh-line me-1"></i>Reset
+                    </button>
                 </div>
             </div>
         </div>
@@ -932,9 +1004,6 @@
                             <option value="50">50</option>
                             <option value="100">100</option>
                         </select>
-                        <button type="button" class="btn btn-light btn-action" id="btn-clear">
-                            <i class="ri-refresh-line me-1"></i>Clear
-                        </button>
                     </div>
                     <div class="drc-export-buttons">
                         <button type="button" class="btn btn-action btn-excel" id="btn-excel">
@@ -1034,8 +1103,14 @@
             });
 
 // Date / dropdown filter events
-            document.getElementById('drcFromDate').addEventListener('change', applyFilters);
-            document.getElementById('drcToDate').addEventListener('change', applyFilters);
+            document.getElementById('drcFromDate').addEventListener('change', function () {
+                refreshDependentFilters(-1);
+                applyFilters();
+            });
+            document.getElementById('drcToDate').addEventListener('change', function () {
+                refreshDependentFilters(-1);
+                applyFilters();
+            });
 
             // Clear button
             document.getElementById('btn-clear').addEventListener('click', function () {
@@ -1048,6 +1123,7 @@
                     var ch = choicesInstances[f.col];
                     if (ch) { try { ch.setChoiceByValue('__ALL__'); } catch (e) { } }
                 });
+                refreshDependentFilters(-1);
                 applyFilters();
             });
 
@@ -1533,10 +1609,8 @@ function renderGrid(columns, rows) {
                 return String(s == null ? '' : s).replace(/[^A-Za-z0-9]/g, '').toLowerCase();
             }
 
-            // strict = true  -> sirf exact / normalized match. Filter fields ke
-            // liye ye chahiye: config me likha hua naam tabhi dikhna chahiye jab
-            // SP ka result set me wo column SACH me ho. warna "Alice" jaise
-            // galat ya stale config entries bhi dropdown me aa jaate the.
+            // strict = true -> exact/normalized match, or a unique numbered
+            // variant such as Category -> Category1. Ambiguous matches stay hidden.
             // strict = false -> Tier 3 bhi (substring). KPI cards ke liye ye
             // chahiye, kyunki wahan config 'DocDate' likhta hai aur column
             // 'Date' hota hai.
@@ -1561,7 +1635,19 @@ function renderGrid(columns, rows) {
                         out.push(allColumns[j]);
                     }
                 }
-                if (out.length || strict) return out;
+                if (out.length) return out;
+
+                if (strict) {
+                    var numberedMatches = [];
+                    for (var m = 0; m < allColumns.length; m++) {
+                        var sourceName = normKey(colSrcName(m));
+                        var suffix = sourceName.substring(want.length);
+                        if (sourceName.indexOf(want) === 0 && /^\d+$/.test(suffix)) {
+                            numberedMatches.push(allColumns[m]);
+                        }
+                    }
+                    return numberedMatches.length === 1 ? numberedMatches : [];
+                }
 
                 // Tier 3 - contains ("Date" <-> "DocDate", "Category" <-> "Category1")
                 for (var k = 0; k < allColumns.length; k++) {
@@ -1570,6 +1656,18 @@ function renderGrid(columns, rows) {
                     }
                 }
                 return out;
+            }
+
+            function getCompanionIdColumn(nameColumn) {
+                var normalizedName = normKey(colSrcName(allColumns.indexOf(nameColumn)));
+                if (normalizedName.length <= 4 || !normalizedName.endsWith('name')) return null;
+
+                var expectedId = normalizedName.slice(0, -4) + 'id';
+                var matches = [];
+                for (var i = 0; i < allColumns.length; i++) {
+                    if (normKey(colSrcName(i)) === expectedId) matches.push(allColumns[i]);
+                }
+                return matches.length === 1 ? matches[0] : null;
             }
 
             function getColumnType(col) {
@@ -1586,11 +1684,12 @@ function renderGrid(columns, rows) {
                 return getColumnType(col).indexOf('date') >= 0;
             }
 
-            function buildFilterOptions(col) {
+            function buildFilterOptions(col, sourceRows) {
                 var seen = {};
                 var vals = [];
-                for (var i = 0; i < allRows.length; i++) {
-                    var v = allRows[i][col];
+                var rows = sourceRows || allRows;
+                for (var i = 0; i < rows.length; i++) {
+                    var v = rows[i][col];
                     if (v === null || v === undefined) continue;
                     var s = String(v).trim();
                     if (!s || seen[s]) continue;
@@ -1599,6 +1698,74 @@ function renderGrid(columns, rows) {
                 }
                 vals.sort(function (a, b) { return a.localeCompare(b); });
                 return vals;
+            }
+
+            function getFilterValue(filter) {
+                var choice = choicesInstances[filter.col];
+                if (choice && typeof choice.getValue === 'function') {
+                    var value = choice.getValue(true);
+                    return Array.isArray(value) ? String(value[0] || '') : String(value || '');
+                }
+                return filter.select.value;
+            }
+
+            function getRowsForFilterOptions(filterIndex) {
+                var rows = allRows.slice();
+                var fromValue = document.getElementById('drcFromDate').value;
+                var toValue = document.getElementById('drcToDate').value;
+                var from = fromValue ? parseDate(fromValue + 'T00:00:00') : null;
+                var to = toValue ? parseDate(toValue + 'T23:59:59.999') : null;
+
+                if ((from || to) && dateCol) {
+                    rows = rows.filter(function (row) {
+                        var value = parseDate(row[dateCol]);
+                        return value && (!from || value >= from) && (!to || value <= to);
+                    });
+                }
+
+                for (var i = 0; i < filterIndex; i++) {
+                    var filter = filterCols[i];
+                    var selected = getFilterValue(filter);
+                    if (!selected || selected === '__ALL__') continue;
+                    rows = rows.filter(function (row) {
+                        return String(row[filter.col] == null ? '' : row[filter.col]).trim() === selected;
+                    });
+                }
+
+                return rows;
+            }
+
+            function refreshDependentFilters(changedIndex) {
+                for (var i = changedIndex + 1; i < filterCols.length; i++) {
+                    var filter = filterCols[i];
+                    var values = buildFilterOptions(filter.col, getRowsForFilterOptions(i));
+                    var selected = getFilterValue(filter);
+                    if (values.indexOf(selected) < 0) selected = '__ALL__';
+
+                    var options = [{
+                        value: '__ALL__',
+                        label: 'All ' + filter.label,
+                        selected: selected === '__ALL__'
+                    }];
+                    values.forEach(function (value) {
+                        options.push({ value: value, label: value, selected: value === selected });
+                    });
+
+                    var choice = choicesInstances[filter.col];
+                    if (choice) {
+                        choice.clearStore();
+                        choice.setChoices(options, 'value', 'label', true);
+                    } else {
+                        while (filter.select.options.length) filter.select.remove(0);
+                        options.forEach(function (option) {
+                            var element = document.createElement('option');
+                            element.value = option.value;
+                            element.textContent = option.label;
+                            element.selected = option.selected;
+                            filter.select.appendChild(element);
+                        });
+                    }
+                }
             }
 
             function detectFilterCols() {
@@ -1618,6 +1785,19 @@ function renderGrid(columns, rows) {
                     // Label SP ke asli column se - config ka stale text nahi.
                     out.push({ col: col, label: colSrcName(allColumns.indexOf(col)) || col, options: buildFilterOptions(col) });
                     usedCols[columnKey] = 1;
+
+                    var relatedId = getCompanionIdColumn(col);
+                    if (relatedId) {
+                        var idKey = String(relatedId).trim().toLowerCase();
+                        if (!usedCols[idKey]) {
+                            out.push({
+                                col: relatedId,
+                                label: colSrcName(allColumns.indexOf(relatedId)),
+                                options: buildFilterOptions(relatedId)
+                            });
+                            usedCols[idKey] = 1;
+                        }
+                    }
                 }
                 return out;
             }
@@ -1628,8 +1808,7 @@ function renderGrid(columns, rows) {
                 return s.charAt(0).toUpperCase() + s.slice(1);
             }
 function initFilters() {
-    var fromWrap = document.getElementById('drcFromWrap');
-    var toWrap = document.getElementById('drcToWrap');
+    var dateRange = document.getElementById('drcDateRange');
     var fromLbl = document.getElementById('drcFromLbl');
     var toLbl = document.getElementById('drcToLbl');
 
@@ -1647,13 +1826,11 @@ function initFilters() {
         var bound = colSrcName(allColumns.indexOf(dateCol)) || dateCol;
         fromLbl.textContent = 'From ' + bound;
         toLbl.textContent = 'To ' + bound;
-        fromWrap.hidden = false;
-        toWrap.hidden = false;
+        dateRange.hidden = false;
         document.getElementById('drcFromDate').value = '';
         document.getElementById('drcToDate').value = '';
     } else {
-        fromWrap.hidden = true;
-        toWrap.hidden = true;
+        dateRange.hidden = true;
     }
 
     // ... baaki ka filterCols wala code same rehne do
@@ -1667,7 +1844,7 @@ function initFilters() {
                     var cols = detectFilterCols();
                     cols.forEach(function (res) {
                         var div = document.createElement('div');
-                        div.className = 'col-6 col-lg-3';
+                        div.className = 'drc-filter-item';
                         var lbl = document.createElement('label');
                         lbl.className = 'form-label fs-label-sm';
                         lbl.textContent = humanLabel(res.label || res.col);
@@ -1688,8 +1865,12 @@ function initFilters() {
                         div.appendChild(lbl);
                         div.appendChild(sel);
                         row.appendChild(div);
-                        filterCols.push({ col: res.col, select: sel });
-                        sel.addEventListener('change', applyFilters);
+                        var filterIndex = filterCols.length;
+                        filterCols.push({ col: res.col, label: humanLabel(res.label || res.col), select: sel });
+                        sel.addEventListener('change', function () {
+                            refreshDependentFilters(filterIndex);
+                            applyFilters();
+                        });
                         try {
                             choicesInstances[res.col] = new Choices(sel, {
                                 searchEnabled: true,
@@ -1701,9 +1882,9 @@ function initFilters() {
                             });
                         } catch (e) { }
                     });
-                    mounts.style.display = filterCols.length ? '' : 'none';
+                    mounts.hidden = filterCols.length === 0;
                 } else {
-                    mounts.style.display = 'none';
+                    mounts.hidden = true;
                 }
 
                 var hasFilters = filterCols.length > 0 || !!dateCol;

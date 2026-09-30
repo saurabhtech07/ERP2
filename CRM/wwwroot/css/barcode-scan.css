@@ -33,18 +33,28 @@
 
 /* Bootstrap here only ships spacing up to -5, so the -6 steps are added here.
    Needed because .row carries a -1.5rem top margin that pulled the scan card
-   up against the BARCODE SCAN page-title box. */
-/* Tighter outer rhythm than a plain .row: the scan bar is a control strip,
-   not a section, so it hugs the page title above and the grid below. */
-.mt-6 { margin-top: 16px !important; }
-.mb-6 { margin-bottom: 0 !important; }
-.gap-6 { gap: 16px !important; }
+   up against the BARCODE SCAN page-title box.
 
-/* breathing room between the Scan Barcode panel and the Barcode Scan records panel */
-.row.table-section { margin-top: 16px; }
+   One gap size for the whole page: page title -> scan card and scan card ->
+   grid are both 24px. The grid gap is carried by the scan row's margin-bottom
+   alone (.row.table-section is forced to 0) so the two cannot drift apart
+   through margin collapsing.
+
+   .filter-panel / .table-panel pin margin-bottom to 0 for a second reason:
+   Velzon ships `.card { margin-bottom: var(--vz-grid-gutter-width) }` and a
+   .row is a flex container, so that card margin cannot collapse with the row's
+   own - the two stacked up and made the filter->grid gap 48px against the
+   24px above it. */
+.mt-6 { margin-top: 24px !important; }
+.mb-6 { margin-bottom: 24px !important; }
+.gap-6 { gap: 24px !important; }
+
+/* gap to the grid above comes from the scan row's margin-bottom, not from here */
+.row.table-section { margin-top: 0; }
 
 .filter-panel {
     position: relative;
+    margin-bottom: 0;
     border: 1px solid #e8edf4;
     border-radius: 14px;
     box-shadow: 0 6px 22px -12px rgba(15, 23, 42, 0.16);
@@ -330,10 +340,9 @@
 
 /* ============================== table panel ============================== */
 
-.table-section { margin-top: 0.5rem; }
-
 .table-panel {
     position: relative;
+    margin-bottom: 0;
     background: var(--drc-surface) !important;
     border-color: var(--drc-border) !important;
     border-radius: 14px;

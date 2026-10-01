@@ -18,7 +18,7 @@
 }
 else
 {
-    <section class="cat-panel" id="catPanel">
+    <section class="cat-panel" id="catPanel" data-selected-table="@ViewBag.SelectedTable">
     <script type="application/json" id="catGroupsJson">@Html.Raw(json)</script>
 
     <!-- Shown while the selected table is being fetched -->
@@ -45,14 +45,6 @@ else
         </div>
 
         <div class="cat-toolbar">
-            <div class="cat-module">
-                <label class="cat-label" for="catModule">Category</label>
-                <div class="cat-select-wrap">
-                    <i class="ri-stack-line cat-select-icon"></i>
-                    <select id="catModule" class="cat-select"></select>
-                </div>
-            </div>
-
             <div class="cat-toolbar-actions">
                 <div class="cat-search">
                     <i class="ri-search-line cat-search-icon"></i>
@@ -74,15 +66,24 @@ else
                     <span class="cat-grid-title">Records</span>
                 </div>
                 <div class="cat-grid-tools">
-                    <button type="button" class="cat-btn cat-btn-ghost" id="catCsv" title="Export CSV">
-                        <i class="ri-file-list-3-line"></i>
+                    <button type="button" class="cat-btn cat-btn-export cat-btn-csv" id="catCsv" title="Export CSV">
+                        <i class="ri-file-list-3-line"></i><span>CSV</span>
                     </button>
-                    <button type="button" class="cat-btn cat-btn-ghost" id="catExcel" title="Export to Excel">
-                        <i class="ri-file-excel-2-line"></i>
+                    <button type="button" class="cat-btn cat-btn-export cat-btn-excel" id="catExcel" title="Export to Excel">
+                        <i class="ri-file-excel-2-line"></i><span>Excel</span>
                     </button>
-                    <button type="button" class="cat-btn cat-btn-ghost" id="catPrint" title="Print">
-                        <i class="ri-printer-line"></i>
+                    <button type="button" class="cat-btn cat-btn-export cat-btn-print" id="catPrint" title="Print">
+                        <i class="ri-printer-line"></i><span>Print</span>
                     </button>
+                </div>
+                <div class="cat-page-size-wrap">
+                    <label class="cat-page-size-label" for="catPageSize">Rows per page</label>
+                    <select class="cat-page-size" id="catPageSize" aria-label="Rows per page">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
                 </div>
             </div>
             <div id="catGrid"></div>

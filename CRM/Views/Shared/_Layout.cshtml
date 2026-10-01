@@ -33,7 +33,7 @@
             opacity: 0;
             visibility: hidden;
         }
-        [data-preloader=disable] #pageLoader {
+        [data-preloader=disable] #pageLoader:not(.page-loader-force) {
             display: none !important;
         }
         #preloader-preview-spinner {
@@ -72,9 +72,14 @@
             var overlay = document.getElementById('pageLoader');
             if (!overlay) return;
             var navTimerKey = '__navTimer';
-            var hideNow = function () { overlay.classList.add('page-loader-hide'); };
+            var navigating = sessionStorage.getItem(navTimerKey) === '1';
+            var hideNow = function () {
+                overlay.classList.add('page-loader-hide');
+                overlay.classList.remove('page-loader-force');
+            };
 
-            if (sessionStorage.getItem(navTimerKey) === '1') {
+            if (navigating) {
+                overlay.classList.add('page-loader-force');
                 sessionStorage.removeItem(navTimerKey);
                 var start = performance.now();
                 var minDelay = 600;
@@ -100,14 +105,20 @@
                 if (!a || a.getAttribute('target') === '_blank') return;
                 if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
                 if (e.defaultPrevented) return;
-                var href = (a.getAttribute('href') || '').trim().split('?')[0].split('#')[0];
-                if (!href || href === '#' || href.indexOf('javascript:') === 0) return;
-                if (href.indexOf('://') >= 0 || href.indexOf('mailto:') >= 0 || href.indexOf('tel:') >= 0) return;
-                if (href.indexOf('/') !== 0) return;
-                var path = window.location.pathname;
-                if (href === path || (href.length > 1 && path.indexOf(href) === 0)) return;
+                var href = (a.getAttribute('href') || '').trim();
+                if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+                if (a.hasAttribute('data-bs-toggle')) return;
+                if (href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+
+                var target;
+                try { target = new URL(href, window.location.href); }
+                catch (error) { return; }
+                if (target.origin !== window.location.origin) return;
+                if (target.pathname === window.location.pathname &&
+                    target.search === window.location.search) return;
 
                 overlay.classList.remove('page-loader-hide');
+                overlay.classList.add('page-loader-force');
                 sessionStorage.setItem(navTimerKey, '1');
                 var stillHere = setTimeout(function () {
                     overlay.classList.add('page-loader-hide');

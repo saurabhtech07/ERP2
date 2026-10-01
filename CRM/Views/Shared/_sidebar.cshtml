@@ -5,6 +5,10 @@
 @{
     var dataAccess = new DataAccess(Configuration.GetConnectionString("DefaultConnection")!);
     var dynamicReportsList = await dataAccess.GetWebTblMasterAsync();
+    var categoryGroups = await new CategoryDataAccess(Configuration.GetConnectionString("DefaultConnection")!).GetGroupsAsync();
+    var rmTables = categoryGroups.Where(x => string.Equals(x.Group, "RM", StringComparison.OrdinalIgnoreCase)).SelectMany(x => x.Tables).ToList();
+    var sfgTables = categoryGroups.Where(x => string.Equals(x.Group, "SFG", StringComparison.OrdinalIgnoreCase)).SelectMany(x => x.Tables).ToList();
+    var fsgTables = categoryGroups.Where(x => string.Equals(x.Group, "FSG", StringComparison.OrdinalIgnoreCase)).SelectMany(x => x.Tables).ToList();
     var masterDynamicReports = dynamicReportsList
         .Where(x => string.Equals(x.Report_Type?.Trim(), "MASTER_DYNAMIC", StringComparison.OrdinalIgnoreCase))
         .ToList();
@@ -97,9 +101,58 @@
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarTransaction">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item"><a href="@Url.Action("Index", "Category", new { group = "RM" })" class="nav-link" data-key="t-category-rm">Category RM</a></li>
-                            <li class="nav-item"><a href="@Url.Action("Index", "Category", new { group = "SFG" })" class="nav-link" data-key="t-category-sfg">Category SFG</a></li>
-                            <li class="nav-item"><a href="@Url.Action("Index", "Category", new { group = "FSG" })" class="nav-link" data-key="t-category-fsg">Category FSG</a></li>
+                            @* A group link is a plain collapse trigger exactly like the
+                               Transaction link above it - it only opens the list of its
+                               own tables. Choosing a table from that list is what opens
+                               the page. *@
+                            <li class="nav-item">
+                                <a href="#sidebarCatRM" data-bs-toggle="collapse" class="nav-link cat-group-link" role="button" aria-expanded="false" aria-controls="sidebarCatRM" data-cat-group="RM" data-cat-collapse="sidebarCatRM">
+                                    <i class="ri-folder-line"></i> <span>Category RM</span>
+                                    <i class="ri-arrow-right-s-line cat-caret"></i>
+                                </a>
+                                <div class="collapse menu-dropdown" id="sidebarCatRM">
+                                    <ul class="nav nav-sm flex-column" data-cat-tables="RM">
+                                        @foreach (var table in rmTables)
+                                        {
+                                            <li class="nav-item">
+                                                <a href="@Url.Action("Index", "Category", new { group = "RM", tableName = table.TableName })" class="nav-link">@table.Label</a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#sidebarCatSFG" data-bs-toggle="collapse" class="nav-link cat-group-link" role="button" aria-expanded="false" aria-controls="sidebarCatSFG" data-cat-group="SFG" data-cat-collapse="sidebarCatSFG">
+                                    <i class="ri-folder-line"></i> <span>Category SFG</span>
+                                    <i class="ri-arrow-right-s-line cat-caret"></i>
+                                </a>
+                                <div class="collapse menu-dropdown" id="sidebarCatSFG">
+                                    <ul class="nav nav-sm flex-column" data-cat-tables="SFG">
+                                        @foreach (var table in sfgTables)
+                                        {
+                                            <li class="nav-item">
+                                                <a href="@Url.Action("Index", "Category", new { group = "SFG", tableName = table.TableName })" class="nav-link">@table.Label</a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#sidebarCatFSG" data-bs-toggle="collapse" class="nav-link cat-group-link" role="button" aria-expanded="false" aria-controls="sidebarCatFSG" data-cat-group="FSG" data-cat-collapse="sidebarCatFSG">
+                                    <i class="ri-folder-line"></i> <span>Category FSG</span>
+                                    <i class="ri-arrow-right-s-line cat-caret"></i>
+                                </a>
+                                <div class="collapse menu-dropdown" id="sidebarCatFSG">
+                                    <ul class="nav nav-sm flex-column" data-cat-tables="FSG">
+                                        @foreach (var table in fsgTables)
+                                        {
+                                            <li class="nav-item">
+                                                <a href="@Url.Action("Index", "Category", new { group = "FSG", tableName = table.TableName })" class="nav-link">@table.Label</a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                 </li>
@@ -141,12 +194,15 @@
         background: transparent!important;
         font-weight: 600;
     }
+    #sidebarTransaction .cat-group-link { font-weight: 700; }
+    #sidebarTransaction [data-cat-tables] .nav-link { font-weight: 600; }
 </style>
 
 <script>
 (function () {
     var menu = document.getElementById('navbar-nav');
     if (!menu) return;
+
     var alwaysOpen = new Set();
     var collapsibles = menu.querySelectorAll('.collapse.menu-dropdown');
     Array.prototype.forEach.call(collapsibles, function (el) {
@@ -166,6 +222,10 @@
         var m = (href || '').match(/[?&]group=([^&#]+)/i);
         return m ? decodeURIComponent(m[1]).toLowerCase() : '';
     }
+    function tableOf(href) {
+        var m = (href || '').match(/[?&]tableName=([^&#]+)/i);
+        return m ? decodeURIComponent(m[1]).toLowerCase() : '';
+    }
     function openCollapse(collapse) {
         if (!collapse) return;
         alwaysOpen.add(collapse.id);
@@ -177,6 +237,10 @@
             trigger.setAttribute('aria-expanded', 'true');
             trigger.classList.add('active');
         }
+        var parentCollapse = collapse.parentElement
+            ? collapse.parentElement.closest('.collapse.menu-dropdown')
+            : null;
+        if (parentCollapse) openCollapse(parentCollapse);
     }
     function restoreOpen() {
         Array.prototype.forEach.call(collapsibles, function (other) {
@@ -202,6 +266,9 @@
                 var href = matchingHref(a);
                 if (!href) continue;
                 if (path === href || path.indexOf(href + '/') === 0) {
+                    if (href.toLowerCase() === '/category' &&
+                        (groupOf(a.getAttribute('href')) !== here ||
+                         tableOf(a.getAttribute('href')) !== tableOf(window.location.search))) continue;
                     a.classList.add('active');
                     a.setAttribute('data-nav-active', '1');
                     openCollapse(a.closest('.collapse.menu-dropdown'));

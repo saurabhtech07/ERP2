@@ -371,9 +371,9 @@ html[data-bs-theme="dark"] {
 }
 
 .cat-grid-head {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
     gap: .75rem;
     padding: .8rem 1rem;
     border-bottom: 1px solid var(--cat-border);
@@ -384,6 +384,7 @@ html[data-bs-theme="dark"] {
     display: flex;
     align-items: center;
     gap: .55rem;
+    justify-self: start;
 }
 
 .cat-grid-title {
@@ -409,18 +410,86 @@ html[data-bs-theme="dark"] {
 .cat-grid-tools {
     display: flex;
     align-items: center;
+    justify-self: center;
     gap: .4rem;
+}
+
+.cat-btn-export {
+    height: 38px;
+    min-width: 82px;
+    padding: 0 .75rem;
+    border: 0;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 7px 16px -9px rgba(15, 23, 42, .55);
+}
+
+.cat-btn-export i { font-size: 16px; }
+
+.cat-btn-csv { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+.cat-btn-excel { background: linear-gradient(135deg, #12b76a, #0f9d58); }
+.cat-btn-print { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+
+.cat-btn-export:hover {
+    color: #fff;
+    filter: saturate(1.15) brightness(1.04);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -10px rgba(15, 23, 42, .65);
+}
+
+.cat-btn-export:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--cat-primary) 36%, transparent);
+    outline-offset: 2px;
+}
+
+.cat-page-size-wrap {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin-right: .35rem;
+    justify-self: end;
+}
+
+.cat-page-size-label {
+    color: var(--cat-muted);
+    font-size: .72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.cat-page-size {
+    width: 72px;
+    height: 36px;
+    padding: .35rem .5rem;
+    border: 1px solid var(--cat-border);
+    border-radius: 9px;
+    background: var(--cat-surface);
+    color: var(--cat-text);
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.cat-page-size:focus {
+    outline: none;
+    border-color: var(--cat-primary);
+    box-shadow: 0 0 0 3px var(--cat-primary-soft);
 }
 
 /* Grid.js renders into #catGrid. The theme variables do not reach Grid.js
    because it builds its own DOM, so the pieces it creates are restyled here. */
 #catGrid {
     padding: .35rem .5rem .6rem;
+    max-height: calc(100vh - 420px);
+    min-height: 320px;
+    overflow: auto;
+    position: relative;
+    scrollbar-gutter: stable;
 }
 
 #catGrid .gridjs-wrapper {
     border: 0;
     box-shadow: none;
+    overflow: visible !important;
 }
 
 #catGrid .gridjs-container {
@@ -437,6 +506,9 @@ html[data-bs-theme="dark"] {
 }
 
 #catGrid th.gridjs-th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
     padding: .68rem .8rem;
     background: var(--cat-grad, var(--vz-primary, #405189));
     color: #fff;
@@ -873,6 +945,14 @@ html[data-bs-theme="dark"] {
 }
 
 @media (max-width: 575.98px) {
+    .cat-grid-head {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .cat-grid-heading { grid-column: 1; grid-row: 1; }
+    .cat-page-size-wrap { grid-column: 2; grid-row: 1; }
+    .cat-grid-tools { grid-column: 1 / -1; grid-row: 2; }
+
     .cat-head {
         align-items: flex-start;
     }

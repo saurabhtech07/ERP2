@@ -15,10 +15,27 @@ namespace CRM.Controllers
 
         // One sidebar link per group, e.g. /Category?group=RM. The view then lists
         // only the tables belonging to that group in its module dropdown.
-        public async Task<IActionResult> Index(string? group = null)
+        public async Task<IActionResult> Index(string? group = null, string? tableName = null)
         {
-            var groups = await GroupsFor(group);
+            var availableGroups = await _data.GetGroupsAsync();
+            if (availableGroups.Count == 0) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(group))
+            {
+                group = availableGroups.FirstOrDefault(x =>
+                    string.Equals(x.Group, "RM", StringComparison.OrdinalIgnoreCase))?.Group
+                    ?? availableGroups[0].Group;
+            }
+
+            var groups = availableGroups.Where(x =>
+                string.Equals(x.Group, group, StringComparison.OrdinalIgnoreCase)).ToList();
             if (!groups.Any()) return NotFound();
+
+            var tables = groups.SelectMany(x => x.Tables).ToList();
+            ViewBag.SelectedTable = tables.FirstOrDefault(x =>
+                string.Equals(x.TableName, tableName, StringComparison.OrdinalIgnoreCase))?.TableName
+                ?? tables.FirstOrDefault()?.TableName
+                ?? string.Empty;
 
             ViewBag.pagetitle = "Transaction";
             ViewBag.ptitle = "Categories";
@@ -30,6 +47,15 @@ namespace CRM.Controllers
         [HttpGet]
         public async Task<IActionResult> IndexPartial(string group) =>
             PartialView("Partials/_GroupPanel", await GroupsFor(group));
+
+        // Every group with its tables, for the sidebar. It lives here because the
+        // sidebar is on every page: a group link only expands to show its tables, so
+        // the lists have to be ready even on pages that are not Category pages.
+        // One small sys.tables query, and the same discovery as Index, so a table
+        // added to the database later shows up in the sidebar with no change here.
+        [HttpGet]
+        public async Task<JsonResult> GetGroups() =>
+            Json(await _data.GetGroupsAsync());
 
         private async Task<List<CategoryGroup>> GroupsFor(string? group)
         {

@@ -1,16 +1,4 @@
-/* =========================================================
-   Dynamic Report - row actions (View / Edit / Delete)
 
-    Mirrors the approach already used by Item Master
-    (wwwroot/js/item-master.js):
-      - ACTIONS column appended by Index.cshtml's renderGrid()
-      - inline onclick handlers, so pagination keeps working
-      - row data read from the in-memory rowMap, no extra fetch
-      - editable masters get Edit/View/Delete, every other report
-        gets the same column with View only
-
-    Index.cshtml publishes state via window.__DRC_STATE__.
-   ========================================================= */
 (function () {
     'use strict';
 

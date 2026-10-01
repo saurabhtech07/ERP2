@@ -1,0 +1,97 @@
+@model CRM.Models.CategoryFormModel
+@{
+    // Which icon to show next to a field. Purely presentational, chosen from the
+    // column's type so the form stays sensible if the table gains new columns.
+    static string IconFor(CRM.Models.CategoryColumn f) =>
+        f.IsDate ? "ri-calendar-line"
+        : f.IsNumeric ? "ri-number-line"
+        : f.IsLongText ? "ri-align-left"
+        : "ri-text";
+}
+
+<div class="cat-form" data-table="@Model.TableName" data-id="@Model.Id">
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger mb-0">@Model.ErrorMessage</div>
+    }
+    else
+    {
+        <!-- Read only context. Nothing here is posted, it just tells the user
+             exactly which table they are writing into. -->
+        <div class="cat-context">
+            <div class="cat-context-grid">
+                <div class="cat-context-item">
+                    <span class="cat-context-label">Table</span>
+                    <span class="cat-context-value">@Model.Label</span>
+                </div>
+                <div class="cat-context-item">
+                    <span class="cat-context-label">Group</span>
+                    <span class="cat-context-value">@Model.Group</span>
+                </div>
+                <div class="cat-context-item">
+                    <span class="cat-context-label">Records</span>
+                    <span class="cat-context-value">@Model.RowCount</span>
+                </div>
+                <div class="cat-context-item">
+                    <span class="cat-context-label">Saved by</span>
+                    <span class="cat-context-value">@Model.UserName</span>
+                </div>
+            </div>
+        </div>
+
+        <form id="catForm" novalidate>
+            <input type="hidden" id="catId" value="@Model.Id" />
+
+            @foreach (var f in Model.Fields)
+            {
+                var value = Model.Values.TryGetValue(f.Name, out var v) ? v : "";
+                var required = !f.IsNullable;
+                <div class="cat-field">
+                    <div class="cat-field-top">
+                        <label class="cat-field-label" for="catf-@f.Name">
+                            <i class="@IconFor(f)"></i>@f.SourceName
+                            @if (required)
+                            {
+                                <span class="cat-req" title="Required">*</span>
+                            }
+                        </label>
+                        @if (f.MaxLength > 0)
+                        {
+                            <span class="cat-counter" data-counter-for="catf-@f.Name">0/@f.MaxLength</span>
+                        }
+                    </div>
+
+                    @if (f.IsLongText)
+                    {
+                        <textarea id="catf-@f.Name" name="@f.Name" rows="3"
+                                  class="cat-input cat-textarea"
+                                  placeholder="Enter @f.SourceName.ToLowerInvariant()"
+                                  @(required ? "required" : "")>@value</textarea>
+                    }
+                    else
+                    {
+                        @* maxlength is deliberately not emitted as a raw
+                           maxlength="..." attribute here - a Razor expression
+                           inside a tag body can come out HTML encoded, which
+                           would break the attribute. data-maxlength carries the
+                           real length and category-page.js enforces it, so the
+                           browser's own limit is not needed. *@
+                        <input type="@(f.IsDate ? "date" : f.IsNumeric ? "number" : "text")"
+                               id="catf-@f.Name"
+                               name="@f.Name"
+                               class="cat-input"
+                               value="@value"
+                               placeholder="Enter @f.SourceName.ToLowerInvariant()"
+                               data-label="@f.SourceName"
+                               data-maxlength="@(f.MaxLength > 0 ? f.MaxLength : 0)"
+                               data-type="@(f.IsDate ? "date" : f.IsNumeric ? "number" : "text")"
+                               autocomplete="off"
+                               @(required ? "required" : "") />
+                    }
+                    <div class="cat-invalid" data-error-for="catf-@f.Name"></div>
+                </div>
+            }
+        </form>
+    }
+</div>

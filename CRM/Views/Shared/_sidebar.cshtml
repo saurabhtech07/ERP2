@@ -97,7 +97,9 @@
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarTransaction">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item"><a href="javascript:void(0);" class="nav-link" data-key="t-sample">Sample</a></li>
+                            <li class="nav-item"><a href="@Url.Action("Index", "Category", new { group = "RM" })" class="nav-link" data-key="t-category-rm">Category RM</a></li>
+                            <li class="nav-item"><a href="@Url.Action("Index", "Category", new { group = "SFG" })" class="nav-link" data-key="t-category-sfg">Category SFG</a></li>
+                            <li class="nav-item"><a href="@Url.Action("Index", "Category", new { group = "FSG" })" class="nav-link" data-key="t-category-fsg">Category FSG</a></li>
                         </ul>
                     </div>
                 </li>
@@ -157,6 +159,13 @@
         if (!href || href === '/' || href === '') return '';
         return href;
     }
+    // matchingHref() drops the query string, so three links like
+    // /Category?group=RM|SFG|FSG all collapse to the same path and pathname
+    // alone cannot tell them apart. The group has to be compared too.
+    function groupOf(href) {
+        var m = (href || '').match(/[?&]group=([^&#]+)/i);
+        return m ? decodeURIComponent(m[1]).toLowerCase() : '';
+    }
     function openCollapse(collapse) {
         if (!collapse) return;
         alwaysOpen.add(collapse.id);
@@ -178,6 +187,15 @@
     function highlight() {
         try {
             var path = window.location.pathname;
+            var here = groupOf(window.location.search);
+
+            // Clear only what this function set last time, otherwise a group
+            // switch would leave the previous link lit as well.
+            Array.prototype.forEach.call(menu.querySelectorAll('[data-nav-active]'), function (el) {
+                el.classList.remove('active');
+                el.removeAttribute('data-nav-active');
+            });
+
             var subLinks = menu.querySelectorAll('.menu-dropdown a[href]');
             for (var i = 0; i < subLinks.length; i++) {
                 var a = subLinks[i];
@@ -185,6 +203,7 @@
                 if (!href) continue;
                 if (path === href || path.indexOf(href + '/') === 0) {
                     a.classList.add('active');
+                    a.setAttribute('data-nav-active', '1');
                     openCollapse(a.closest('.collapse.menu-dropdown'));
                 }
             }
@@ -192,15 +211,19 @@
             for (var j = 0; j < flatLinks.length; j++) {
                 var flat = flatLinks[j];
                 var flatHref = matchingHref(flat);
-                if (flatHref && (path === flatHref || path.indexOf(flatHref + '/') === 0)) {
-                    flat.classList.add('active');
-                }
+                if (!flatHref || !(path === flatHref || path.indexOf(flatHref + '/') === 0)) continue;
+                if (groupOf(flat.getAttribute('href')) !== here) continue;
+                flat.classList.add('active');
+                flat.setAttribute('data-nav-active', '1');
             }
         } catch (e) { }
     }
     highlight();
     document.addEventListener('DOMContentLoaded', highlight);
     window.addEventListener('load', highlight);
+    // Pages that swap content without a reload (the Category group switch) tell
+    // the sidebar to re-evaluate, since this script only runs on a full load.
+    document.addEventListener('sidebar:refresh', highlight);
     document.addEventListener('hidden.bs.collapse', function (e) {
         if (e.target && e.target.classList && e.target.classList.contains('menu-dropdown')) {
             alwaysOpen.delete(e.target.id);

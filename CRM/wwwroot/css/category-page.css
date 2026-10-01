@@ -1,0 +1,896 @@
+/* =============================================================================
+   category-page.css
+   Styling for the Category screens. Every colour is derived from the Velzon
+   theme variables, so changing the accent in the Theme Customizer (or flipping
+   to dark mode) restyles this page too - nothing here is a fixed brand colour.
+   Class names are scoped with .cat- / #cat* so nothing can leak into the other
+   master screens that share this layout.
+   ============================================================================= */
+
+/* These live on :root, not on .cat-panel, because the Add/Edit modal is a sibling
+   of the panel and not a descendant of it. Scoping them to .cat-panel left every
+   var(--cat-grad) inside the modal unresolved, so the Save button fell back to a
+   transparent background with white text and all but disappeared. */
+:root {
+    /* Fallbacks keep the page readable even if a Velzon variable is missing. */
+    --cat-primary: rgb(var(--vz-primary-rgb, 64, 81, 137));
+    --cat-primary-soft: color-mix(in srgb, var(--cat-primary) 12%, transparent);
+    --cat-grad: linear-gradient(135deg,
+            color-mix(in srgb, var(--cat-primary) 82%, #06b6d4) 0%,
+            var(--cat-primary) 55%,
+            color-mix(in srgb, var(--cat-primary) 86%, #6366f1) 100%);
+    --cat-surface: var(--vz-body-bg, #ffffff);
+    --cat-surface-alt: color-mix(in srgb, var(--cat-primary) 4%, var(--cat-surface));
+    --cat-border: var(--vz-border-color, #e9ecef);
+    --cat-text: var(--vz-body-color, #495057);
+    --cat-muted: color-mix(in srgb, var(--cat-text) 62%, transparent);
+    --cat-radius: 14px;
+    --cat-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 8px 24px -12px rgba(15, 23, 42, .18);
+    --cat-shadow-lg: 0 24px 60px -28px rgba(15, 23, 42, .38);
+}
+
+html[data-bs-theme="dark"] {
+    --cat-border: rgba(255, 255, 255, .12);
+    --cat-muted: rgba(255, 255, 255, .62);
+    --cat-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px -14px rgba(0, 0, 0, .7);
+    --cat-shadow-lg: 0 30px 70px -30px rgba(0, 0, 0, .85);
+}
+
+/* ------------------------------------------------------------------ header */
+
+.cat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+}
+
+.cat-head-main {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    min-width: 0;
+}
+
+.cat-head-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border-radius: 12px;
+    background: var(--cat-grad, var(--vz-primary, #405189));
+    color: #fff;
+    font-size: 20px;
+    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--cat-primary) 70%, transparent);
+}
+
+.cat-title {
+    margin: 0;
+    font-size: 1.16rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--cat-text);
+}
+
+.cat-title-sep {
+    color: var(--cat-muted);
+    margin: 0 .3rem;
+    font-weight: 400;
+}
+
+.cat-sub {
+    margin: .15rem 0 0;
+    font-size: .8rem;
+    color: var(--cat-muted);
+}
+
+.cat-group-badge {
+    flex: 0 0 auto;
+    padding: .34rem .8rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--cat-primary);
+    background: var(--cat-primary-soft);
+    border: 1px solid color-mix(in srgb, var(--cat-primary) 26%, transparent);
+}
+
+/* ----------------------------------------------------------------- toolbar */
+
+.cat-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .85rem;
+    padding: .9rem 1rem;
+    margin-bottom: 1rem;
+    background: var(--cat-surface);
+    border: 1px solid var(--cat-border);
+    border-radius: var(--cat-radius);
+    box-shadow: var(--cat-shadow);
+}
+
+.cat-label {
+    display: block;
+    margin-bottom: .3rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--cat-muted);
+}
+
+.cat-module {
+    min-width: 250px;
+}
+
+.cat-select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.cat-select-icon {
+    position: absolute;
+    left: .8rem;
+    font-size: 16px;
+    color: var(--cat-primary);
+    pointer-events: none;
+}
+
+.cat-select {
+    width: 100%;
+    appearance: none;
+    padding: .55rem 2.2rem .55rem 2.35rem;
+    border: 1px solid var(--cat-border);
+    border-radius: 10px;
+    background: var(--cat-surface);
+    color: var(--cat-text);
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .18s, box-shadow .18s;
+}
+
+/* Chevron drawn with borders so it needs no icon font and cannot fall back
+   to a missing-glyph box. */
+.cat-select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    margin-top: -5px;
+    border-right: 2px solid var(--cat-muted);
+    border-bottom: 2px solid var(--cat-muted);
+    transform: rotate(45deg);
+    pointer-events: none;
+}
+
+.cat-select:focus {
+    outline: none;
+    border-color: var(--cat-primary);
+    box-shadow: 0 0 0 4px var(--cat-primary-soft);
+}
+
+.cat-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+}
+
+.cat-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.cat-search-icon {
+    position: absolute;
+    left: .8rem;
+    font-size: 16px;
+    color: var(--cat-muted);
+    pointer-events: none;
+}
+
+.cat-search-input {
+    width: 240px;
+    padding: .55rem 2.1rem .55rem 2.3rem;
+    border: 1px solid var(--cat-border);
+    border-radius: 10px;
+    background: var(--cat-surface);
+    color: var(--cat-text);
+    font-size: .86rem;
+    transition: border-color .18s, box-shadow .18s, width .18s;
+}
+
+.cat-search-input::placeholder {
+    color: var(--cat-muted);
+}
+
+.cat-search-input:focus {
+    outline: none;
+    width: 270px;
+    border-color: var(--cat-primary);
+    box-shadow: 0 0 0 4px var(--cat-primary-soft);
+}
+
+.cat-search-input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.cat-search-clear {
+    position: absolute;
+    right: .5rem;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--cat-text) 10%, transparent);
+    color: var(--cat-muted);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.cat-search-clear:hover {
+    background: color-mix(in srgb, var(--cat-text) 18%, transparent);
+    color: var(--cat-text);
+}
+
+.cat-search-clear[hidden] {
+    display: none;
+}
+
+/* ------------------------------------------------------- the Add Category
+   Gradient fill, lift + glow on hover, the plus glyph rotates, and a shine
+   sweeps across. The ripple span is created by category-page.js on pointerdown. */
+
+.cat-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    padding: .55rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: .86rem;
+    font-weight: 600;
+    line-height: 1.4;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform .18s cubic-bezier(.34, 1.56, .64, 1),
+                box-shadow .18s, filter .18s, background-color .18s, border-color .18s;
+}
+
+.cat-btn-add {
+    background: var(--cat-grad, var(--vz-primary, #405189));
+    color: #fff;
+    box-shadow: 0 4px 14px -6px color-mix(in srgb, var(--cat-primary) 80%, transparent);
+}
+
+.cat-btn-add::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 22%,
+            rgba(255, 255, 255, .38) 48%, transparent 74%);
+    transform: translateX(-130%);
+    transition: transform .62s ease;
+}
+
+.cat-btn-add:hover::before {
+    transform: translateX(130%);
+}
+
+.cat-btn-add:hover {
+    transform: translateY(-2px);
+    filter: saturate(1.12);
+    box-shadow: 0 12px 26px -10px color-mix(in srgb, var(--cat-primary) 85%, transparent);
+}
+
+.cat-btn-add:active {
+    transform: translateY(0) scale(.98);
+}
+
+.cat-btn-add i {
+    position: relative;
+    font-size: 17px;
+    transition: transform .3s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.cat-btn-add:hover i {
+    transform: rotate(90deg);
+}
+
+.cat-btn-add:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px var(--cat-primary-soft),
+                0 12px 26px -10px color-mix(in srgb, var(--cat-primary) 85%, transparent);
+}
+
+.cat-btn[disabled] {
+    cursor: not-allowed;
+    opacity: .62;
+    transform: none;
+    box-shadow: none;
+    filter: grayscale(.25);
+}
+
+.cat-btn-ghost {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: var(--cat-surface);
+    border-color: var(--cat-border);
+    color: var(--cat-muted);
+    border-radius: 9px;
+    font-size: 16px;
+}
+
+.cat-btn-ghost:hover {
+    background: var(--cat-primary-soft);
+    border-color: color-mix(in srgb, var(--cat-primary) 40%, transparent);
+    color: var(--cat-primary);
+}
+
+.cat-ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .45);
+    transform: scale(0);
+    animation: cat-ripple .6s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes cat-ripple {
+    to {
+        transform: scale(2.6);
+        opacity: 0;
+    }
+}
+
+/* ------------------------------------------------------------- grid + card */
+
+.cat-grid-card {
+    background: var(--cat-surface);
+    border: 1px solid var(--cat-border);
+    border-radius: var(--cat-radius);
+    box-shadow: var(--cat-shadow);
+    overflow: hidden;
+}
+
+.cat-grid-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .8rem 1rem;
+    border-bottom: 1px solid var(--cat-border);
+    background: var(--cat-surface-alt);
+}
+
+.cat-grid-heading {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+}
+
+.cat-grid-title {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--cat-muted);
+}
+
+.cat-count-pill {
+    min-width: 26px;
+    padding: .16rem .5rem;
+    border-radius: 999px;
+    background: var(--cat-grad, var(--vz-primary, #405189));
+    color: #fff;
+    font-size: .74rem;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.cat-grid-tools {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+/* Grid.js renders into #catGrid. The theme variables do not reach Grid.js
+   because it builds its own DOM, so the pieces it creates are restyled here. */
+#catGrid {
+    padding: .35rem .5rem .6rem;
+}
+
+#catGrid .gridjs-wrapper {
+    border: 0;
+    box-shadow: none;
+}
+
+#catGrid .gridjs-container {
+    color: var(--cat-text);
+}
+
+#catGrid .gridjs-table {
+    width: 100% !important;
+}
+
+#catGrid table.gridjs-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#catGrid th.gridjs-th {
+    padding: .68rem .8rem;
+    background: var(--cat-grad, var(--vz-primary, #405189));
+    color: #fff;
+    border: 0;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+#catGrid th.gridjs-th:first-child {
+    border-top-left-radius: 9px;
+}
+
+#catGrid th.gridjs-th:last-child {
+    border-top-right-radius: 9px;
+}
+
+#catGrid th.gridjs-th.sortable:hover {
+    background: color-mix(in srgb, var(--cat-primary) 88%, #06b6d4);
+}
+
+#catGrid td.gridjs-td {
+    padding: .6rem .8rem;
+    border-bottom: 1px solid var(--cat-border);
+    font-size: .86rem;
+    color: var(--cat-text);
+    white-space: nowrap;
+}
+
+#catGrid tbody tr:hover td.gridjs-td {
+    background: var(--cat-surface-alt);
+}
+
+#catGrid .gridjs-pagination {
+    padding: .55rem .3rem .1rem;
+    color: var(--cat-muted);
+    font-size: .82rem;
+}
+
+#catGrid .gridjs-pagination .gridjs-pages button {
+    border: 1px solid var(--cat-border);
+    background: var(--cat-surface);
+    color: var(--cat-muted);
+    border-radius: 7px;
+    margin: 0 2px;
+    min-width: 30px;
+}
+
+#catGrid .gridjs-pagination .gridjs-pages button:disabled {
+    opacity: .45;
+}
+
+#catGrid .gridjs-pagination .gridjs-pages button.gridjs-currentPage {
+    background: var(--cat-primary);
+    border-color: var(--cat-primary);
+    color: #fff;
+}
+
+#catGrid .gridjs-pagination .gridjs-pages button:hover:not(:disabled) {
+    border-color: var(--cat-primary);
+    color: var(--cat-primary);
+}
+
+#catGrid .gridjs-search {
+    display: none;
+}
+
+#catGrid .gridjs-footer {
+    color: var(--cat-muted);
+}
+
+/* The action column is appended by the page script. */
+#catGrid .cat-actions {
+    display: flex;
+    gap: .35rem;
+    justify-content: flex-end;
+}
+
+.cat-act {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--cat-border);
+    border-radius: 8px;
+    background: var(--cat-surface);
+    color: var(--cat-muted);
+    cursor: pointer;
+    font-size: 15px;
+    transition: background-color .16s, color .16s, border-color .16s;
+}
+
+.cat-act:hover {
+    background: var(--cat-primary-soft);
+    border-color: color-mix(in srgb, var(--cat-primary) 40%, transparent);
+    color: var(--cat-primary);
+}
+
+/* ----------------------------------------------------------------- loader */
+
+.cat-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    background: var(--cat-surface);
+    border-radius: var(--cat-radius);
+}
+
+.cat-loading[hidden] {
+    display: none;
+}
+
+.cat-skeleton {
+    width: 100%;
+    max-width: 720px;
+}
+
+.cat-skel-head,
+.cat-skel-row {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--cat-text) 9%, transparent);
+}
+
+.cat-skel-head {
+    height: 20px;
+    width: 40%;
+    margin: 0 auto 1.4rem;
+}
+
+.cat-skel-row {
+    height: 16px;
+    margin-bottom: .8rem;
+}
+
+.cat-skel-row:nth-child(3) { width: 92%; }
+.cat-skel-row:nth-child(4) { width: 78%; }
+.cat-skel-row:nth-child(5) { width: 85%; }
+
+.cat-skel-head::after,
+.cat-skel-row::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent,
+            color-mix(in srgb, var(--cat-surface) 85%, transparent), transparent);
+    animation: cat-shimmer 1.4s ease infinite;
+}
+
+@keyframes cat-shimmer {
+    to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cat-btn, .cat-btn-add i, .cat-select, .cat-search-input { transition: none; }
+    .cat-skel-head::after, .cat-skel-row::after { animation: none; }
+}
+
+/* ------------------------------------------------------------------ modal */
+
+#catModal .modal-dialog {
+    max-width: 540px;
+}
+
+#catModal .modal-content {
+    border: 0;
+    border-radius: 18px;
+    box-shadow: var(--cat-shadow-lg);
+    overflow: hidden;
+}
+
+#catModal .modal-header {
+    position: relative;
+    gap: .7rem;
+    padding: 1.05rem 1.25rem;
+    border-bottom: 1px solid var(--cat-border);
+    background: var(--cat-surface-alt);
+}
+
+#catModal .modal-title {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--cat-text);
+}
+
+/* The icon chip is a real <i> in the markup (see Index.cshtml) rather than a
+   ::before content string, so a wrong codepoint cannot blank it out. */
+#catModal .modal-title-icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border-radius: 9px;
+    background: var(--cat-grad, var(--vz-primary, #405189));
+    color: #fff;
+    font-size: 16px;
+}
+
+#catModal .modal-body {
+    padding: 1.15rem 1.25rem;
+}
+
+#catModal .modal-footer {
+    gap: .5rem;
+    padding: .85rem 1.25rem 1.1rem;
+    border-top: 1px solid var(--cat-border);
+    background: var(--cat-surface-alt);
+}
+
+/* Bootstrap sets .modal-footer to display:flex, which beats the UA rule behind
+   the hidden attribute - without this the Save/Cancel row shows even when the
+   form failed to load. */
+#catModal .modal-footer[hidden] {
+    display: none;
+}
+
+#catModal .modal-footer .btn {
+    border-radius: 10px;
+    padding: .5rem 1.1rem;
+    font-size: .86rem;
+    font-weight: 600;
+}
+
+#catModal .btn-cat-save {
+    position: relative;
+    overflow: hidden;
+    border: 0;
+    background: var(--cat-grad, var(--vz-primary, #405189));
+    color: #fff;
+    box-shadow: 0 4px 14px -6px color-mix(in srgb, var(--cat-primary) 80%, transparent);
+    transition: transform .18s cubic-bezier(.34, 1.56, .64, 1), box-shadow .18s, filter .18s;
+}
+
+#catModal .btn-cat-save:hover {
+    transform: translateY(-1px);
+    filter: saturate(1.1);
+    color: #fff;
+    box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--cat-primary) 85%, transparent);
+}
+
+#catModal .btn-cat-save:disabled {
+    opacity: .6;
+    transform: none;
+    cursor: not-allowed;
+}
+
+/* While the form is being fetched the body is just a spinner. */
+#catModal .cat-modal-spinner {
+    display: grid;
+    place-items: center;
+    padding: 2.5rem 0;
+}
+
+/* ------------------------------------------------------------------- form */
+
+.cat-context {
+    padding: .8rem .9rem;
+    margin-bottom: 1.1rem;
+    border: 1px solid var(--cat-border);
+    border-left: 3px solid var(--cat-primary);
+    border-radius: 12px;
+    background: var(--cat-surface-alt);
+}
+
+.cat-context-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .6rem .9rem;
+}
+
+.cat-context-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cat-context-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--cat-muted);
+}
+
+.cat-context-value {
+    font-size: .86rem;
+    font-weight: 600;
+    color: var(--cat-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cat-field {
+    margin-bottom: 1rem;
+}
+
+.cat-field:last-child {
+    margin-bottom: 0;
+}
+
+.cat-field-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .35rem;
+}
+
+.cat-field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin: 0;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--cat-muted);
+}
+
+.cat-field-label i {
+    color: var(--cat-primary);
+    font-size: 15px;
+}
+
+.cat-req {
+    color: #e11d48;
+    font-weight: 700;
+}
+
+.cat-counter {
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--cat-muted);
+}
+
+.cat-counter.is-over {
+    color: #e11d48;
+    font-weight: 700;
+}
+
+.cat-input {
+    display: block;
+    width: 100%;
+    padding: .58rem .8rem;
+    border: 1px solid var(--cat-border);
+    border-radius: 10px;
+    background: var(--cat-surface);
+    color: var(--cat-text);
+    font-size: .9rem;
+    transition: border-color .16s, box-shadow .16s;
+}
+
+.cat-input::placeholder {
+    color: color-mix(in srgb, var(--cat-muted) 78%, transparent);
+}
+
+.cat-input:focus {
+    outline: none;
+    border-color: var(--cat-primary);
+    box-shadow: 0 0 0 4px var(--cat-primary-soft);
+}
+
+.cat-input.is-invalid {
+    border-color: #e11d48;
+    box-shadow: 0 0 0 4px rgba(225, 29, 72, .12);
+}
+
+.cat-textarea {
+    resize: vertical;
+    min-height: 76px;
+}
+
+/* Number inputs: the browser spinner clashes with the row layout. */
+.cat-input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.cat-input[type="number"]::-webkit-outer-spin-button,
+.cat-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.cat-invalid {
+    min-height: 0;
+    margin-top: .3rem;
+    font-size: .76rem;
+    color: #e11d48;
+}
+
+.cat-invalid:empty {
+    display: none;
+}
+
+/* ------------------------------------------------------------- responsive */
+
+@media (max-width: 991.98px) {
+    .cat-toolbar {
+        align-items: stretch;
+    }
+
+    .cat-module,
+    .cat-search-input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .cat-toolbar-actions {
+        flex: 1 1 100%;
+    }
+
+    .cat-search {
+        flex: 1 1 auto;
+    }
+
+    .cat-search-input:focus {
+        width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .cat-head {
+        align-items: flex-start;
+    }
+
+    .cat-context-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cat-btn-add span {
+        display: none;
+    }
+
+    .cat-btn-add {
+        width: 40px;
+        padding: .5rem;
+    }
+
+    #catModal .modal-dialog {
+        margin: .5rem;
+    }
+}

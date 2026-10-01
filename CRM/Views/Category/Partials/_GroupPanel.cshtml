@@ -1,0 +1,92 @@
+@model List<CRM.Models.CategoryGroup>
+@using System.Text.Json
+@{
+    // camelCase so the client reads g.tables[0].tableName the same way everywhere.
+    // The default encoder is HTML safe, so this cannot break out of the script tag.
+    var json = JsonSerializer.Serialize(Model, new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    });
+    var active = Model.FirstOrDefault();
+}
+
+@if (active == null)
+{
+    <section class="cat-panel" id="catPanel">
+        <div class="alert alert-warning mb-0">No category group was found for this link.</div>
+    </section>
+}
+else
+{
+    <section class="cat-panel" id="catPanel">
+    <script type="application/json" id="catGroupsJson">@Html.Raw(json)</script>
+
+    <!-- Shown while the selected table is being fetched -->
+    <div class="cat-loading" id="catLoading" hidden aria-live="polite" aria-busy="true">
+        <div class="cat-skeleton">
+            <div class="cat-skel-head"></div>
+            <div class="cat-skel-row"></div>
+            <div class="cat-skel-row"></div>
+            <div class="cat-skel-row"></div>
+            <div class="cat-skel-row"></div>
+        </div>
+    </div>
+
+    <div class="cat-body" id="catBody">
+        <div class="cat-head">
+            <div class="cat-head-main">
+                <span class="cat-head-icon"><i class="ri-folder-chart-line"></i></span>
+                <div>
+                    <h1 class="cat-title">@active.Group<span class="cat-title-sep">/</span>Categories</h1>
+                    <p class="cat-sub" id="catModuleMeta">Select a category to begin</p>
+                </div>
+            </div>
+            <span class="cat-group-badge">@active.Group</span>
+        </div>
+
+        <div class="cat-toolbar">
+            <div class="cat-module">
+                <label class="cat-label" for="catModule">Category</label>
+                <div class="cat-select-wrap">
+                    <i class="ri-stack-line cat-select-icon"></i>
+                    <select id="catModule" class="cat-select"></select>
+                </div>
+            </div>
+
+            <div class="cat-toolbar-actions">
+                <div class="cat-search">
+                    <i class="ri-search-line cat-search-icon"></i>
+                    <input type="search" id="catSearch" class="cat-search-input"
+                           placeholder="Search&hellip;" autocomplete="off" aria-label="Search rows" />
+                    <button type="button" id="catSearchClear" class="cat-search-clear"
+                            aria-label="Clear search" hidden><i class="ri-close-line"></i></button>
+                </div>
+                <button type="button" class="cat-btn cat-btn-add" id="catAdd">
+                    <i class="ri-add-line"></i><span>Add Category</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="cat-grid-card">
+            <div class="cat-grid-head">
+                <div class="cat-grid-heading">
+                    <span class="cat-count-pill" id="catCount">0</span>
+                    <span class="cat-grid-title">Records</span>
+                </div>
+                <div class="cat-grid-tools">
+                    <button type="button" class="cat-btn cat-btn-ghost" id="catCsv" title="Export CSV">
+                        <i class="ri-file-list-3-line"></i>
+                    </button>
+                    <button type="button" class="cat-btn cat-btn-ghost" id="catExcel" title="Export to Excel">
+                        <i class="ri-file-excel-2-line"></i>
+                    </button>
+                    <button type="button" class="cat-btn cat-btn-ghost" id="catPrint" title="Print">
+                        <i class="ri-printer-line"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="catGrid"></div>
+        </div>
+    </div>
+</section>
+}
